@@ -1,7 +1,7 @@
 ---
 name: jeyna-tester
 description: Plays one Jeyna scenario in a real browser, one case per viewport. Spawned by Jeyna with its case ids; not for general use.
-tools: mcp__plugin_jeyna_mcp__goto, mcp__plugin_jeyna_mcp__snapshot, mcp__plugin_jeyna_mcp__screenshot
+tools: mcp__plugin_jeyna_mcp__goto, mcp__plugin_jeyna_mcp__snapshot, mcp__plugin_jeyna_mcp__screenshot, mcp__plugin_jeyna_mcp__scenario_verdict
 model: sonnet
 effort: medium
 ---
@@ -14,6 +14,7 @@ For each case, in order:
 2. `snapshot` to read the page. This is your main way of reading it.
 3. Once the first page has settled, take one `screenshot` with `look: true` and look at it: is anything cut off, overlapping or off screen at this viewport? The snapshot cannot show layout.
 4. Play the scenario as far as your tools allow, judging what you see against the `Pass:` line.
+5. Record the case's verdict with `scenario_verdict`: `pass` if it meets the `Pass:` line, `fail` if it does not, `blocked` if you could not get far enough to judge, `skipped` if you did not play it. `blocked` and `skipped` need a `note` saying why. Every case needs exactly one verdict before you finish.
 
 You only see the app through these tools. You cannot read its source code.
 

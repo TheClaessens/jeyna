@@ -207359,6 +207359,34 @@ function registerSessionTools(server3, getContext2) {
       }
     }
   );
+  server3.registerTool(
+    "scenario_verdict",
+    {
+      description: "Record this case's verdict against the scenario's Pass: line. One per case; calling again replaces it. blocked (could not get far enough to judge) and skipped need a note saying why.",
+      inputSchema: {
+        case: external_exports.string().describe("Case id from your prompt's jeyna-tester-cases line, e.g. t1-390x844"),
+        result: external_exports.enum(["pass", "fail", "blocked", "skipped"]),
+        note: external_exports.string().min(1).optional(),
+        findings: external_exports.array(external_exports.string()).default([])
+      }
+    },
+    async ({ case: caseId, result: result2, note, findings }) => {
+      try {
+        if (!current) throw new Error("No running session. Call session_start first.");
+        const { runDir, session } = current;
+        if (!session.cases.some((c) => c.id === caseId)) {
+          throw new Error(`Unknown case "${caseId}". Cases in this run: ${session.cases.map((c) => c.id).join(", ")}.`);
+        }
+        if ((result2 === "blocked" || result2 === "skipped") && !note) throw new Error(`A ${result2} verdict needs a note saying why.`);
+        const verdict = { case: caseId, result: result2, ...note && { note }, findings };
+        session.verdicts = [...session.verdicts.filter((v) => v.case !== caseId), verdict];
+        save(runDir, session);
+        return ok({ recorded: verdict });
+      } catch (e) {
+        return fail(e);
+      }
+    }
+  );
 }
 
 // src/server.ts
