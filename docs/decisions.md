@@ -801,3 +801,26 @@ A code review of the integration branch found races, leaks and duplicated logic.
 - New: `src/shared.ts`, `src/shared.test.ts`, `src/testkit.ts`.
 - `src/browser.ts`, `src/accounts.ts`, `src/findings.ts`, `src/finish.ts`, `src/flows.ts`, `src/session.ts`, `src/server.ts`, and the tests.
 - analysis: §5.4 `update_status`, `validate` and `goto` rows. The bundle is rebuilt.
+
+## D31 · 2026-10-15 · Live verification on the sample app; tester and skill prompt fixes
+
+The developer ran the plugin interactively (`claude --plugin-dir plugin`, Claude Code 2.1.299, macOS) in a copy of `sample-app/`: `/jeyna:init`, three `/jeyna:playtest todos` runs, one exploratory `/jeyna:playtest let's test the authentication flow`, `save_flow`, and the same request again, run guided.
+
+**Passed live**
+- `/jeyna:init` end to end: the config was written and validated, `.jeyna/.env` was created with empty values, and `.gitignore` was updated.
+- P2: the project root resolved to the session's folder (`/private/tmp/jeyna-sample`). The server shows as `plugin:jeyna:mcp`. The tester allowlist (`mcp__plugin_jeyna_mcp__*`) works: testers called every tool on it.
+- P3: variables exported in the shell reach the plugin server (reported as `env`). `.jeyna/.env` values are read too.
+- AC4: `Write` to `.jeyna/.env` is denied with the guard's message, and the agent did not work around it.
+- P5: at 390x844 the testers reported the off-screen Sign in button (seeded bug 2) from their `look: true` screenshot, in every run. The pass branch in D28 stands.
+- #8 and #9: the skill ran the flow, spawned testers batch by batch, marked duplicates, called `session_finish` and reported elapsed time and tester count (6 cases in 1m 20s–1m 46s with 3 testers).
+- #10 AC1: the scout looked with 8 calls, signed in with placeholders, and proposed four authentication scenarios with `Pass:` lines in one message, then waited. The run found seeded bugs 1, 2, 3, 5 and 6. AC1b: after `save_flow`, the same request ran the saved flow guided, with the same 4 scenarios × 2 viewports and the same results.
+- Missing credentials: a tester without account values recorded `blocked` with a note, rather than failing the case.
+
+**Problems found live, fixed in the prompts**
+- Testers failed a case for any finding they recorded, even when the `Pass:` line was met. Complete-and-delete failed on sign-in-page findings. The tester now judges the verdict against the `Pass:` line only, and a `fail` lists only the findings that break it.
+- The skill marked a distinct problem as a duplicate of a finding that happened to mention it ("Wrong password for ." under the off-screen button), which hid seeded bug 6. A duplicate must now describe nothing the kept finding does not; when in doubt, keep both.
+- A tester bundled two problems into one finding (the unlabelled field plus the off-screen button), which defeats duplicate marking and inflates severity. The tester must now split them. In the next run (authentication, guided), no finding bundled two problems.
+
+**Open**
+- A tester signed in as one account plays its viewport cases one after the other on the same app state. In the todos flow the second case saw the first case's todo, and `Account: consumes` scenarios leave accounts changed (password reset, lockout) for the next run. The sample app resets on restart. Real apps need a precondition, a cleanup step, or one account per case. Not decided.
+- Still pending live verification: P6 and P7 (the SubagentStop hook's `agent_type` in a debug log, and a tester blocked once then released), P8 (overlap of same-batch testers' calls; the run times suggest it), whether `effort` per spawn is accepted, AC3 over a whole transcript, AC5 (a tester retrying with a screenshot), and the "run `/jeyna:init`" message in a project without `.jeyna/`.
