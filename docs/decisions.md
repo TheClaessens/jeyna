@@ -614,3 +614,23 @@ Claude Code 2.1.299, node 20.12.2, macOS arm64. No headless Claude Code session 
 
 **Changed**
 - New: `plugin/hooks/check-exit.sh`. `src/session.ts` adds `scenario_verdict`. `plugin/hooks/hooks.json`, `plugin/agents/jeyna-tester.md`, `src/run.test.ts`, `src/hooks.test.ts`. The bundle is rebuilt.
+
+## D24 · 2026-10-15 · Findings: `record_finding`, the converter, `fail` needs a finding (slice 2, issue #6)
+
+Claude Code 2.1.299, node 20.12.2, macOS arm64. No headless Claude Code session was run (the owner ruled out `claude -p` for cost). Verified locally by driving the committed bundle over MCP stdio against the sample app (`src/run.test.ts`). `claude plugin validate` passes for `./plugin` and `.`.
+
+**AC5 · a bug without evidence is refused, the tester retries with a screenshot: refusal verified, retry pending live verification**
+- Verified locally: `record_finding` of kind `bug` with no `evidence` returns a tool error that tells the tester to call `screenshot {case}` and call `record_finding` again with the file name, and lists the case's screenshots so far. The same finding with the screenshot's file name is then recorded as `PT-exploratory-001`.
+- Not verified: that a live `jeyna:jeyna-tester` reads the error and retries with a screenshot. To probe: in `sample-app/`, start a run, spawn `jeyna:jeyna-tester` on `t1-390x844` and tell it to record the off-screen Sign in button (bug 2) as a `bug` without evidence first; then check that a second `record_finding` carries a screenshot and `findings/` holds one file.
+
+**Also decided in building**
+- `record_finding {case, finding}` validates FindingInput (§5.2): kind `bug | ux | a11y | question`, no `perf` (D8); severity `critical | major | minor | note`; 1–12 steps; title 8–140 characters. Unknown cases are refused with the run's case ids.
+- Evidence names must be plain file names in the run's `evidence/` folder (no path parts); otherwise the call is refused with the case's screenshots (F6.3).
+- Id: `PT-<slug>-<nnn>`, the slug being the flow with any `exploratory:` prefix removed. The number is the count of this run's findings plus one, taken and the file created with `wx` in one synchronous step after the handler's last `await` (D11). Eight concurrent calls get eight distinct ids (test).
+- Server-added frontmatter: `schema`, `id`, `status: open`, `flow`, `case`, `scenario` and `viewport` (from the case, D4), `browser` (`<browser type> <version>`, or `unknown` before any browser call), `build`, `author` (the tester's model from `session.json`, D15), `created`. The body is `# <title>`, then `## Steps` (numbered), `## Expected`, `## Actual`, `## Evidence` (image links to `../evidence/`), `## Suggested next step` (`None given.` when absent), so every section is always present for `validate`. Frontmatter is written with the `yaml` package already bundled; gray-matter is not added.
+- The finding list (id, case) lives in memory with the session, not in `session.json` (§5.2 has no field for it). After a server restart the run is aborted by the next `session_start` anyway.
+- `scenario_verdict` refuses a `fail` with no finding (D8), and refuses any listed id that is not a finding of that case, whatever the result, naming the case's findings.
+- The `jeyna-tester` allowlist gains `record_finding`; its instructions add the finding step and the `fail` needs-a-finding rule.
+
+**Changed**
+- New: `src/findings.ts`. `src/schema.ts` adds `FindingInput`; `src/session.ts` keeps the finding list and checks verdict findings; `src/browser.ts` exports `browserName`; `src/server.ts` registers `record_finding`. `plugin/agents/jeyna-tester.md`, `src/run.test.ts`. The bundle is rebuilt.

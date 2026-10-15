@@ -59,7 +59,8 @@ type Session = {
 type Verdict = { case: string; result: "pass" | "fail" | "blocked" | "skipped"; note?: string; findings: string[] };
 
 // The in-memory session is the only source of truth during a run (D11).
-export let current: { runDir: string; session: Session } | undefined;
+// findings: id and case of each finding recorded in this run; its length is the id counter (D11).
+export let current: { runDir: string; session: Session; findings: { id: string; case: string }[] } | undefined;
 
 // Synchronous temp + rename: writes cannot interleave and readers never see half a file (D11).
 function save(runDir: string, session: Session) {
@@ -150,7 +151,7 @@ export function registerSessionTools(server: McpServer, getContext: () => { root
           verdicts: [],
         };
         save(runDir, session);
-        current = { runDir, session };
+        current = { runDir, session, findings: [] };
         return ok({
           id,
           runDir,
@@ -182,7 +183,14 @@ export function registerSessionTools(server: McpServer, getContext: () => { root
           throw new Error(`Unknown case "${caseId}". Cases in this run: ${session.cases.map((c) => c.id).join(", ")}.`);
         }
         if ((result === "blocked" || result === "skipped") && !note) throw new Error(`A ${result} verdict needs a note saying why.`);
-        // ponytail: fail is accepted without a finding until record_finding exists (ticket 6, D8).
+        const ofCase = current.findings.filter((f) => f.case === caseId).map((f) => f.id);
+        const foreign = findings.filter((id) => !ofCase.includes(id));
+        if (foreign.length) {
+          throw new Error(`Not findings of case ${caseId}: ${foreign.join(", ")}. Its findings: ${ofCase.join(", ") || "none"}.`);
+        }
+        if (result === "fail" && !findings.length) {
+          throw new Error(`A fail needs at least one finding of case ${caseId}: record it with record_finding, then list its id in findings.`);
+        }
         const verdict: Verdict = { case: caseId, result, ...(note && { note }), findings };
         session.verdicts = [...session.verdicts.filter((v) => v.case !== caseId), verdict];
         save(runDir, session);
