@@ -6,7 +6,9 @@
   "scripts": {
     "build": "node build.mjs",
     "typecheck": "tsc --noEmit",
-    "test": "npm run build && vitest run --exclude '.claude/**' --exclude '**/node_modules/**'"
+    "test": "npm run build && vitest run --exclude '.claude/**' --exclude '**/node_modules/**'",
+    "check": "npm test && npm run typecheck && node scripts/check.mjs",
+    "prepare": "git config core.hooksPath .githooks"
   },
   "devDependencies": {
     "@modelcontextprotocol/sdk": "^1.32.1",

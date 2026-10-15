@@ -118,11 +118,13 @@ test("goto resolves a path under the app url's base path", async () => {
 });
 
 // The browser the server launched, found as its child process (the installed Chrome or Playwright's Chromium).
+// `ps -A -o pid=,ppid=,args=` reads the same on macOS (BSD ps has no --ppid) and Linux.
 const browserPids = (serverPid: number) =>
-  execFileSync("ps", ["-o", "pid=,args=", "--ppid", String(serverPid)], { encoding: "utf8" })
+  execFileSync("ps", ["-A", "-o", "pid=,ppid=,args="], { encoding: "utf8" })
     .split("\n")
-    .filter((l) => /chrom/i.test(l))
-    .map((l) => Number(l.trim().split(/\s+/)[0]));
+    .map((l) => l.trim().split(/\s+/))
+    .filter(([, ppid, ...args]) => Number(ppid) === serverPid && /chrom/i.test(args.join(" ")))
+    .map(([pid]) => Number(pid));
 
 test("after the browser dies (a crash, or the headed window closed), the next call launches a new one", async () => {
   const { call, text, pid } = await started();

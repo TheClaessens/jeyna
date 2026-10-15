@@ -14,6 +14,8 @@ Issues and specs for this repo live as GitHub issues. Use the `gh` CLI for all o
 
 Infer the repo from `git remote -v`; `gh` does this automatically when run inside a clone.
 
+No `gh` (cloud sessions): use the `mcp__github__*` tools (`issue_read`, `add_issue_comment`, `issue_write` with `state: closed, state_reason: completed`) on `TheClaessens/jeyna`.
+
 ## Pull requests as a triage surface
 
 **PRs as a request surface: no.** _(Set to `yes` if this repo treats external PRs as feature requests; `/triage` reads this flag.)_

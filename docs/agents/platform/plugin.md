@@ -122,7 +122,8 @@ claude plugin marketplace add ./            # or owner/repo on GitHub
 claude plugin install jeyna@jeyna --scope project   # writes enabledPlugins in .claude/settings.json
 ```
 
-## Headless verification (doc-sourced; UNVERIFIED here because auth was unavailable)
+## Live verification by the developer (doc-sourced)
+These commands are for the developer to run by hand: each one is a billed Claude session. Agents verify locally (IMPLEMENTER-RULES step 3) and put anything that needs a live session on the live-verification checklist.
 ```bash
 cd sample-app
 claude -p "/jeyna:init" --plugin-dir ../plugin --permission-mode acceptEdits

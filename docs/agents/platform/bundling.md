@@ -49,6 +49,7 @@ Notes:
 playwright-core ships no browser. Options at runtime:
 - `channel: "chrome"` -> the user's installed Google Chrome (mac: `/Applications/Google Chrome.app/...`). Other channels: `chrome-beta`, `chrome-dev`, `chrome-canary`, `msedge`, ...
 - no channel -> Playwright's own build from `~/Library/Caches/ms-playwright` (Linux `~/.cache/ms-playwright`, Windows `%LOCALAPPDATA%\ms-playwright`, override `PLAYWRIGHT_BROWSERS_PATH`). In headless mode it looks for `chromium_headless_shell-<rev>`, where `<rev>` comes from the bundled `browsers.json` (1248 for 1.64.1).
+- Cloud sessions (claude.ai/code): no Google Chrome, the image's Chromium is rev 1194 (not 1248), and the proxy blocks `npx playwright install`. `.claude/hooks/cloud-chrome.sh` (SessionStart) links `/opt/google/chrome/chrome` to that Chromium so channel "chrome" launches.
 
 Observed error messages (VERIFIED):
 - missing channel: `Chromium distribution 'chrome-canary' is not found at /Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary` (nothing else; no install hint).
