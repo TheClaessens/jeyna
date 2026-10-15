@@ -19,8 +19,9 @@ afterEach(async () => {
   await Promise.all(clients.splice(0).map((c) => c.close()));
 });
 
+// No app runs here: these tests never open a browser, so the url is never fetched.
 const CONFIG = `
-app: { name: todo-sample, url: http://localhost:4931 }
+app: { name: todo-sample, url: http://localhost:9 }
 viewports: [1440x900, 390x844]
 accounts:
   - { handle: user_a, user_env: JEYNA_USER_A_USER, pass_env: JEYNA_USER_A_PASS }

@@ -1,31 +1,30 @@
 // Drives the committed bundle (copied away from node_modules) over MCP stdio against the sample app.
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-import { spawn, type ChildProcess } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, afterEach, beforeAll, expect, test } from "vitest";
+import { type App, startApp } from "./testkit.js";
 
-const PORT = 4931;
-const APP = `http://localhost:${PORT}`;
+let APP: string;
 let bundle: string;
-let app: ChildProcess;
+let app: App;
 const clients: Client[] = [];
 
 beforeAll(async () => {
   const dir = mkdtempSync(join(tmpdir(), "jeyna-bundle-"));
   cpSync("plugin/server", dir, { recursive: true });
   bundle = join(dir, "jeyna-mcp.mjs");
-  app = spawn("node", ["sample-app/server.mjs"], { env: { ...process.env, PORT: String(PORT) }, stdio: "pipe" });
-  await new Promise((r) => app.stdout!.once("data", r));
+  app = await startApp();
+  APP = app.url;
 });
-afterAll(() => app.kill());
+afterAll(() => app.stop());
 afterEach(async () => {
   await Promise.all(clients.splice(0).map((c) => c.close()));
 });
 
-const CONFIG = `
+const CONFIG = () => `
 app: { name: todo-sample, url: ${APP} }
 viewports: [1440x900, 390x844]
 accounts:
@@ -35,7 +34,7 @@ accounts:
 function project(): string {
   const root = realpathSync(mkdtempSync(join(tmpdir(), "jeyna-project-")));
   mkdirSync(join(root, ".jeyna"));
-  writeFileSync(join(root, ".jeyna", "jeyna.config.yaml"), CONFIG);
+  writeFileSync(join(root, ".jeyna", "jeyna.config.yaml"), CONFIG());
   return root;
 }
 

@@ -1,16 +1,15 @@
 // click, fill, press and redaction (D9), driving the committed bundle over MCP stdio against the sample app.
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-import { spawn, type ChildProcess } from "node:child_process";
 import { cpSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterAll, afterEach, beforeEach, beforeAll, expect, test } from "vitest";
+import { afterEach, beforeEach, beforeAll, expect, test } from "vitest";
+import { type App, startApp } from "./testkit.js";
 
-const PORT = 4932;
-const APP = `http://localhost:${PORT}`;
+let APP: string;
 let bundle: string;
-let app: ChildProcess;
+let app: App;
 const clients: Client[] = [];
 
 // Credentials from sample-app/.env.example. user_a comes from the server's env, user_b from .jeyna/.env.
@@ -25,17 +24,15 @@ beforeAll(() => {
 });
 // A fresh app per test: its state (passwords, lockouts, todos) is in memory.
 beforeEach(async () => {
-  app = spawn("node", ["sample-app/server.mjs"], { env: { ...process.env, PORT: String(PORT) }, stdio: "pipe" });
-  await new Promise((r) => app.stdout!.once("data", r));
+  app = await startApp();
+  APP = app.url;
 });
 afterEach(async () => {
   await Promise.all(clients.splice(0).map((c) => c.close()));
-  app.kill();
-  await new Promise((r) => app.once("exit", r));
+  await app.stop();
 });
-afterAll(() => app?.kill());
 
-const CONFIG = `
+const CONFIG = () => `
 app: { name: todo-sample, url: ${APP} }
 viewports: [1440x900]
 accounts:
@@ -48,7 +45,7 @@ type Result = { isError?: boolean; content: ({ type: "text"; text: string } | { 
 async function start(env: Record<string, string> = ENV_A, scenarios = [SIGN_IN]) {
   const root = realpathSync(mkdtempSync(join(tmpdir(), "jeyna-project-")));
   mkdirSync(join(root, ".jeyna"));
-  writeFileSync(join(root, ".jeyna", "jeyna.config.yaml"), CONFIG);
+  writeFileSync(join(root, ".jeyna", "jeyna.config.yaml"), CONFIG());
   writeFileSync(join(root, ".jeyna", ".env"), `JEYNA_USER_B_USER=${B.user}\nJEYNA_USER_B_PASS=${B.pass}\n`);
   const clean = { ...process.env } as Record<string, string>;
   for (const k of Object.keys(clean)) if (k.startsWith("JEYNA_USER_")) delete clean[k];
