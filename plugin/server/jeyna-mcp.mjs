@@ -176737,14 +176737,14 @@ ${c.title}:`);
               type3 = "paused";
               active = true;
             } else {
-              const calls = [...this._apiCalls.values()].reverse();
-              const running = calls.find((c) => c.status === "running" && c.location?.file);
+              const calls2 = [...this._apiCalls.values()].reverse();
+              const running = calls2.find((c) => c.status === "running" && c.location?.file);
               if (running) {
                 location2 = running.location;
                 type3 = "running";
                 active = true;
               } else {
-                const last = calls.find((c) => c.location?.file);
+                const last = calls2.find((c) => c.location?.file);
                 location2 = last?.location;
                 type3 = last?.status === "error" ? "error" : "running";
               }
@@ -207538,6 +207538,19 @@ function secretSources(root, config2) {
   return Object.fromEntries(names.map((n) => [n, process.env[n] ? "env" : dotenv3[n] ? ".env" : "missing"]));
 }
 var server2 = new McpServer({ name: "jeyna", version: "0.0.1" });
+var calls = 0;
+var register = server2.registerTool.bind(server2);
+server2.registerTool = ((name, config2, handler) => register(name, config2, (async (...a) => {
+  const id = ++calls;
+  const t0 = Date.now();
+  const what = `call ${id} ${name} ${a[0]?.case ?? "-"}`;
+  log3(`${what} start`);
+  try {
+    return await handler(...a);
+  } finally {
+    log3(`${what} end ${Date.now() - t0}ms`);
+  }
+})));
 server2.registerTool(
   "get_context",
   {
