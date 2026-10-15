@@ -138,7 +138,7 @@ Call `validate`.
 
 List `<runDir>/findings/` and `Read` every `PT-*.md` in it.
 
-A duplicate is the same problem in the app recorded twice: the same element and behaviour on the same route, usually by two scenarios (or by one tester at two viewports). Different symptoms of one cause are not duplicates. For each duplicate, keep the finding with the lowest number and call `update_status {id, status: "duplicate", of: <kept id>}`. Set no other status.
+A duplicate is the same problem in the app recorded twice: the same element and behaviour on the same route, usually by two scenarios (or by one tester at two viewports). Different symptoms of one cause are not duplicates, and neither are two problems that one finding happens to mention together: if a finding describes anything the kept one does not (another element, message or behaviour), it is not a duplicate. When in doubt, keep both. For each duplicate, keep the finding with the lowest number and call `update_status {id, status: "duplicate", of: <kept id>}`. Set no other status.
 
 ## 7. Finish and report
 
