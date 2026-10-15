@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { parseArgs, parseEnv } from "node:util";
 import { parse } from "yaml";
@@ -61,6 +61,36 @@ function secretSources(root: string, config: Config): Record<string, "env" | ".e
   return Object.fromEntries(names.map((n) => [n, process.env[n] ? "env" : dotenv[n] ? ".env" : "missing"]));
 }
 
+// The account-value redactor (D9), rebuilt only when what it is built from changes: the config's and
+// .jeyna/.env's mtime and size, and the env values of the variables the config names. Re-checked per
+// message (not per string), so a .jeyna/.env edited mid-run is still honoured, without a YAML and .env parse per message (D30).
+let cached: { stamp: string; names: string[]; env: string; redact: (t: string) => string } | undefined;
+const envOf = (names: string[]) => JSON.stringify(names.map((n) => process.env[n] ?? null));
+
+function currentRedactor(): (text: string) => string {
+  let stamp = "no root";
+  try {
+    const root = projectRoot();
+    const files = [join(root, ".jeyna", "jeyna.config.yaml"), join(root, ".jeyna", ".env")];
+    stamp = [root, ...files.map((f) => {
+      const st = statSync(f, { throwIfNoEntry: false });
+      return st ? `${st.mtimeMs}:${st.size}` : "-";
+    })].join("|");
+  } catch {} // no project root: nothing to redact with
+  if (!cached || cached.stamp !== stamp || cached.env !== envOf(cached.names)) {
+    let names: string[] = [];
+    let fn = (t: string) => t;
+    try {
+      const { root, config } = getContext();
+      names = config.accounts.flatMap((a) => [a.user_env, a.pass_env]);
+      fn = redactor(accountValues(root, config));
+    } catch {} // no valid config: no account values to know of
+    cached = { stamp, names, env: envOf(names), redact: fn };
+  }
+  return cached.redact;
+}
+const redact = (text: string) => currentRedactor()(text);
+
 const server = new McpServer({ name: "jeyna", version: "0.0.1" });
 
 // Every tool call logs start and end to stderr, so concurrent calls show as overlapping spans (P8).
@@ -104,7 +134,7 @@ server.registerTool(
 );
 
 registerSessionTools(server, getContext);
-registerBrowserTools(server, getContext);
+registerBrowserTools(server, getContext, redact);
 registerFindingTools(server);
 registerFinishTools(server, getContext);
 registerFlowTools(server, getContext);
@@ -113,16 +143,9 @@ registerFlowTools(server, getContext);
 if (positionals[0] === "validate") process.exit(validateCli(positionals[1], projectRoot));
 
 // Every message leaves through here, so account values are replaced by their placeholders once,
-// for every tool and every error (D9). Values are re-read per message: .jeyna/.env may change mid-run.
+// for every tool and every error (D9). The redactor follows .jeyna/.env edits mid-run (see currentRedactor).
 const transport = new StdioServerTransport();
 const send = transport.send.bind(transport);
-transport.send = (msg) => {
-  let redact = (t: string) => t;
-  try {
-    const { root, config } = getContext();
-    redact = redactor(accountValues(root, config));
-  } catch {} // no valid config: no account values to know of
-  return send(redactDeep(msg, redact));
-};
+transport.send = (msg) => send(redactDeep(msg, currentRedactor()));
 await server.connect(transport);
 log("jeyna-mcp ready", process.argv.slice(2).join(" "));

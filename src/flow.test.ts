@@ -141,7 +141,10 @@ test("only and viewports narrow a guided run; unknown names are refused with the
 
 test("session_start needs exactly one of flow and scenarios", async () => {
   const { call, text } = await connect(project());
-  expect(text(await call("session_start", {}))).toMatch(/flow \(guided\) or scenarios \(exploratory\)/);
+  const neither = await call("session_start", {});
+  expect(neither.isError).toBe(true);
+  expect(text(neither)).toMatch(/flow \(guided\) or scenarios \(exploratory\): give one of them/);
+  expect(text(neither)).not.toMatch(/not both/);
   const both = await call("session_start", { flow: "todos", scenarios: [{ name: "x", description: "d", pass: "p" }] });
   expect(both.isError).toBe(true);
   expect(text(both)).toMatch(/not both/);

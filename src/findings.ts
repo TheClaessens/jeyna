@@ -47,6 +47,10 @@ export function registerFindingTools(server: McpServer) {
           throw new Error(`No such evidence: ${missing.join(", ")}. Screenshots of this case: ${have().join(", ") || "none"}.`);
         }
         const browser = await browserName();
+        // The run may have finished or been replaced (session_start force) during that await: never write into it.
+        if (current !== run || run.session.status !== "running") {
+          throw new Error(`The run ${run.session.id} ended or was replaced while this finding was being recorded; nothing was written.`);
+        }
 
         // Id and file in one synchronous step after the last await: no two calls get the same id (D11).
         const slug = run.session.flow.replace(/^exploratory:/, "");

@@ -23,11 +23,19 @@ export function substitute(value: string, account: Account | undefined, caseId: 
 
 const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
+// A username is replaced only as a whole token: not next to a letter, digit or one of _ % + @ - .
+// (a "." or "%XX" byte that ends a sentence or encodes a quote still bounds it), so "admin" leaves
+// "Administrator" and "admin@example.test" alone (D30).
+const TOKEN = "[\\p{L}\\p{N}_%+@.-]";
+const BEFORE = `(?<=^|(?!${TOKEN})[\\s\\S]|%[0-9A-Fa-f]{2}|(?<![\\p{L}\\p{N}])\\.)`;
+const AFTER = `(?=$|(?!${TOKEN})[\\s\\S]|%[0-9A-Fa-f]{2}|\\.(?![\\p{L}\\p{N}]))`;
+
 // Every configured value, also URL- and form-encoded, back to its placeholder, ignoring case (D9).
+// Passwords are replaced wherever they appear, even inside a larger token; usernames as whole tokens (D30).
 export function redactor(accounts: Account[]): (text: string) => string {
   const pairs = accounts.flatMap((a) => [
-    [a.pass, "{{account.pass}}"],
     [a.user, "{{account.user}}"],
+    [a.pass, "{{account.pass}}"], // after the user: a value that is both is treated as a password
   ]);
   const forms = new Map<string, string>();
   for (const [v, ph] of pairs) {
@@ -36,8 +44,11 @@ export function redactor(accounts: Account[]): (text: string) => string {
   }
   if (!forms.size) return (t) => t;
   // Longest first, so a password that contains the username is replaced whole.
-  const re = new RegExp([...forms.keys()].sort((x, y) => y.length - x.length).map(escape).join("|"), "gi");
-  return (t) => t.replace(re, (m) => forms.get(m.toLowerCase())!);
+  const alternatives = [...forms]
+    .sort(([x], [y]) => y.length - x.length)
+    .map(([f, ph]) => (ph === "{{account.pass}}" ? escape(f) : `${BEFORE}${escape(f)}${AFTER}`));
+  const re = new RegExp(alternatives.join("|"), "giu");
+  return (t) => t.replace(re, (m) => forms.get(m.toLowerCase()) ?? "{{account.pass}}");
 }
 
 // Redacts every string in an outgoing MCP message except image data: the single exit point.

@@ -175,3 +175,41 @@ test("press sends a key to the focused element", async () => {
   const r = await call("press", { case: CASE, key: "Enter" });
   expect(JSON.parse(text(r))).toEqual({ url: `${APP}/todos`, title: "Todos · Todo sample" });
 });
+
+test("a .jeyna/.env edited mid-run is redacted from the next message on", async () => {
+  const { root, call, text } = await start();
+  const NEW = "carol@example.test";
+  // session_start echoes an unknown `only` name in its error, a handy way to send any text through the exit point.
+  const echo = async () => text(await call("session_start", { scenarios: [SIGN_IN], only: [NEW] }));
+  expect(await echo()).toContain(NEW);
+  writeFileSync(join(root, ".jeyna", ".env"), `JEYNA_USER_B_USER=${NEW}\nJEYNA_USER_B_PASS=${B.pass}\n`);
+  expect(await echo()).toContain("Unknown scenarios: {{account.user}}.");
+  expect(await echo()).not.toContain(NEW);
+});
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+// record_finding awaits the browser name; if session_start (force) replaces the run meanwhile, nothing is written (D30).
+test("record_finding refuses when its run is replaced while it waits for the browser", async () => {
+  const { call, text, run } = await start();
+  const goto = call("goto", { case: CASE, path: "/login" }); // starts the browser launch
+  await sleep(30);
+  const finding = {
+    title: "Sign in button is cut off",
+    kind: "ux",
+    severity: "minor",
+    route: "/login",
+    steps: ["Open /login"],
+    expected: "The button is visible.",
+    actual: "It is cut off.",
+  };
+  const recorded = call("record_finding", { case: CASE, finding }); // waits on the launch for the browser name
+  await sleep(30);
+  const restarted = call("session_start", { scenarios: [SIGN_IN], force: true });
+  const r = await recorded;
+  expect(r.isError, text(r)).toBe(true);
+  expect(text(r)).toMatch(/ended or was replaced while this finding was being recorded; nothing was written/);
+  expect(readdirSync(run.runDir)).not.toContain("findings");
+  expect((await restarted).isError).toBeFalsy();
+  await goto;
+}, 30_000);

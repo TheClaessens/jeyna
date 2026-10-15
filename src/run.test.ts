@@ -1,6 +1,7 @@
 // Drives the committed bundle (copied away from node_modules) over MCP stdio against the sample app.
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { execFileSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -31,10 +32,10 @@ accounts:
   - { handle: user_a, user_env: JEYNA_USER_A_USER, pass_env: JEYNA_USER_A_PASS }
 `;
 
-function project(): string {
+function project(config = CONFIG()): string {
   const root = realpathSync(mkdtempSync(join(tmpdir(), "jeyna-project-")));
   mkdirSync(join(root, ".jeyna"));
-  writeFileSync(join(root, ".jeyna", "jeyna.config.yaml"), CONFIG());
+  writeFileSync(join(root, ".jeyna", "jeyna.config.yaml"), config);
   return root;
 }
 
@@ -43,12 +44,11 @@ type Result = { isError?: boolean; content: ({ type: "text"; text: string } | { 
 async function connect(root: string, env: Record<string, string> = {}) {
   const client = new Client({ name: "test", version: "0" });
   clients.push(client);
-  await client.connect(
-    new StdioClientTransport({ command: "node", args: [bundle, "--project", root], env: { ...process.env, ...env } as Record<string, string>, stderr: "ignore" }),
-  );
+  const transport = new StdioClientTransport({ command: "node", args: [bundle, "--project", root], env: { ...process.env, ...env } as Record<string, string>, stderr: "ignore" });
+  await client.connect(transport);
   const call = async (name: string, args: Record<string, unknown> = {}) => (await client.callTool({ name, arguments: args })) as Result;
   const text = (r: Result) => (r.content[0] as { text: string }).text;
-  return { call, text };
+  return { call, text, pid: transport.pid! };
 }
 
 const SIGN_IN = { name: "Sign in", description: "Sign in from the login page.", pass: "The todo list shows." };
@@ -104,6 +104,39 @@ test("goto opens a path on the app in the case's own browser and returns final u
   expect(r.isError).toBeFalsy();
   expect(JSON.parse(text(r))).toEqual({ url: `${APP}/login`, title: "Sign in · Todo sample" });
 });
+
+test("goto resolves a path under the app url's base path", async () => {
+  const c = await connect(project(CONFIG().replace(`url: ${APP} }`, `url: ${APP}/base/ }`)));
+  await c.call("session_start", { scenarios: [SIGN_IN] });
+  for (const [path, url] of [["/login", `${APP}/base/login`], ["todos?x=1#y", `${APP}/base/todos?x=1#y`]]) {
+    const r = await c.call("goto", { case: "t1-1440x900", path });
+    expect(r.isError, c.text(r)).toBeFalsy();
+    expect(JSON.parse(c.text(r)).url).toBe(url); // the sample app has no /base, so a Not found page, at the right url
+  }
+  const full = await c.call("goto", { case: "t1-1440x900", url: `${APP}/login` });
+  expect(JSON.parse(c.text(full)).url).toBe(`${APP}/login`);
+});
+
+// The browser the server launched, found as its child process (the installed Chrome or Playwright's Chromium).
+const browserPids = (serverPid: number) =>
+  execFileSync("ps", ["-o", "pid=,args=", "--ppid", String(serverPid)], { encoding: "utf8" })
+    .split("\n")
+    .filter((l) => /chrom/i.test(l))
+    .map((l) => Number(l.trim().split(/\s+/)[0]));
+
+test("after the browser dies (a crash, or the headed window closed), the next call launches a new one", async () => {
+  const { call, text, pid } = await started();
+  expect((await call("goto", { case: "t1-1440x900", path: "/login" })).isError).toBeFalsy();
+  const [chrome] = browserPids(pid);
+  expect(chrome).toBeGreaterThan(0);
+  process.kill(chrome, "SIGKILL");
+  await new Promise((r) => setTimeout(r, 500)); // the server sees the disconnect
+  const r = await call("goto", { case: "t1-1440x900", path: "/login" });
+  expect(r.isError, text(r)).toBeFalsy();
+  expect(JSON.parse(text(r)).url).toBe(`${APP}/login`);
+  expect(browserPids(pid)).not.toContain(chrome);
+  expect((await call("snapshot", { case: "t1-390x844" })).isError).toBeFalsy(); // another case gets a fresh page too
+}, 30_000);
 
 test("snapshot returns the aria tree, where the unlabelled password field shows as a nameless textbox (bug 3)", async () => {
   const { call, text } = await started();

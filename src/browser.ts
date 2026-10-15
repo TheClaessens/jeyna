@@ -7,18 +7,33 @@ import { z } from "zod";
 import type { Config } from "./schema.js";
 import { current, fail, ok } from "./session.js";
 import { accountValues, substitute } from "./accounts.js";
+import { appUrl, clip } from "./shared.js";
 
 const log = (...a: unknown[]) => console.error(new Date().toISOString(), ...a);
 
 // One browser per server process: the installed Chrome with a temporary profile, else Playwright's
 // Chromium (D13). JEYNA_BROWSER_CHANNEL overrides the channel, which is how P4 forces the fallback.
+// When it goes away (a crash, or the user closes the headed window) the next call launches a new one.
 let browser: Promise<Browser> | undefined;
 
 function getBrowser(headed: boolean): Promise<Browser> {
-  return (browser ??= launch(headed).catch((e) => {
-    browser = undefined;
-    throw e;
-  }));
+  if (browser) return browser;
+  const launching: Promise<Browser> = launch(headed).then(
+    (b) => {
+      b.on("disconnected", () => {
+        if (browser !== launching) return;
+        log("browser disconnected; the next browser call launches a new one");
+        browser = undefined;
+        pages.clear(); // their contexts died with it; screenshot numbering (shots) carries on
+      });
+      return b;
+    },
+    (e) => {
+      if (browser === launching) browser = undefined;
+      throw e;
+    },
+  );
+  return (browser = launching);
 }
 
 async function launch(headed: boolean): Promise<Browser> {
@@ -80,14 +95,24 @@ function viewportOf(caseId: string, config: Config): string {
   return c.viewport;
 }
 
+// Drop a case's page only if the map still holds that same promise, not one created after it.
+function forget(caseId: string, p: Promise<Page>) {
+  if (pages.get(caseId) === p) pages.delete(caseId);
+}
+
 function page(caseId: string, config: Config): Promise<Page> {
   const viewport = viewportOf(caseId, config);
   let p = pages.get(caseId);
   if (!p) {
     const [width, height] = viewport.split("x").map(Number);
-    p = getBrowser(config.browser.headed).then(async (b) => (await b.newContext({ viewport: { width, height } })).newPage());
-    p.catch(() => pages.delete(caseId));
-    pages.set(caseId, p);
+    const created: Promise<Page> = getBrowser(config.browser.headed).then(async (b) => {
+      const pg = await (await b.newContext({ viewport: { width, height } })).newPage();
+      // A page closed under us (its tab or window shut) is replaced on the next call, not reused.
+      pg.on("close", () => forget(caseId, created));
+      return pg;
+    });
+    created.catch(() => forget(caseId, created));
+    pages.set(caseId, (p = created));
   }
   return p;
 }
@@ -113,15 +138,21 @@ async function settled(p: Page) {
   return ok({ url: p.url(), title: await p.title() });
 }
 
-const SNAPSHOT_MAX =90_000; // just under Claude Code's default 25k-token MCP output cap (D14)
+const SNAPSHOT_MAX = 90_000; // just under Claude Code's default 25k-token MCP output cap (D14)
 
-export function registerBrowserTools(server: McpServer, getContext: () => { root: string; config: Config }) {
+// redact: the transport's account-value redactor (D9), applied to a snapshot before it is cut (D30).
+export function registerBrowserTools(
+  server: McpServer,
+  getContext: () => { root: string; config: Config },
+  redact: (text: string) => string,
+) {
   const caseId = z.string().describe("Case id from session_start, e.g. t1-390x844; or scout for the look before a run");
 
   server.registerTool(
     "goto",
     {
-      description: "Open a page in this case's browser. Give `path` (relative to the app url, e.g. /login) or a full `url`. Returns the final url and title.",
+      description:
+        "Open a page in this case's browser. Give `path` (relative to the app url, including its base path: /login on http://host/app/ opens http://host/app/login) or a full `url`. Returns the final url and title.",
       inputSchema: { case: caseId, path: z.string().optional(), url: z.string().optional() },
     },
     async (a) => {
@@ -129,7 +160,7 @@ export function registerBrowserTools(server: McpServer, getContext: () => { root
         const { config } = getContext();
         if (!a.path === !a.url) throw new Error("Give exactly one of path or url.");
         const p = await page(a.case, config);
-        await p.goto(a.url ?? new URL(a.path!, config.app.url).href, { waitUntil: "load" });
+        await p.goto(a.url ?? appUrl(a.path!, config.app.url), { waitUntil: "load" });
         return ok({ url: p.url(), title: await p.title() });
       } catch (e) {
         return fail(e);
@@ -222,11 +253,7 @@ export function registerBrowserTools(server: McpServer, getContext: () => { root
     async (a) => {
       try {
         const p = await page(a.case, getContext().config);
-        const snap = await p.locator("body").ariaSnapshot();
-        const text =
-          snap.length > SNAPSHOT_MAX
-            ? `${snap.slice(0, SNAPSHOT_MAX)}\n[truncated at ${SNAPSHOT_MAX} characters, the page continues]`
-            : snap;
+        const text = clip(await p.locator("body").ariaSnapshot(), SNAPSHOT_MAX, redact);
         return { content: [{ type: "text", text }] };
       } catch (e) {
         return fail(e);
@@ -248,8 +275,12 @@ export function registerBrowserTools(server: McpServer, getContext: () => { root
     },
     async (a) => {
       try {
+        const run = current;
         const p = await page(a.case, getContext().config);
         const png = await p.screenshot({ fullPage: a.fullPage });
+        if (a.case !== SCOUT && (current !== run || run?.session.status !== "running")) {
+          throw new Error("The run ended or was replaced while the screenshot was taken; nothing was saved.");
+        }
         if (a.case === SCOUT) {
           return {
             content: [
@@ -261,7 +292,7 @@ export function registerBrowserTools(server: McpServer, getContext: () => { root
         const seq = (shots.get(a.case) ?? 0) + 1;
         shots.set(a.case, seq);
         const name = `${a.case}-${seq}${a.label ? `-${a.label}` : ""}.png`;
-        writeFileSync(join(current!.runDir, "evidence", name), png, { flag: "wx" });
+        writeFileSync(join(run!.runDir, "evidence", name), png, { flag: "wx" });
         return {
           content: [
             { type: "text", text: name },

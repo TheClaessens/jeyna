@@ -65726,7 +65726,7 @@ ${end.comment}` : end.comment;
     minimatch.escape = escape22;
     minimatch.unescape = unescape2;
     var import_node_process7 = __toESM3(__require("node:process"), 1);
-    var import_node_path8 = __toESM3(__require("node:path"), 1);
+    var import_node_path9 = __toESM3(__require("node:path"), 1);
     var import_node_url = __require("node:url");
     var import_node_child_process7 = __toESM3(__require("node:child_process"), 1);
     var import_promises2 = __toESM3(__require("node:fs/promises"), 1);
@@ -66027,8 +66027,8 @@ tell application "System Events" to get value of property list item "CFBundleNam
     var is_in_ssh_default = isInSsh;
     var import_meta = {};
     var fallbackAttemptSymbol = /* @__PURE__ */ Symbol("fallbackAttempt");
-    var __dirname2 = import_meta.url ? import_node_path8.default.dirname((0, import_node_url.fileURLToPath)(import_meta.url)) : "";
-    var localXdgOpenPath = import_node_path8.default.join(__dirname2, "xdg-open");
+    var __dirname2 = import_meta.url ? import_node_path9.default.dirname((0, import_node_url.fileURLToPath)(import_meta.url)) : "";
+    var localXdgOpenPath = import_node_path9.default.join(__dirname2, "xdg-open");
     var { platform, arch } = import_node_process7.default;
     var tryEachApp = async (apps2, opener) => {
       if (apps2.length === 0) {
@@ -73002,7 +73002,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
       assignProp: () => assignProp2,
       base64ToUint8Array: () => base64ToUint8Array2,
       base64urlToUint8Array: () => base64urlToUint8Array2,
-      cached: () => cached2,
+      cached: () => cached3,
       captureStackTrace: () => captureStackTrace2,
       cleanEnum: () => cleanEnum2,
       cleanRegex: () => cleanRegex2,
@@ -73079,7 +73079,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
         return value2.toString();
       return value2;
     }
-    function cached2(getter) {
+    function cached3(getter) {
       const set22 = false;
       return {
         get value() {
@@ -73188,7 +73188,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
     function isObject3(data) {
       return typeof data === "object" && data !== null && !Array.isArray(data);
     }
-    var allowsEval2 = /* @__PURE__ */ cached2(() => {
+    var allowsEval2 = /* @__PURE__ */ cached3(() => {
       if (globalConfig2.jitless) {
         return false;
       }
@@ -75397,7 +75397,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
           }
         });
       }
-      const _normalized = cached2(() => normalizeDef2(def));
+      const _normalized = cached3(() => normalizeDef2(def));
       defineLazy2(inst._zod, "propValues", () => {
         const shape = def.shape;
         const propValues = {};
@@ -75449,7 +75449,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
     var $ZodObjectJIT2 = /* @__PURE__ */ $constructor2("$ZodObjectJIT", (inst, def) => {
       $ZodObject2.init(inst, def);
       const superParse = inst._zod.parse;
-      const _normalized = cached2(() => normalizeDef2(def));
+      const _normalized = cached3(() => normalizeDef2(def));
       const generateFastpass = (shape) => {
         const doc = new Doc2(["shape", "payload", "ctx"]);
         const normalized = _normalized.value;
@@ -75711,7 +75711,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
         }
         return propValues;
       });
-      const disc = cached2(() => {
+      const disc = cached3(() => {
         const opts = def.options;
         const map22 = /* @__PURE__ */ new Map();
         for (const o2 of opts) {
@@ -122300,14 +122300,14 @@ ${snapshottedObjectBuiltins.map((n) => `  const ${n} = (typeof globalThis.${n} =
         delete window.__pwCleanupScreenshot;
       };
     }
-    function trimClipToSize(clip, size) {
+    function trimClipToSize(clip2, size) {
       const p1 = {
-        x: Math.max(0, Math.min(clip.x, size.width)),
-        y: Math.max(0, Math.min(clip.y, size.height))
+        x: Math.max(0, Math.min(clip2.x, size.width)),
+        y: Math.max(0, Math.min(clip2.y, size.height))
       };
       const p2 = {
-        x: Math.max(0, Math.min(clip.x + clip.width, size.width)),
-        y: Math.max(0, Math.min(clip.y + clip.height, size.height))
+        x: Math.max(0, Math.min(clip2.x + clip2.width, size.width)),
+        y: Math.max(0, Math.min(clip2.y + clip2.height, size.height))
       };
       const result2 = { x: p1.x, y: p1.y, width: p2.x - p1.x, height: p2.y - p1.y };
       assert(result2.width > 0 && result2.height > 0, "Clipped area is either empty or outside the resulting image");
@@ -133075,12 +133075,12 @@ ${details.join("\n")}`;
       }
       throw new Error("\n" + wrapInASCIIBox(errorLines.join("\n"), 1));
     }
-    function isSharedLib(basename2) {
+    function isSharedLib(basename3) {
       switch (import_os6.default.platform()) {
         case "linux":
-          return basename2.endsWith(".so") || basename2.includes(".so.");
+          return basename3.endsWith(".so") || basename3.includes(".so.");
         case "win32":
-          return basename2.endsWith(".dll");
+          return basename3.endsWith(".dll");
         default:
           return false;
       }
@@ -133092,8 +133092,8 @@ ${details.join("\n")}`;
       const allStats = await Promise.all(allPaths.map((aPath) => import_fs15.default.promises.stat(aPath)));
       const filePaths = allPaths.filter((aPath, index) => allStats[index].isFile());
       const executablersOrLibraries = (await Promise.all(filePaths.map(async (filePath) => {
-        const basename2 = import_path16.default.basename(filePath).toLowerCase();
-        if (isSharedLib(basename2))
+        const basename3 = import_path16.default.basename(filePath).toLowerCase();
+        if (isSharedLib(basename3))
           return filePath;
         if (await checkExecutable(filePath))
           return filePath;
@@ -133103,12 +133103,12 @@ ${details.join("\n")}`;
     }
     async function missingFileDependenciesWindows(sdkLanguage, filePath) {
       const executable = registry.findExecutable("winldd").executablePathOrDie(sdkLanguage);
-      const dirname2 = import_path16.default.dirname(filePath);
+      const dirname3 = import_path16.default.dirname(filePath);
       const { stdout, code } = await spawnAsync(executable, [filePath], {
-        cwd: dirname2,
+        cwd: dirname3,
         env: {
           ...process.env,
-          LD_LIBRARY_PATH: process.env.LD_LIBRARY_PATH ? `${process.env.LD_LIBRARY_PATH}:${dirname2}` : dirname2
+          LD_LIBRARY_PATH: process.env.LD_LIBRARY_PATH ? `${process.env.LD_LIBRARY_PATH}:${dirname3}` : dirname3
         }
       });
       if (code !== 0)
@@ -133117,12 +133117,12 @@ ${details.join("\n")}`;
       return missingDeps;
     }
     async function missingFileDependencies(filePath, extraLDPaths) {
-      const dirname2 = import_path16.default.dirname(filePath);
+      const dirname3 = import_path16.default.dirname(filePath);
       let LD_LIBRARY_PATH = extraLDPaths.join(":");
       if (process.env.LD_LIBRARY_PATH)
         LD_LIBRARY_PATH = `${process.env.LD_LIBRARY_PATH}:${LD_LIBRARY_PATH}`;
       const { stdout, code } = await spawnAsync("ldd", [filePath], {
-        cwd: dirname2,
+        cwd: dirname3,
         env: {
           ...process.env,
           LD_LIBRARY_PATH
@@ -138312,12 +138312,12 @@ ${e.stack}`);
                 })
               };
             }
-            const clip = { ...documentRect, scale: viewportRect ? visualViewport.scale : 1 };
+            const clip2 = { ...documentRect, scale: viewportRect ? visualViewport.scale : 1 };
             if (scale === "css") {
               const deviceScaleFactor = this._mainFrameSession._metricsOverride?.deviceScaleFactor || contentSize.width / cssContentSize.width || 1;
-              clip.scale /= deviceScaleFactor;
+              clip2.scale /= deviceScaleFactor;
             }
-            const result2 = await progress2.race(this._mainFrameSession._client.send("Page.captureScreenshot", { format: format2, quality, clip, captureBeyondViewport: !fitsViewport }));
+            const result2 = await progress2.race(this._mainFrameSession._client.send("Page.captureScreenshot", { format: format2, quality, clip: clip2, captureBeyondViewport: !fitsViewport }));
             if (!fitsViewport && this._browserContext._options.hasTouch) {
               await progress2.race(this._mainFrameSession._client.send("Emulation.setTouchEmulationEnabled", { enabled: true }));
             }
@@ -153444,9 +153444,9 @@ if (self.ServiceWorkerContainer) ServiceWorkerContainer.prototype.register = asy
             await import_fs32.default.promises.unlink(filePath);
           }
           readDescriptor(guid3) {
-            const cached2 = this._descriptors.get(guid3);
-            if (cached2)
-              return cached2;
+            const cached3 = this._descriptors.get(guid3);
+            if (cached3)
+              return cached3;
             const filePath = import_path33.default.join(this._browsersDir(), guid3);
             const content = import_fs32.default.readFileSync(filePath, "utf-8");
             return JSON.parse(content);
@@ -186339,9 +186339,9 @@ var NONE = 0;
 var ASSUMED = 1;
 var PROVEN = 2;
 function isRecursive(inst, stack, resolve4) {
-  const cached2 = recursive.get(inst);
-  if (cached2 !== void 0)
-    return cached2 ? PROVEN : NONE;
+  const cached3 = recursive.get(inst);
+  if (cached3 !== void 0)
+    return cached3 ? PROVEN : NONE;
   if (stack.has(inst))
     return PROVEN;
   stack.add(inst);
@@ -198316,15 +198316,15 @@ function visit(schema, fnOrHandlers) {
   };
   const cache = /* @__PURE__ */ new Map();
   function run(s) {
-    const cached2 = cache.get(s);
-    if (cached2 === RESOLVING) {
+    const cached3 = cache.get(s);
+    if (cached3 === RESOLVING) {
       return new $ZodLazy({
         type: "lazy",
         getter: () => cache.get(s)
       });
     }
-    if (cached2 !== void 0)
-      return cached2;
+    if (cached3 !== void 0)
+      return cached3;
     cache.set(s, RESOLVING);
     const inner = mapInner(s);
     const mapped = fn(inner, inner !== s);
@@ -207031,8 +207031,8 @@ var StdioServerTransport2 = class {
 
 // src/server.ts
 var import_yaml4 = __toESM2(require_dist2(), 1);
-import { existsSync as existsSync6, readFileSync as readFileSync5 } from "node:fs";
-import { dirname, join as join7, resolve as resolve3 } from "node:path";
+import { existsSync as existsSync6, readFileSync as readFileSync5, statSync } from "node:fs";
+import { dirname as dirname2, join as join7, resolve as resolve3 } from "node:path";
 import { parseArgs, parseEnv as parseEnv2 } from "node:util";
 
 // src/schema.ts
@@ -207140,10 +207140,14 @@ function substitute(value2, account, caseId) {
   return value2.replaceAll("{{account.user}}", account.user).replaceAll("{{account.pass}}", account.pass);
 }
 var escape2 = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+var TOKEN = "[\\p{L}\\p{N}_%+@.-]";
+var BEFORE = `(?<=^|(?!${TOKEN})[\\s\\S]|%[0-9A-Fa-f]{2}|(?<![\\p{L}\\p{N}])\\.)`;
+var AFTER = `(?=$|(?!${TOKEN})[\\s\\S]|%[0-9A-Fa-f]{2}|\\.(?![\\p{L}\\p{N}]))`;
 function redactor(accounts) {
   const pairs = accounts.flatMap((a) => [
-    [a.pass, "{{account.pass}}"],
-    [a.user, "{{account.user}}"]
+    [a.user, "{{account.user}}"],
+    [a.pass, "{{account.pass}}"]
+    // after the user: a value that is both is treated as a password
   ]);
   const forms = /* @__PURE__ */ new Map();
   for (const [v, ph] of pairs) {
@@ -207151,12 +207155,13 @@ function redactor(accounts) {
     for (const f of [v, encodeURIComponent(v), new URLSearchParams({ v }).toString().slice(2)]) forms.set(f.toLowerCase(), ph);
   }
   if (!forms.size) return (t) => t;
-  const re2 = new RegExp([...forms.keys()].sort((x, y) => y.length - x.length).map(escape2).join("|"), "gi");
-  return (t) => t.replace(re2, (m) => forms.get(m.toLowerCase()));
+  const alternatives = [...forms].sort(([x], [y]) => y.length - x.length).map(([f, ph]) => ph === "{{account.pass}}" ? escape2(f) : `${BEFORE}${escape2(f)}${AFTER}`);
+  const re2 = new RegExp(alternatives.join("|"), "giu");
+  return (t) => t.replace(re2, (m) => forms.get(m.toLowerCase()) ?? "{{account.pass}}");
 }
-function redactDeep(msg, redact) {
+function redactDeep(msg, redact2) {
   const walk = (v) => {
-    if (typeof v === "string") return redact(v);
+    if (typeof v === "string") return redact2(v);
     if (Array.isArray(v)) return v.map(walk);
     if (v && typeof v === "object") {
       if (v.type === "image") return v;
@@ -207167,14 +207172,55 @@ function redactDeep(msg, redact) {
   return walk(msg);
 }
 
+// src/shared.ts
+import { dirname, resolve } from "node:path";
+var splitFront = (md) => /^---\n([\s\S]*?)\n?---\n([\s\S]*)$/.exec(md);
+var duplicateNames = (items) => {
+  const names = items.map((s) => s.name);
+  return [...new Set(names.filter((n, i) => names.indexOf(n) !== i))];
+};
+function appUrl(path, app) {
+  if (/^([a-z][a-z0-9+.-]*:|\/\/)/i.test(path)) return new URL(path, app).href;
+  const base = new URL(app);
+  const rel = new URL(path.startsWith("/") ? path : `/${path}`, "http://x");
+  base.pathname = base.pathname.replace(/\/+$/, "") + rel.pathname;
+  base.search = rel.search;
+  base.hash = rel.hash;
+  return base.href;
+}
+function clip(text2, max, redact2) {
+  const safe = redact2(text2);
+  return safe.length > max ? `${safe.slice(0, max)}
+[truncated at ${max} characters, the page continues]` : safe;
+}
+function runDirOf(root, run) {
+  const playtests = resolve(root, ".jeyna", "playtests");
+  const dir = resolve(playtests, run);
+  if (!run || dirname(dir) !== playtests) throw new Error(`run must be a run id under .jeyna/playtests/, not ${run || "an empty string"}.`);
+  return dir;
+}
+
 // src/browser.ts
 var log2 = (...a) => console.error((/* @__PURE__ */ new Date()).toISOString(), ...a);
 var browser;
 function getBrowser(headed) {
-  return browser ??= launch(headed).catch((e) => {
-    browser = void 0;
-    throw e;
-  });
+  if (browser) return browser;
+  const launching = launch(headed).then(
+    (b) => {
+      b.on("disconnected", () => {
+        if (browser !== launching) return;
+        log2("browser disconnected; the next browser call launches a new one");
+        browser = void 0;
+        pages.clear();
+      });
+      return b;
+    },
+    (e) => {
+      if (browser === launching) browser = void 0;
+      throw e;
+    }
+  );
+  return browser = launching;
 }
 async function launch(headed) {
   const channel = process.env.JEYNA_BROWSER_CHANNEL ?? "chrome";
@@ -207223,14 +207269,21 @@ function viewportOf(caseId, config2) {
   if (!c) throw new Error(`Unknown case "${caseId}". Cases in this run: ${current.session.cases.map((c2) => c2.id).join(", ")}.`);
   return c.viewport;
 }
+function forget(caseId, p) {
+  if (pages.get(caseId) === p) pages.delete(caseId);
+}
 function page(caseId, config2) {
   const viewport = viewportOf(caseId, config2);
   let p = pages.get(caseId);
   if (!p) {
     const [width, height] = viewport.split("x").map(Number);
-    p = getBrowser(config2.browser.headed).then(async (b) => (await b.newContext({ viewport: { width, height } })).newPage());
-    p.catch(() => pages.delete(caseId));
-    pages.set(caseId, p);
+    const created = getBrowser(config2.browser.headed).then(async (b) => {
+      const pg = await (await b.newContext({ viewport: { width, height } })).newPage();
+      pg.on("close", () => forget(caseId, created));
+      return pg;
+    });
+    created.catch(() => forget(caseId, created));
+    pages.set(caseId, p = created);
   }
   return p;
 }
@@ -207252,12 +207305,12 @@ async function settled(p) {
   return ok({ url: p.url(), title: await p.title() });
 }
 var SNAPSHOT_MAX = 9e4;
-function registerBrowserTools(server3, getContext2) {
+function registerBrowserTools(server3, getContext2, redact2) {
   const caseId = external_exports.string().describe("Case id from session_start, e.g. t1-390x844; or scout for the look before a run");
   server3.registerTool(
     "goto",
     {
-      description: "Open a page in this case's browser. Give `path` (relative to the app url, e.g. /login) or a full `url`. Returns the final url and title.",
+      description: "Open a page in this case's browser. Give `path` (relative to the app url, including its base path: /login on http://host/app/ opens http://host/app/login) or a full `url`. Returns the final url and title.",
       inputSchema: { case: caseId, path: external_exports.string().optional(), url: external_exports.string().optional() }
     },
     async (a) => {
@@ -207265,7 +207318,7 @@ function registerBrowserTools(server3, getContext2) {
         const { config: config2 } = getContext2();
         if (!a.path === !a.url) throw new Error("Give exactly one of path or url.");
         const p = await page(a.case, config2);
-        await p.goto(a.url ?? new URL(a.path, config2.app.url).href, { waitUntil: "load" });
+        await p.goto(a.url ?? appUrl(a.path, config2.app.url), { waitUntil: "load" });
         return ok({ url: p.url(), title: await p.title() });
       } catch (e) {
         return fail(e);
@@ -207349,9 +207402,7 @@ ${near.map((n) => `- ${n}`).join("\n")}` : "The page has no clickable controls."
     async (a) => {
       try {
         const p = await page(a.case, getContext2().config);
-        const snap = await p.locator("body").ariaSnapshot();
-        const text2 = snap.length > SNAPSHOT_MAX ? `${snap.slice(0, SNAPSHOT_MAX)}
-[truncated at ${SNAPSHOT_MAX} characters, the page continues]` : snap;
+        const text2 = clip(await p.locator("body").ariaSnapshot(), SNAPSHOT_MAX, redact2);
         return { content: [{ type: "text", text: text2 }] };
       } catch (e) {
         return fail(e);
@@ -207371,8 +207422,12 @@ ${near.map((n) => `- ${n}`).join("\n")}` : "The page has no clickable controls."
     },
     async (a) => {
       try {
+        const run = current;
         const p = await page(a.case, getContext2().config);
         const png = await p.screenshot({ fullPage: a.fullPage });
+        if (a.case !== SCOUT && (current !== run || run?.session.status !== "running")) {
+          throw new Error("The run ended or was replaced while the screenshot was taken; nothing was saved.");
+        }
         if (a.case === SCOUT) {
           return {
             content: [
@@ -207384,7 +207439,7 @@ ${near.map((n) => `- ${n}`).join("\n")}` : "The page has no clickable controls."
         const seq = (shots.get(a.case) ?? 0) + 1;
         shots.set(a.case, seq);
         const name = `${a.case}-${seq}${a.label ? `-${a.label}` : ""}.png`;
-        writeFileSync(join2(current.runDir, "evidence", name), png, { flag: "wx" });
+        writeFileSync(join2(run.runDir, "evidence", name), png, { flag: "wx" });
         return {
           content: [
             { type: "text", text: name },
@@ -207409,7 +207464,7 @@ process.on("SIGINT", shutdown);
 // src/flows.ts
 var import_yaml = __toESM2(require_dist2(), 1);
 import { existsSync as existsSync2, mkdirSync, readdirSync, readFileSync as readFileSync2, writeFileSync as writeFileSync2 } from "node:fs";
-import { join as join3, resolve } from "node:path";
+import { join as join3 } from "node:path";
 var FlowName = external_exports.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "lowercase words joined by '-', the same as the file name");
 var FlowFront = external_exports.strictObject({
   name: FlowName,
@@ -207420,7 +207475,7 @@ var FlowFront = external_exports.strictObject({
 var flowsDir = (root) => join3(root, ".jeyna", "flows");
 var flowNames = (root) => existsSync2(flowsDir(root)) ? readdirSync(flowsDir(root)).filter((f) => f.endsWith(".md")).map((f) => f.slice(0, -3)).sort() : [];
 function parseFlow(md, file2) {
-  const m = /^---\n([\s\S]*?)\n?---\n([\s\S]*)$/.exec(md);
+  const m = splitFront(md);
   if (!m) throw new Error(`${file2}: no YAML frontmatter between --- lines.`);
   const front = FlowFront.safeParse((0, import_yaml.parse)(m[1]) ?? {});
   if (!front.success) throw new Error(`${file2}: frontmatter is invalid:
@@ -207443,8 +207498,7 @@ ${external_exports.prettifyError(front.error)}`);
     return { name, description, pass, ...account && { account } };
   });
   if (!scenarios.length) throw new Error(`${file2}: ## Scenarios has no ### scenario.`);
-  const names = scenarios.map((s) => s.name);
-  const dupes = names.filter((n, i) => names.indexOf(n) !== i);
+  const dupes = duplicateNames(scenarios);
   if (dupes.length) throw new Error(`${file2}: scenario names must be unique: ${dupes.join(", ")}.`);
   return { frontmatter: front.data, body, scenarios };
 }
@@ -207512,9 +207566,7 @@ function registerFlowTools(server3, getContext2) {
     async ({ run, name }) => {
       try {
         const root = getContext2().root;
-        const playtests = resolve(root, ".jeyna", "playtests");
-        const runDir = resolve(playtests, run);
-        if (!runDir.startsWith(playtests + "/") && !runDir.startsWith(playtests + "\\")) throw new Error(`run must be a run id under .jeyna/playtests/, not ${run}.`);
+        const runDir = runDirOf(root, run);
         const file2 = join3(runDir, "session.json");
         if (!existsSync2(file2)) throw new Error(`No run ${run}: ${file2} does not exist.`);
         const session = JSON.parse(readFileSync2(file2, "utf8"));
@@ -207603,7 +207655,8 @@ function registerSessionTools(server3, getContext2) {
     async ({ flow: flowName, scenarios: given2, only, entry, slug, viewports, force }) => {
       try {
         const { root, config: config2 } = getContext2();
-        if (!flowName === !given2) throw new Error("session_start needs flow (guided) or scenarios (exploratory), not both.");
+        if (flowName && given2) throw new Error("session_start needs flow (guided) or scenarios (exploratory), not both.");
+        if (!flowName && !given2) throw new Error("session_start needs flow (guided) or scenarios (exploratory): give one of them.");
         const flow = flowName ? readFlow(root, flowName) : void 0;
         if (flow && slug) throw new Error("slug is for exploratory runs; a guided run is named after its flow.");
         if (flow && entry) throw new Error("entry is for exploratory runs; a guided run starts at its flow's entry.");
@@ -207626,8 +207679,7 @@ function registerSessionTools(server3, getContext2) {
         const strangers = (flow?.frontmatter.accounts ?? []).filter((h) => !handles.includes(h));
         if (strangers.length) throw new Error(`Flow ${flowName} names accounts not in jeyna.config.yaml: ${strangers.join(", ")}. Configured: ${handles.join(", ") || "none"}.`);
         const pool = flow?.frontmatter.accounts ?? handles;
-        const names = scenarios.map((s) => s.name);
-        const dupes = names.filter((n, i) => names.indexOf(n) !== i);
+        const dupes = duplicateNames(scenarios);
         if (dupes.length) throw new Error(`Scenario names must be unique: ${dupes.join(", ")}.`);
         const dir = join4(root, ".jeyna", "playtests");
         const stale = runningRuns(dir);
@@ -207762,6 +207814,9 @@ function registerFindingTools(server3) {
           throw new Error(`No such evidence: ${missing.join(", ")}. Screenshots of this case: ${have().join(", ") || "none"}.`);
         }
         const browser2 = await browserName();
+        if (current !== run || run.session.status !== "running") {
+          throw new Error(`The run ${run.session.id} ended or was replaced while this finding was being recorded; nothing was written.`);
+        }
         const slug = run.session.flow.replace(/^exploratory:/, "");
         const id = `PT-${slug}-${String(run.findings.length + 1).padStart(3, "0")}`;
         const front = {
@@ -207796,7 +207851,7 @@ function registerFindingTools(server3) {
 // src/finish.ts
 var import_yaml3 = __toESM2(require_dist2(), 1);
 import { existsSync as existsSync5, readdirSync as readdirSync4, readFileSync as readFileSync4, writeFileSync as writeFileSync5 } from "node:fs";
-import { join as join6, relative, resolve as resolve2 } from "node:path";
+import { basename as basename2, join as join6, relative, resolve as resolve2 } from "node:path";
 var SEVERITIES = FindingInput.shape.severity.options;
 var KINDS = FindingInput.shape.kind.options;
 var STATUSES = ["open", "duplicate", "wontfix", "fixed"];
@@ -207820,7 +207875,6 @@ var FindingFront = external_exports.strictObject({
   created: external_exports.string(),
   evidence: external_exports.array(external_exports.string())
 });
-var splitFront = (md) => /^---\n([\s\S]*?)\n?---\n([\s\S]*)$/.exec(md);
 function readFindings(runDir, session) {
   const dir = join6(runDir, "findings");
   if (!existsSync5(dir)) return [];
@@ -207980,13 +208034,13 @@ function registerFinishTools(server3, getContext2) {
     "validate",
     {
       description: "Check a run folder: every finding parses with its sections, evidence exists, bugs have evidence, every case has a verdict, report.md exists when done. Returns {run, errors}; each error is `path: message`. Defaults to the running run, else the latest.",
-      inputSchema: { run: external_exports.string().optional().describe("Run id or run folder path; default: the current run") },
+      inputSchema: { run: external_exports.string().optional().describe("Run id (or its folder under .jeyna/playtests/); default: the current run") },
       annotations: { readOnlyHint: true }
     },
     async ({ run }) => {
       try {
         const root = getContext2().root;
-        const dir = run ? resolve2(root, ".jeyna", "playtests", run) : current?.runDir ?? runs(root)[0];
+        const dir = run !== void 0 ? runDirOf(root, run) : current?.runDir ?? runs(root)[0];
         if (!dir) throw new Error("No run to validate: no run is running and .jeyna/playtests/ has none.");
         if (!existsSync5(dir)) throw new Error(`No run folder ${dir}.`);
         return ok({ run: dir, errors: validateRun(dir) });
@@ -208026,21 +208080,35 @@ ${errors2.join("\n")}`);
   server3.registerTool(
     "update_status",
     {
-      description: "Change a finding's status (the only mutable field, D11). During a run, mark a cross-scenario duplicate with status duplicate and of: the finding it repeats. wontfix and fixed are for later sessions. Looks in the current run, then the newest run holding the id.",
+      description: "Change a finding's status (the only mutable field, D11). During a run, mark a cross-scenario duplicate with status duplicate and of: the finding it repeats. wontfix and fixed are for later sessions. Looks in `run` if given, else the current run; with no run running, the one run holding the id. Ids repeat across runs of the same flow, so when several runs hold it, it refuses and lists them: give run.",
       inputSchema: {
         id: external_exports.string().describe("Finding id, e.g. PT-login-003"),
         status: external_exports.enum(STATUSES),
         of: external_exports.string().optional().describe("Required for duplicate: the id of the finding this one repeats"),
-        note: external_exports.string().min(1).optional()
+        note: external_exports.string().min(1).optional(),
+        run: external_exports.string().min(1).optional().describe("Run id holding the finding, e.g. 2026-10-15-login; needed when several runs hold the id")
       }
     },
-    async ({ id, status, of, note }) => {
+    async ({ id, status, of, note, run }) => {
       try {
         if (status === "duplicate" && !of) throw new Error(`A duplicate needs of: the id of the finding ${id} repeats.`);
         if (status !== "duplicate" && of) throw new Error("of is only for status duplicate.");
-        const dirs = [...current ? [current.runDir] : [], ...runs(getContext2().root)];
-        const runDir = dirs.find((d) => existsSync5(join6(d, "findings", `${id}.md`)));
-        if (!runDir) throw new Error(`No finding ${id} in any run under .jeyna/playtests/.`);
+        const holds = (d) => existsSync5(join6(d, "findings", `${id}.md`));
+        let runDir;
+        if (run !== void 0) {
+          runDir = runDirOf(getContext2().root, run);
+          if (!holds(runDir)) throw new Error(`No finding ${id} in run ${run}.`);
+        } else if (current && holds(current.runDir)) {
+          runDir = current.runDir;
+        } else {
+          const all = runs(getContext2().root).filter(holds);
+          if (!all.length) throw new Error(`No finding ${id} in any run under .jeyna/playtests/.`);
+          if (all.length > 1) {
+            const ids = all.map((d) => basename2(d));
+            throw new Error(`${all.length} runs hold a finding ${id}: ${ids.join(", ")} (newest first). Call update_status again with run set to one of them.`);
+          }
+          runDir = all[0];
+        }
         if (of === id) throw new Error("A finding cannot be a duplicate of itself.");
         if (of && !existsSync5(join6(runDir, "findings", `${of}.md`))) throw new Error(`No finding ${of} in ${runDir}; of must name a finding of the same run.`);
         const path = join6(runDir, "findings", `${id}.md`);
@@ -208072,9 +208140,9 @@ var given = (v) => typeof v === "string" && v !== "" && !v.includes("${") ? v : 
 function projectRoot() {
   const root = given(values.project) ?? given(process.env.CLAUDE_PROJECT_DIR);
   if (root) return resolve3(root);
-  for (let dir = process.cwd(); ; dir = dirname(dir)) {
+  for (let dir = process.cwd(); ; dir = dirname2(dir)) {
     if (existsSync6(join7(dir, ".jeyna"))) return dir;
-    if (dirname(dir) === dir) break;
+    if (dirname2(dir) === dir) break;
   }
   throw new Error(
     "Jeyna could not find the project root: no --project argument, no CLAUDE_PROJECT_DIR, and no .jeyna/ folder above " + process.cwd() + ". Start Claude Code in your project folder."
@@ -208103,6 +208171,33 @@ function secretSources(root, config2) {
   const names = config2.accounts.flatMap((a) => [a.user_env, a.pass_env]);
   return Object.fromEntries(names.map((n) => [n, process.env[n] ? "env" : dotenv3[n] ? ".env" : "missing"]));
 }
+var cached2;
+var envOf = (names) => JSON.stringify(names.map((n) => process.env[n] ?? null));
+function currentRedactor() {
+  let stamp = "no root";
+  try {
+    const root = projectRoot();
+    const files = [join7(root, ".jeyna", "jeyna.config.yaml"), join7(root, ".jeyna", ".env")];
+    stamp = [root, ...files.map((f) => {
+      const st = statSync(f, { throwIfNoEntry: false });
+      return st ? `${st.mtimeMs}:${st.size}` : "-";
+    })].join("|");
+  } catch {
+  }
+  if (!cached2 || cached2.stamp !== stamp || cached2.env !== envOf(cached2.names)) {
+    let names = [];
+    let fn = (t) => t;
+    try {
+      const { root, config: config2 } = getContext();
+      names = config2.accounts.flatMap((a) => [a.user_env, a.pass_env]);
+      fn = redactor(accountValues(root, config2));
+    } catch {
+    }
+    cached2 = { stamp, names, env: envOf(names), redact: fn };
+  }
+  return cached2.redact;
+}
+var redact = (text2) => currentRedactor()(text2);
 var server2 = new McpServer({ name: "jeyna", version: "0.0.1" });
 var calls = 0;
 var register = server2.registerTool.bind(server2);
@@ -208140,22 +208235,14 @@ server2.registerTool(
   }
 );
 registerSessionTools(server2, getContext);
-registerBrowserTools(server2, getContext);
+registerBrowserTools(server2, getContext, redact);
 registerFindingTools(server2);
 registerFinishTools(server2, getContext);
 registerFlowTools(server2, getContext);
 if (positionals[0] === "validate") process.exit(validateCli(positionals[1], projectRoot));
 var transport = new StdioServerTransport2();
 var send = transport.send.bind(transport);
-transport.send = (msg) => {
-  let redact = (t) => t;
-  try {
-    const { root, config: config2 } = getContext();
-    redact = redactor(accountValues(root, config2));
-  } catch {
-  }
-  return send(redactDeep(msg, redact));
-};
+transport.send = (msg) => send(redactDeep(msg, currentRedactor()));
 await server2.connect(transport);
 log3("jeyna-mcp ready", process.argv.slice(2).join(" "));
 /*! Bundled license information:

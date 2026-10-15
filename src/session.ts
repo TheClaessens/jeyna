@@ -6,6 +6,7 @@ import { z } from "zod";
 import { closeContexts } from "./browser.js";
 import { readFlow } from "./flows.js";
 import { type Case, type Config, Scenario } from "./schema.js";
+import { duplicateNames } from "./shared.js";
 
 export type Tester = { id: string; scenario: string; account?: string; batch: number; cases: Case[] };
 
@@ -118,7 +119,8 @@ export function registerSessionTools(server: McpServer, getContext: () => { root
     async ({ flow: flowName, scenarios: given, only, entry, slug, viewports, force }) => {
       try {
         const { root, config } = getContext();
-        if (!flowName === !given) throw new Error("session_start needs flow (guided) or scenarios (exploratory), not both.");
+        if (flowName && given) throw new Error("session_start needs flow (guided) or scenarios (exploratory), not both.");
+        if (!flowName && !given) throw new Error("session_start needs flow (guided) or scenarios (exploratory): give one of them.");
         const flow = flowName ? readFlow(root, flowName) : undefined;
         if (flow && slug) throw new Error("slug is for exploratory runs; a guided run is named after its flow.");
         if (flow && entry) throw new Error("entry is for exploratory runs; a guided run starts at its flow's entry.");
@@ -141,8 +143,7 @@ export function registerSessionTools(server: McpServer, getContext: () => { root
         const strangers = (flow?.frontmatter.accounts ?? []).filter((h) => !handles.includes(h));
         if (strangers.length) throw new Error(`Flow ${flowName} names accounts not in jeyna.config.yaml: ${strangers.join(", ")}. Configured: ${handles.join(", ") || "none"}.`);
         const pool = flow?.frontmatter.accounts ?? handles;
-        const names = scenarios.map((s) => s.name);
-        const dupes = names.filter((n, i) => names.indexOf(n) !== i);
+        const dupes = duplicateNames(scenarios);
         if (dupes.length) throw new Error(`Scenario names must be unique: ${dupes.join(", ")}.`);
 
         const dir = join(root, ".jeyna", "playtests");
