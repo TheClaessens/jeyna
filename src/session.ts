@@ -51,6 +51,7 @@ export type Session = {
   started: string;
   finished?: string;
   mode: "guided" | "exploratory";
+  entry?: string;
   scenarios: Scenario[];
   testers: (Omit<Tester, "cases"> & { model: string; cases: string[] })[];
   cases: Case[];
@@ -103,22 +104,24 @@ export function registerSessionTools(server: McpServer, getContext: () => { root
     "session_start",
     {
       description:
-        "Start a playtest run, guided from a flow in .jeyna/flows/ or exploratory from an explicit scenario list. only and viewports narrow the run; unknown names are refused with the valid ones. Plans one tester per scenario, one case per viewport, one account per tester, and the batch to spawn each tester in (no account is held by two testers in one batch). Refused while another run is running unless force is true.",
+        "Start a playtest run, guided from a flow in .jeyna/flows/ or exploratory from an explicit scenario list (with its slug and entry path). Closes the scout look. only and viewports narrow the run; unknown names are refused with the valid ones. Plans one tester per scenario, one case per viewport, one account per tester, and the batch to spawn each tester in (no account is held by two testers in one batch). Refused while another run is running unless force is true.",
       inputSchema: {
         flow: z.string().optional().describe("Flow name from get_context (guided run)"),
         scenarios: z.array(Scenario).min(1).optional().describe("Explicit scenario list (exploratory run)"),
         only: z.array(z.string()).min(1).optional().describe("Scenario names to run; default all"),
+        entry: z.string().min(1).optional().describe("Entry path of an exploratory run, e.g. /login; save_flow writes it to the flow. Default /"),
         slug: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "lowercase words joined by '-'").optional().describe("Run folder slug of an exploratory run; default exploratory"),
         viewports: z.array(z.string()).min(1).optional(),
         force: z.boolean().default(false),
       },
     },
-    async ({ flow: flowName, scenarios: given, only, slug, viewports, force }) => {
+    async ({ flow: flowName, scenarios: given, only, entry, slug, viewports, force }) => {
       try {
         const { root, config } = getContext();
         if (!flowName === !given) throw new Error("session_start needs flow (guided) or scenarios (exploratory), not both.");
         const flow = flowName ? readFlow(root, flowName) : undefined;
         if (flow && slug) throw new Error("slug is for exploratory runs; a guided run is named after its flow.");
+        if (flow && entry) throw new Error("entry is for exploratory runs; a guided run starts at its flow's entry.");
         let scenarios = flow?.scenarios ?? given!;
         if (only) {
           const unknownScenarios = only.filter((n) => !scenarios.some((s) => s.name === n));
@@ -170,6 +173,7 @@ export function registerSessionTools(server: McpServer, getContext: () => { root
           status: "running",
           started: new Date().toISOString(),
           mode: flow ? "guided" : "exploratory",
+          entry: flow?.frontmatter.entry ?? entry ?? "/",
           scenarios,
           testers: testers.map((t) => ({ ...t, model: config.tester.model, cases: t.cases.map((c) => c.id) })),
           cases: testers.flatMap((t) => t.cases),

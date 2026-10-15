@@ -66,13 +66,25 @@ export async function closeContexts() {
   await Promise.allSettled(all.map(async (p) => (await p).context().close()));
 }
 
-function page(caseId: string, config: Config): Promise<Page> {
-  if (!current) throw new Error("No running session. Call session_start first; browser tools take a case id from its result.");
+// The reserved case for the exploratory look before a session exists (D6, F2.3): no session needed,
+// the first configured viewport, the first pool account, nothing written to disk; session_start closes it.
+export const SCOUT = "scout";
+
+function viewportOf(caseId: string, config: Config): string {
+  if (caseId === SCOUT) return config.viewports[0];
+  if (!current) {
+    throw new Error("No running session. Call session_start first; browser tools take a case id from its result (or `scout` for the look before a run).");
+  }
   const c = current.session.cases.find((c) => c.id === caseId);
   if (!c) throw new Error(`Unknown case "${caseId}". Cases in this run: ${current.session.cases.map((c) => c.id).join(", ")}.`);
+  return c.viewport;
+}
+
+function page(caseId: string, config: Config): Promise<Page> {
+  const viewport = viewportOf(caseId, config);
   let p = pages.get(caseId);
   if (!p) {
-    const [width, height] = c.viewport.split("x").map(Number);
+    const [width, height] = viewport.split("x").map(Number);
     p = getBrowser(config.browser.headed).then(async (b) => (await b.newContext({ viewport: { width, height } })).newPage());
     p.catch(() => pages.delete(caseId));
     pages.set(caseId, p);
@@ -104,7 +116,7 @@ async function settled(p: Page) {
 const SNAPSHOT_MAX =90_000; // just under Claude Code's default 25k-token MCP output cap (D14)
 
 export function registerBrowserTools(server: McpServer, getContext: () => { root: string; config: Config }) {
-  const caseId = z.string().describe("Case id from session_start, e.g. t1-390x844");
+  const caseId = z.string().describe("Case id from session_start, e.g. t1-390x844; or scout for the look before a run");
 
   server.registerTool(
     "goto",
@@ -164,7 +176,8 @@ export function registerBrowserTools(server: McpServer, getContext: () => { root
       try {
         const { root, config } = getContext();
         const p = await page(a.case, config);
-        const handle = current!.session.testers.find((t) => t.cases.includes(a.case))?.account;
+        const handle = a.case === SCOUT ? config.accounts[0]?.handle : current!.session.testers.find((t) => t.cases.includes(a.case))?.account;
+        if (a.case === SCOUT && !handle && /\{\{account\./.test(a.value)) throw new Error("jeyna.config.yaml lists no accounts, so scout cannot sign in.");
         const value = substitute(a.value, accountValues(root, config).find((x) => x.handle === handle), a.case);
         const el = p.locator(a.selector);
         const tag = await el.evaluate((e) => e.tagName, undefined, { timeout: ACT_TIMEOUT });
@@ -225,7 +238,7 @@ export function registerBrowserTools(server: McpServer, getContext: () => { root
     "screenshot",
     {
       description:
-        "Save a PNG of this case's page as evidence and return its file name. Set look: true to also see the image, for visual questions (layout, overlap, cut-off or off-screen elements); otherwise prefer snapshot. Viewport only unless fullPage is true.",
+        "Save a PNG of this case's page as evidence and return its file name. Set look: true to also see the image, for visual questions (layout, overlap, cut-off or off-screen elements); otherwise prefer snapshot. Viewport only unless fullPage is true. For case scout nothing is saved: it returns the image only.",
       inputSchema: {
         case: caseId,
         label: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "lowercase words joined by '-'").optional(),
@@ -237,6 +250,14 @@ export function registerBrowserTools(server: McpServer, getContext: () => { root
       try {
         const p = await page(a.case, getContext().config);
         const png = await p.screenshot({ fullPage: a.fullPage });
+        if (a.case === SCOUT) {
+          return {
+            content: [
+              { type: "text" as const, text: "scout: not saved (the look before a run writes nothing)" },
+              { type: "image" as const, data: png.toString("base64"), mimeType: "image/png" },
+            ],
+          };
+        }
         const seq = (shots.get(a.case) ?? 0) + 1;
         shots.set(a.case, seq);
         const name = `${a.case}-${seq}${a.label ? `-${a.label}` : ""}.png`;

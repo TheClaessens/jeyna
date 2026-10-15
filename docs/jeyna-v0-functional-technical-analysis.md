@@ -181,7 +181,7 @@ Numbered so they can be referenced in grill sessions. "Must" is v0; "should" is 
 
 **Finding frontmatter** (server-added fields in bold): schema, **id**, kind, severity, **status** (`open | duplicate | wontfix | fixed`), **of?**, **flow**, **case**, **scenario**, route, **viewport**, **browser**, **build**, **author** (the tester's model id, D15), **created**, evidence. Scenario and viewport are copied from the case, so a tester cannot get them wrong (D4).
 
-**Session** (`session.json`): schema, id, flow (name, or `exploratory:<slug>`), app, build, status (running | done | aborted), started, finished?, mode (guided | exploratory), scenarios[{name, description, pass, account?: none | consumes}], testers[{id, scenario, account?, batch, model, cases[]}], cases[{id, scenario, viewport}], verdicts[{case, result, note?, findings[]}], summary?.
+**Session** (`session.json`): schema, id, flow (name, or `exploratory:<slug>`), app, build, status (running | done | aborted), started, finished?, mode (guided | exploratory), entry, scenarios[{name, description, pass, account?: none | consumes}], testers[{id, scenario, account?, batch, model, cases[]}], cases[{id, scenario, viewport}], verdicts[{case, result, note?, findings[]}], summary?.
 
 **Config** (`jeyna.config.yaml`):
 
@@ -234,8 +234,8 @@ Run family:
 |---|---|---|
 | `get_context` | — | project root, config (env variable names only), `secrets`: per account variable `env` \| `.env` \| `missing`, never the value (D18, D21), conventions text, flows with their scenario names, active session if any |
 | `get_flow` | `{name}` | flow frontmatter + body + parsed scenario list |
-| `session_start` | `{flow?, scenarios?: [{name, description, pass, account?}], only?: string[], viewports?: string[], force?}` | session id, run dir, testers[{id, scenario, account handle?, batch, cases[{id, viewport}]}]. Either `flow` (guided) or an explicit `scenarios` list (exploratory) is required. |
-| `save_flow` | `{run, name}` | writes `flows/<name>.md` from that run's `session.json` scenarios (F2.4); refuses if the file exists |
+| `session_start` | `{flow?, scenarios?: [{name, description, pass, account?}], slug?, entry?, only?: string[], viewports?: string[], force?}` | session id, run dir, testers[{id, scenario, account handle?, batch, cases[{id, viewport}]}]. Either `flow` (guided) or an explicit `scenarios` list (exploratory) is required; `slug` and `entry` are for exploratory runs (D29). Closes the scout. |
+| `save_flow` | `{run, name}` | writes `flows/<name>.md` from that run's `session.json` scenarios and `entry` (F2.4); refuses if the file exists, a bad name, or a scenario that would not read back the same (D29) |
 | `scenario_verdict` | `{case, result, note?, findings?}` | ok; refused if `fail` has no finding of this case, or `blocked`/`skipped` has no note |
 | `record_finding` | `{case, finding: FindingInput}` | `{id, path}`; refused if kind is `bug` with no evidence, or an evidence file does not exist |
 | `update_status` | `{id, status, of?, note?}` | ok; `of` required when status is `duplicate` |
