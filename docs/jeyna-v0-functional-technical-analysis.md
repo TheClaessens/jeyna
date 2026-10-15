@@ -232,7 +232,7 @@ Run family:
 
 | tool | input | output |
 |---|---|---|
-| `get_context` | — | project root, config (secrets redacted), conventions text, flows with their scenario names, active session if any |
+| `get_context` | — | project root, config (env variable names only), `secrets`: per account variable `env` \| `.env` \| `missing`, never the value (D18, D21), conventions text, flows with their scenario names, active session if any |
 | `get_flow` | `{name}` | flow frontmatter + body + parsed scenario list |
 | `session_start` | `{flow?, scenarios?: [{name, description, pass, account?}], only?: string[], viewports?: string[], force?}` | session id, run dir, testers[{id, scenario, account handle?, batch, cases[{id, viewport}]}]. Either `flow` (guided) or an explicit `scenarios` list (exploratory) is required. |
 | `save_flow` | `{run, name}` | writes `flows/<name>.md` from that run's `session.json` scenarios (F2.4); refuses if the file exists |

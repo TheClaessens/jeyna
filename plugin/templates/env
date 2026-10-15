@@ -1,0 +1,2 @@
+# Jeyna test-account secrets. Gitignored. Fill in by hand; agents may not write this file.
+# A variable exported in the shell that starts `claude` wins over the value here.

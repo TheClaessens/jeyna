@@ -2,7 +2,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
-import { parseArgs } from "node:util";
+import { parseArgs, parseEnv } from "node:util";
 import { parse } from "yaml";
 import { z } from "zod";
 import { Config } from "./schema.js";
@@ -46,7 +46,15 @@ function getContext() {
   if (!parsed.success) {
     throw new Error(`.jeyna/jeyna.config.yaml is invalid. Fix these fields:\n${z.prettifyError(parsed.error)}`);
   }
-  return { root, config: parsed.data };
+  return { root, config: parsed.data, secrets: secretSources(root, parsed.data) };
+}
+
+// Where each account variable is set: shell env first, then .jeyna/.env. Never the value (D18, P3).
+function secretSources(root: string, config: Config): Record<string, "env" | ".env" | "missing"> {
+  const file = join(root, ".jeyna", ".env");
+  const dotenv = existsSync(file) ? parseEnv(readFileSync(file, "utf8")) : {};
+  const names = config.accounts.flatMap((a) => [a.user_env, a.pass_env]);
+  return Object.fromEntries(names.map((n) => [n, process.env[n] ? "env" : dotenv[n] ? ".env" : "missing"]));
 }
 
 const server = new McpServer({ name: "jeyna", version: "0.0.1" });
