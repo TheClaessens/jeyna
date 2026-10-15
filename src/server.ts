@@ -10,12 +10,13 @@ import { registerSessionTools } from "./session.js";
 import { registerBrowserTools } from "./browser.js";
 import { accountValues, redactDeep, redactor } from "./accounts.js";
 import { registerFindingTools } from "./findings.js";
+import { registerFinishTools, validateCli } from "./finish.js";
 
 // stdout is the JSON-RPC channel: log to stderr only.
 const log = (...a: unknown[]) => console.error(new Date().toISOString(), ...a);
 process.on("unhandledRejection", (e) => log("unhandledRejection", e));
 
-const { values } = parseArgs({ options: { project: { type: "string" } }, strict: false });
+const { values, positionals } = parseArgs({ options: { project: { type: "string" } }, strict: false });
 
 // An unset variable reaches us as its literal "${...}" text, so treat that as absent.
 const given = (v: unknown) => (typeof v === "string" && v !== "" && !v.includes("${") ? v : undefined);
@@ -96,6 +97,10 @@ server.registerTool(
 registerSessionTools(server, getContext);
 registerBrowserTools(server, getContext);
 registerFindingTools(server);
+registerFinishTools(server, getContext);
+
+// `node jeyna-mcp.mjs validate [runDir]` lints a run folder from a shell instead of serving MCP (F8.2).
+if (positionals[0] === "validate") process.exit(validateCli(positionals[1], projectRoot));
 
 // Every message leaves through here, so account values are replaced by their placeholders once,
 // for every tool and every error (D9). Values are re-read per message: .jeyna/.env may change mid-run.

@@ -675,3 +675,27 @@ Claude Code 2.1.299, node 20.12.2, playwright-core 1.64.1. No headless Claude Co
 - `src/browser.ts`: `click`, `fill`, `press`. `src/server.ts`: redaction on the transport.
 - `sample-app/server.mjs`: todo list, password reset, Sign out, seeded bugs 1, 4, 5, 6. `sample-app/SEEDED-BUGS.md` lists all six.
 - `plugin/agents/jeyna-tester.md`: allowlist and how to use the new tools and placeholders.
+
+---
+
+## D27 · 2026-10-15 · A run ends in a report: `validate`, `session_finish`, `update_status` (slice 2, issue #8)
+
+Claude Code 2.1.299. No headless Claude Code session was run (the owner ruled out `claude -p` for cost). Verified locally by driving the committed bundle over MCP stdio and from a shell (`src/finish.test.ts`). `claude plugin validate` passes for `./plugin` and `.`.
+
+**AC6, AC7, refusals: verified locally; the main-agent path is pending live verification**
+- Verified locally: the matrix in `report.md` has one row per scenario, one column per viewport, and a verdict (with its finding links and note) in every cell. `session_finish` with a case missing its verdict returns a tool error listing `session.json: case <id> has no verdict`, writes no report, and `session.json` stays `running`. `update_status` to `duplicate` without `of` is refused and the file is unchanged.
+- AC7: a generated run folder was read by hand. `report.md` is plain markdown (no HTML): a metadata list, the summary, two count tables, the matrix and the finding table, with relative links to `findings/<id>.md`; a `|` in a note is escaped. Finding files keep their frontmatter and the five sections, with images linked as `../evidence/`.
+- Not verified: that a live main agent calls `validate`, fixes what `session_finish` refuses, and marks duplicates. That is the `playtest` skill, slice 3.
+
+**Also decided in building**
+- `validate` reads only the run folder on disk (`session.json`, `findings/*.md`, `evidence/`), never the server's in-memory finding index, so the tool and the shell give the same answer. Errors are `path: message` with paths relative to the run folder; the shell prints them relative to its working directory.
+- Shell: `node plugin/server/jeyna-mcp.mjs validate [runDir]`. With no argument it takes the newest run (by `started`) of the project found the usual way (D7). Errors go to stdout one per line, exit 1; clean prints `ok: <runDir>` to stderr, exit 0.
+- `validate {run?}`: `run` is a run id or path; default the running run, else the newest.
+- Checks beyond F8.1: the frontmatter is a strict schema (a misspelt key is reported); the `id` matches the file name; the `case` is a case of the run; `duplicate` has an `of` naming a finding of the same run; every id a verdict lists has a file. A `running` run is not reported as stale: `session_finish` runs the same checks on a running run.
+- `session_finish {summary}` writes `report.md` first, then sets `done` with `finished` and `summary` in `session.json`, so a crash between leaves a `running` run, never a `done` one with no report. It then forgets the run and closes all browser contexts.
+- Report counts: cases by verdict; findings by severity, excluding duplicates, which are counted on their own. Findings are sorted by severity, then kind (bug, ux, a11y, question), then id. Duplicates stay in the list with `duplicate of <link>`.
+- `update_status {id, status, of?, note?}` accepts `open | duplicate | wontfix | fixed` (`open` undoes a wrong mark). It looks in the running run, then in runs newest first, so a later session can set `wontfix` or `fixed`. It rewrites only the frontmatter, placing `of` and `note` right after `status`; `note` is a new optional frontmatter field. `report.md` is not regenerated after the run is done.
+- These are run-control tools: the `jeyna-tester` allowlist does not get them (D1).
+
+**Changed**
+- New: `src/finish.ts`, `src/finish.test.ts`. `src/session.ts` exports `Session`, `save` and `endRun` and adds `summary?`; `src/server.ts` registers the tools and the `validate` subcommand. The bundle is rebuilt.

@@ -1,0 +1,190 @@
+// validate, session_finish, report.md and update_status, driven over MCP stdio and from a shell, against the committed bundle.
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { spawnSync } from "node:child_process";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { afterEach, beforeAll, expect, test } from "vitest";
+
+let bundle: string;
+const clients: Client[] = [];
+
+beforeAll(() => {
+  const dir = mkdtempSync(join(tmpdir(), "jeyna-bundle-"));
+  cpSync("plugin/server", dir, { recursive: true });
+  bundle = join(dir, "jeyna-mcp.mjs");
+});
+afterEach(async () => {
+  await Promise.all(clients.splice(0).map((c) => c.close()));
+});
+
+const CONFIG = `
+app: { name: todo-sample, url: http://localhost:4931 }
+viewports: [1440x900, 390x844]
+accounts:
+  - { handle: user_a, user_env: JEYNA_USER_A_USER, pass_env: JEYNA_USER_A_PASS }
+`;
+
+type Result = { isError?: boolean; content: { type: "text"; text: string }[] };
+
+const SIGN_IN = { name: "Sign in", description: "Sign in from the login page.", pass: "The todo list shows." };
+const LANDING = { name: "Landing", description: "Open the home page.", pass: "The landing page shows.", account: "none" };
+const A11Y = {
+  title: "Password field has no label",
+  kind: "a11y",
+  severity: "major",
+  route: "/login",
+  steps: ["Open /login", "Read the accessibility snapshot"],
+  expected: "The password field is announced as Password.",
+  actual: "The snapshot shows a nameless textbox after Email.",
+};
+
+async function started(scenarios: unknown[] = [SIGN_IN]) {
+  const root = realpathSync(mkdtempSync(join(tmpdir(), "jeyna-project-")));
+  mkdirSync(join(root, ".jeyna"));
+  writeFileSync(join(root, ".jeyna", "jeyna.config.yaml"), CONFIG);
+  const client = new Client({ name: "test", version: "0" });
+  clients.push(client);
+  await client.connect(new StdioClientTransport({ command: "node", args: [bundle, "--project", root], stderr: "ignore" }));
+  const call = async (name: string, args: Record<string, unknown> = {}) => (await client.callTool({ name, arguments: args })) as Result;
+  const text = (r: Result) => r.content[0].text;
+  const run = JSON.parse(text(await call("session_start", { scenarios, slug: "login" })));
+  // An evidence file the way screenshot names them, without needing a browser.
+  writeFileSync(join(run.runDir, "evidence", "t1-390x844-1-login.png"), "png");
+  return { root, call, text, runDir: run.runDir as string };
+}
+
+const sessionOf = (runDir: string) => JSON.parse(readFileSync(join(runDir, "session.json"), "utf8"));
+
+test("session_finish with a missing verdict is refused with the error list and the run stays running", async () => {
+  const { call, text, runDir } = await started();
+  await call("scenario_verdict", { case: "t1-1440x900", result: "pass" });
+  const r = await call("session_finish", { summary: "Done." });
+  expect(r.isError).toBe(true);
+  expect(text(r)).toMatch(/^session\.json: case t1-390x844 has no verdict$/m);
+  expect(sessionOf(runDir).status).toBe("running");
+  expect(existsSync(join(runDir, "report.md"))).toBe(false);
+});
+
+const BUG = { ...A11Y, title: "Sign in accepts an empty password", kind: "bug", severity: "critical", evidence: ["t1-390x844-1-login.png"] };
+const UX = { ...A11Y, title: "Error message disappears too fast", kind: "ux", severity: "minor" };
+
+// Two scenarios, four cases, three findings: a full run ready to finish.
+async function recorded() {
+  const s = await started([SIGN_IN, LANDING]);
+  const id = async (c: string, finding: unknown) => JSON.parse(s.text(await s.call("record_finding", { case: c, finding }))).id as string;
+  const ux = await id("t1-1440x900", UX);
+  const a11y = await id("t1-390x844", A11Y);
+  const bug = await id("t1-390x844", BUG);
+  await s.call("scenario_verdict", { case: "t1-1440x900", result: "pass", findings: [ux] });
+  await s.call("scenario_verdict", { case: "t1-390x844", result: "fail", findings: [bug, a11y] });
+  await s.call("scenario_verdict", { case: "t2-1440x900", result: "pass" });
+  await s.call("scenario_verdict", { case: "t2-390x844", result: "blocked", note: "home | page down" });
+  return { ...s, ids: { ux, a11y, bug } };
+}
+
+test("session_finish writes report.md with counts, a verdict in every matrix cell, findings by severity then kind; the run is done (AC6)", async () => {
+  const { call, text, runDir, ids } = await recorded();
+  const r = await call("session_finish", { summary: "Sign in is broken on mobile." });
+  expect(r.isError).toBeFalsy();
+  const out = JSON.parse(text(r));
+  expect(out.reportPath).toBe(join(runDir, "report.md"));
+  expect(out.counts).toEqual({ cases: 4, pass: 2, fail: 1, blocked: 1, skipped: 0, findings: 3, critical: 1, major: 1, minor: 1, note: 0, duplicate: 0 });
+  expect(sessionOf(runDir)).toMatchObject({ status: "done", summary: "Sign in is broken on mobile.", finished: expect.any(String) });
+
+  const md = readFileSync(out.reportPath, "utf8");
+  expect(md).toMatch(/^## Summary\n\nSign in is broken on mobile\.$/m);
+  expect(md).toContain("| Scenario | 1440x900 | 390x844 |");
+  expect(md).toContain(`| Sign in | pass [${ids.ux}](findings/${ids.ux}.md) | fail [${ids.bug}](findings/${ids.bug}.md) [${ids.a11y}](findings/${ids.a11y}.md) |`);
+  expect(md).toContain("| Landing | pass | blocked (home \\| page down) |");
+  const order = [ids.bug, ids.a11y, ids.ux].map((id) => md.indexOf(`| [${id}](findings/${id}.md) |`));
+  expect(order[0]).toBeGreaterThan(0);
+  expect(order).toEqual([...order].sort((a, b) => a - b));
+  expect(md).toContain(`| critical | bug | [${ids.bug}](findings/${ids.bug}.md) | Sign in accepts an empty password | Sign in | 390x844 | open |`);
+  expect(md).not.toMatch(/<[a-z]/i); // plain markdown, no HTML (AC7)
+  cpSync(runDir, join(tmpdir(), "jeyna-ac7-run"), { recursive: true }); // kept for reading in a markdown viewer (AC7)
+
+  expect(JSON.parse(text(await call("validate"))).errors).toEqual([]);
+  const again = await call("session_finish", { summary: "x" });
+  expect(again.isError).toBe(true);
+  expect(text(again)).toMatch(/session_start/);
+});
+
+test("update_status to duplicate without of is refused; with of it sets status and of, and the report counts it as a duplicate", async () => {
+  const { call, text, runDir, ids } = await recorded();
+  const r = await call("update_status", { id: ids.a11y, status: "duplicate" });
+  expect(r.isError).toBe(true);
+  expect(text(r)).toMatch(/needs of/);
+  expect(readFileSync(join(runDir, "findings", `${ids.a11y}.md`), "utf8")).toMatch(/^status: open$/m);
+
+  expect((await call("update_status", { id: ids.a11y, status: "duplicate", of: "PT-login-099" })).isError).toBe(true);
+  const ok = await call("update_status", { id: ids.a11y, status: "duplicate", of: ids.ux, note: "same label bug" });
+  expect(ok.isError).toBeFalsy();
+  const md = readFileSync(join(runDir, "findings", `${ids.a11y}.md`), "utf8");
+  expect(md).toMatch(new RegExp(`^status: duplicate\\nof: ${ids.ux}\\nnote: same label bug\\nflow:`, "m"));
+  expect(md).toMatch(/^## Suggested next step$/m);
+
+  const out = JSON.parse(text(await call("session_finish", { summary: "Done." })));
+  expect(out.counts).toMatchObject({ findings: 2, major: 0, duplicate: 1 });
+  expect(readFileSync(out.reportPath, "utf8")).toContain(`| duplicate of [${ids.ux}](findings/${ids.ux}.md) |`);
+});
+
+test("after the run, wontfix and fixed can be set on its findings", async () => {
+  const { call, runDir, ids } = await recorded();
+  await call("session_finish", { summary: "Done." });
+  expect((await call("update_status", { id: ids.ux, status: "wontfix", note: "by design" })).isError).toBeFalsy();
+  expect((await call("update_status", { id: ids.bug, status: "fixed" })).isError).toBeFalsy();
+  expect(readFileSync(join(runDir, "findings", `${ids.ux}.md`), "utf8")).toMatch(/^status: wontfix\nnote: by design$/m);
+  expect(readFileSync(join(runDir, "findings", `${ids.bug}.md`), "utf8")).toMatch(/^status: fixed$/m);
+  expect((await call("update_status", { id: "PT-login-099", status: "fixed" })).isError).toBe(true);
+});
+
+test("validate reports broken findings, missing evidence and a missing report, one path: message each", async () => {
+  const { call, text, runDir, ids } = await recorded();
+  const file = (id: string) => join(runDir, "findings", `${id}.md`);
+  writeFileSync(file(ids.ux), readFileSync(file(ids.ux), "utf8").replace("## Expected", "## Expectation"));
+  writeFileSync(file(ids.a11y), readFileSync(file(ids.a11y), "utf8").replace("severity: major", "severity: huge"));
+  rmSync(join(runDir, "evidence", "t1-390x844-1-login.png"));
+  writeFileSync(join(runDir, "findings", "PT-login-009.md"), "# no frontmatter\n");
+  const { errors } = JSON.parse(text(await call("validate", { run: sessionOf(runDir).id })));
+  expect(errors).toEqual([
+    `findings/${ids.ux}.md: missing the ## Expected section`,
+    expect.stringMatching(new RegExp(`^findings/${ids.a11y}\\.md: frontmatter severity: .*critical`)),
+    `findings/${ids.bug}.md: evidence t1-390x844-1-login.png does not exist in evidence/`,
+    "findings/PT-login-009.md: no YAML frontmatter between --- lines",
+  ]);
+  writeFileSync(join(runDir, "session.json"), JSON.stringify({ ...sessionOf(runDir), status: "done" }));
+  expect(JSON.parse(text(await call("validate"))).errors).toContain("report.md: missing, but the run is done");
+});
+
+test("a bug finding edited to have no evidence fails validate", async () => {
+  const { call, text, runDir, ids } = await recorded();
+  const f = join(runDir, "findings", `${ids.bug}.md`);
+  writeFileSync(f, readFileSync(f, "utf8").replace("evidence:\n  - t1-390x844-1-login.png", "evidence: []"));
+  expect(JSON.parse(text(await call("validate"))).errors).toEqual([`findings/${ids.bug}.md: a bug needs evidence`]);
+});
+
+const shell = (args: string[], cwd: string) => {
+  const env = { ...process.env };
+  delete env.CLAUDE_PROJECT_DIR;
+  return spawnSync("node", [bundle, ...args], { cwd, encoding: "utf8", env });
+};
+
+test("validate runs from a shell via the bundle: one path: message line per error and exit 1, exit 0 when clean", async () => {
+  const { root, call, runDir } = await started();
+  const rel = runDir.slice(root.length + 1);
+  const bad = shell(["validate", runDir], root);
+  expect(bad.status).toBe(1);
+  expect(bad.stdout).toBe(`${rel}/session.json: case t1-1440x900 has no verdict\n${rel}/session.json: case t1-390x844 has no verdict\n`);
+  for (const c of ["t1-1440x900", "t1-390x844"]) await call("scenario_verdict", { case: c, result: "pass" });
+  await call("session_finish", { summary: "Done." });
+  const good = shell(["validate"], root); // no argument: the latest run of the project found from cwd
+  expect(good.stdout).toBe("");
+  expect(good.stderr).toContain(`ok: ${runDir}`);
+  expect(good.status).toBe(0);
+  rmSync(join(runDir, "report.md"));
+  const gone = shell(["validate", rel], root);
+  expect(gone.status).toBe(1);
+  expect(gone.stdout).toBe(`${rel}/report.md: missing, but the run is done\n`);
+});
