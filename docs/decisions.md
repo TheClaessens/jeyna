@@ -591,9 +591,66 @@ Claude Code 2.1.299, node 20.12.2, macOS arm64, Google Chrome 155.0.8059.41, pla
 - New: `src/session.ts`, `src/browser.ts`, `src/session.test.ts`, `src/run.test.ts`, `plugin/agents/jeyna-tester.md`, `sample-app/server.mjs`, `sample-app/.env.example`, `sample-app/SEEDED-BUGS.md`.
 - `src/server.ts` registers the new tools. `src/schema.ts` adds `Scenario` and `Case`. The bundle is rebuilt.
 
+## D23 · 2026-10-15 · Probes P6 and P7, verdicts (slice 1, issue #4)
+
+Claude Code 2.1.299, node 20.12.2, macOS arm64. No headless Claude Code session was run (the owner ruled out `claude -p` for cost). Verified locally: `scenario_verdict` over MCP stdio against the committed bundle (`src/run.test.ts`), and `plugin/hooks/check-exit.sh` fed synthetic SubagentStop JSON plus a synthetic subagent transcript in the real JSONL shape (`src/hooks.test.ts`). `claude plugin validate` passes for `./plugin` and `.`.
+
+**P6 · hook fires, `agent_type` matches: pending live verification**
+- `hooks.json` registers SubagentStop with matcher `^jeyna:jeyna-tester$` (a `:` makes Claude Code treat the matcher as an unanchored regex, so it is anchored).
+- While a run is `running`, every call appends a line to `<runDir>/hooks.log`: time, `agent_type`, `agent_id`, the marker's cases, the missing ones, and the decision. That line is where P6 reads the observed `agent_type`.
+- Not verified: that the hook fires for a spawned tester and the logged string is `jeyna:jeyna-tester`. To probe: in `sample-app/`, start a run, spawn `jeyna:jeyna-tester` with a prompt opening `jeyna-tester-cases: t1-390x844` and telling it to stop without a verdict, then read `hooks.log`. If nothing is logged, retry with matcher `*` to see the real string, then set the matcher to it (fallback, D2).
+
+**P7 · blocked once, then allowed: pending live verification**
+- Verified locally: with a case of the marker unverdicted, the hook prints `{"decision":"block","reason":…}` naming only this tester's missing cases and `scenario_verdict`. With `stop_hook_active: true` it allows the stop and logs `allow (stop_hook_active)`. With every case verdicted it allows. With no `running` run it prints and writes nothing.
+- The marker is read from the first user record of `agent_transcript_path` whose content is a string (or text blocks), so a later system reminder cannot supply case ids. A leading `~` is expanded.
+- Not verified: that the live tester receives the reason, records its verdict, and that the second stop arrives with `stop_hook_active: true`. Same probe as P6; then check `session.json` has the verdict and `hooks.log` shows `block` then `allow`. If the marker is not in the transcript, the fallback is to read case ids from the tester's tool calls (D2); not built.
+
+**Also decided in building**
+- `scenario_verdict {case, result, note?, findings?}`: one verdict per case, a second call replaces it. `blocked` and `skipped` without a note are refused (D8). `fail` is accepted without a finding until `record_finding` exists (ticket 6). Unknown cases are refused with the run's case ids.
+- The session is written with synchronous temp + rename after each change in memory; node runs tool handlers one at a time between awaits, so that sync write is the one write queue (D11). Parallel verdicts are all kept (test).
+- The hook reads `session.json` from disk; the server never does mid-run. Project root: `CLAUDE_PROJECT_DIR`, then the payload's `cwd`.
+- A transcript without a marker is allowed and logged as `allow (no marker)`: without case ids the hook cannot judge.
+- The `jeyna-tester` allowlist gains `scenario_verdict`; its instructions add the verdict step.
+
+**Changed**
+- New: `plugin/hooks/check-exit.sh`. `src/session.ts` adds `scenario_verdict`. `plugin/hooks/hooks.json`, `plugin/agents/jeyna-tester.md`, `src/run.test.ts`, `src/hooks.test.ts`. The bundle is rebuilt.
+
+## D24 · 2026-10-15 · Probe P8, parallel calls (slice 1, issue #5)
+
+Claude Code 2.1.299, node 20.12.2, macOS arm64, Google Chrome 155.0.8059.41. No headless Claude Code session was run (the owner ruled out `claude -p` for cost). Verified locally by driving the committed bundle over one MCP stdio connection from a folder with no `node_modules` (`src/run.test.ts`, plus a manual client run with stderr visible).
+
+**P8 · server handles concurrent calls: verified locally; Claude Code issuing them concurrently pending live verification**
+- Every tool call now logs `<iso> call <n> <tool> <case|-> start` and `… end <ms>ms` to stderr.
+- Two cases (`t1-1440x900`, `t2-390x844`) each ran `goto` → `snapshot` → `screenshot` → `scenario_verdict`, the two sequences interleaved over one connection, not awaited one after the other. Observed: both `goto` calls started 12 ms apart and ended 1 ms apart (about 630 ms each, sharing the one Chrome launch); `snapshot` and `screenshot` pairs overlapped the same way. Wall time for both cases was 691 ms, about one case's worth. Both verdicts are in `session.json` (no lost update, D11).
+- So the server does not serialise: the stdio transport dispatches each request as it arrives and node interleaves the handlers between awaits. Each case keeps its own browser context (D4). The D10/D11 fallback (serialise browser calls) is not needed on the server side.
+- Not verified: that Claude Code, with two `jeyna:jeyna-tester`s spawned in one message, sends their calls to the one jeyna-mcp process concurrently rather than one at a time. To probe: in `sample-app/`, start a run with two scenarios, spawn both testers in one message, and read the server's stderr (the MCP log, `claude --debug`) for overlapping `start`/`end` spans. If they never overlap, record the serialised throughput (sum of tester times) here; no server change follows.
+
+**Changed**
+- `src/server.ts`: per-call start/end logging around every registered tool. `src/run.test.ts`: the P8 test. The bundle is rebuilt.
+
+## D25 · 2026-10-15 · Findings: `record_finding`, the converter, `fail` needs a finding (slice 2, issue #6)
+
+Claude Code 2.1.299, node 20.12.2, macOS arm64. No headless Claude Code session was run (the owner ruled out `claude -p` for cost). Verified locally by driving the committed bundle over MCP stdio against the sample app (`src/run.test.ts`). `claude plugin validate` passes for `./plugin` and `.`.
+
+**AC5 · a bug without evidence is refused, the tester retries with a screenshot: refusal verified, retry pending live verification**
+- Verified locally: `record_finding` of kind `bug` with no `evidence` returns a tool error that tells the tester to call `screenshot {case}` and call `record_finding` again with the file name, and lists the case's screenshots so far. The same finding with the screenshot's file name is then recorded as `PT-exploratory-001`.
+- Not verified: that a live `jeyna:jeyna-tester` reads the error and retries with a screenshot. To probe: in `sample-app/`, start a run, spawn `jeyna:jeyna-tester` on `t1-390x844` and tell it to record the off-screen Sign in button (bug 2) as a `bug` without evidence first; then check that a second `record_finding` carries a screenshot and `findings/` holds one file.
+
+**Also decided in building**
+- `record_finding {case, finding}` validates FindingInput (§5.2): kind `bug | ux | a11y | question`, no `perf` (D8); severity `critical | major | minor | note`; 1–12 steps; title 8–140 characters. Unknown cases are refused with the run's case ids.
+- Evidence names must be plain file names in the run's `evidence/` folder (no path parts); otherwise the call is refused with the case's screenshots (F6.3).
+- Id: `PT-<slug>-<nnn>`, the slug being the flow with any `exploratory:` prefix removed. The number is the count of this run's findings plus one, taken and the file created with `wx` in one synchronous step after the handler's last `await` (D11). Eight concurrent calls get eight distinct ids (test).
+- Server-added frontmatter: `schema`, `id`, `status: open`, `flow`, `case`, `scenario` and `viewport` (from the case, D4), `browser` (`<browser type> <version>`, or `unknown` before any browser call), `build`, `author` (the tester's model from `session.json`, D15), `created`. The body is `# <title>`, then `## Steps` (numbered), `## Expected`, `## Actual`, `## Evidence` (image links to `../evidence/`), `## Suggested next step` (`None given.` when absent), so every section is always present for `validate`. Frontmatter is written with the `yaml` package already bundled; gray-matter is not added.
+- The finding list (id, case) lives in memory with the session, not in `session.json` (§5.2 has no field for it). After a server restart the run is aborted by the next `session_start` anyway.
+- `scenario_verdict` refuses a `fail` with no finding (D8), and refuses any listed id that is not a finding of that case, whatever the result, naming the case's findings.
+- The `jeyna-tester` allowlist gains `record_finding`; its instructions add the finding step and the `fail` needs-a-finding rule.
+
+**Changed**
+- New: `src/findings.ts`. `src/schema.ts` adds `FindingInput`; `src/session.ts` keeps the finding list and checks verdict findings; `src/browser.ts` exports `browserName`; `src/server.ts` registers `record_finding`. `plugin/agents/jeyna-tester.md`, `src/run.test.ts`. The bundle is rebuilt.
+
 ---
 
-## D23 · 2026-10-15 · click, fill, press and redaction; AC3 proved locally (slice 2, issue #7)
+## D26 · 2026-10-15 · click, fill, press and redaction; AC3 proved locally (slice 2, issue #7)
 
 Claude Code 2.1.299, node 20.12.2, playwright-core 1.64.1. No headless Claude Code session was run (the owner ruled out `claude -p` for cost). Verified by driving the committed bundle over MCP stdio against the sample app (`src/operate.test.ts`).
 
@@ -611,7 +668,7 @@ Claude Code 2.1.299, node 20.12.2, playwright-core 1.64.1. No headless Claude Co
 - Not verified: the transcript of a live session. A tester's own messages could still contain a value it never saw only if it guessed it. Check by running `/jeyna:playtest` on `sample-app/` and grepping the session JSONL for both accounts' values.
 
 **Allowlist**
-- The tester allowlist is now `goto`, `click`, `fill`, `press`, `snapshot`, `screenshot`. `scenario_verdict` (ticket 4) and `record_finding` (ticket 6) complete the eight of D9 when they merge.
+- The tester allowlist is now the full eight of D9: `goto`, `click`, `fill`, `press`, `snapshot`, `screenshot`, `record_finding`, `scenario_verdict`.
 
 **Changed**
 - New: `src/accounts.ts`, `src/accounts.test.ts`, `src/operate.test.ts`.

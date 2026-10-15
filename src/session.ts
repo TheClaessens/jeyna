@@ -53,11 +53,14 @@ type Session = {
   scenarios: Scenario[];
   testers: (Omit<Tester, "cases"> & { model: string; cases: string[] })[];
   cases: Case[];
-  verdicts: unknown[];
+  verdicts: Verdict[];
 };
 
+type Verdict = { case: string; result: "pass" | "fail" | "blocked" | "skipped"; note?: string; findings: string[] };
+
 // The in-memory session is the only source of truth during a run (D11).
-export let current: { runDir: string; session: Session } | undefined;
+// findings: id and case of each finding recorded in this run; its length is the id counter (D11).
+export let current: { runDir: string; session: Session; findings: { id: string; case: string }[] } | undefined;
 
 // Synchronous temp + rename: writes cannot interleave and readers never see half a file (D11).
 function save(runDir: string, session: Session) {
@@ -148,12 +151,50 @@ export function registerSessionTools(server: McpServer, getContext: () => { root
           verdicts: [],
         };
         save(runDir, session);
-        current = { runDir, session };
+        current = { runDir, session, findings: [] };
         return ok({
           id,
           runDir,
           testers: testers.map(({ cases, ...t }) => ({ ...t, cases: cases.map(({ id, viewport }) => ({ id, viewport })) })),
         });
+      } catch (e) {
+        return fail(e);
+      }
+    },
+  );
+
+  server.registerTool(
+    "scenario_verdict",
+    {
+      description:
+        "Record this case's verdict against the scenario's Pass: line. One per case; calling again replaces it. blocked (could not get far enough to judge) and skipped need a note saying why.",
+      inputSchema: {
+        case: z.string().describe("Case id from your prompt's jeyna-tester-cases line, e.g. t1-390x844"),
+        result: z.enum(["pass", "fail", "blocked", "skipped"]),
+        note: z.string().min(1).optional(),
+        findings: z.array(z.string()).default([]),
+      },
+    },
+    async ({ case: caseId, result, note, findings }) => {
+      try {
+        if (!current) throw new Error("No running session. Call session_start first.");
+        const { runDir, session } = current;
+        if (!session.cases.some((c) => c.id === caseId)) {
+          throw new Error(`Unknown case "${caseId}". Cases in this run: ${session.cases.map((c) => c.id).join(", ")}.`);
+        }
+        if ((result === "blocked" || result === "skipped") && !note) throw new Error(`A ${result} verdict needs a note saying why.`);
+        const ofCase = current.findings.filter((f) => f.case === caseId).map((f) => f.id);
+        const foreign = findings.filter((id) => !ofCase.includes(id));
+        if (foreign.length) {
+          throw new Error(`Not findings of case ${caseId}: ${foreign.join(", ")}. Its findings: ${ofCase.join(", ") || "none"}.`);
+        }
+        if (result === "fail" && !findings.length) {
+          throw new Error(`A fail needs at least one finding of case ${caseId}: record it with record_finding, then list its id in findings.`);
+        }
+        const verdict: Verdict = { case: caseId, result, ...(note && { note }), findings };
+        session.verdicts = [...session.verdicts.filter((v) => v.case !== caseId), verdict];
+        save(runDir, session);
+        return ok({ recorded: verdict });
       } catch (e) {
         return fail(e);
       }

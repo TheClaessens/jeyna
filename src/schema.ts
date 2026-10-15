@@ -29,3 +29,17 @@ export const Scenario = z.strictObject({
 export type Scenario = z.infer<typeof Scenario>;
 
 export type Case = { id: string; scenario: string; viewport: string };
+
+// What a tester sends to record_finding (§5.2). Scenario, viewport and the rest are added by the server (D4).
+export const FindingInput = z.strictObject({
+  title: z.string().min(8).max(140).describe("One line, no severity words"),
+  kind: z.enum(["bug", "ux", "a11y", "question"]),
+  severity: z.enum(["critical", "major", "minor", "note"]),
+  route: z.string().min(1).describe("e.g. /login"),
+  steps: z.array(z.string().min(1)).min(1).max(12),
+  expected: z.string().min(1),
+  actual: z.string().min(1),
+  evidence: z.array(z.string()).default([]).describe("File names returned by screenshot, e.g. t1-390x844-2-login.png"),
+  next: z.string().min(1).optional().describe("Suggested next step"),
+});
+export type FindingInput = z.infer<typeof FindingInput>;

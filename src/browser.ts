@@ -49,6 +49,16 @@ async function launch(headed: boolean): Promise<Browser> {
 const pages = new Map<string, Promise<Page>>();
 const shots = new Map<string, number>();
 
+// "chromium 155.0.8059.41" for findings; "unknown" when no browser was launched.
+export async function browserName(): Promise<string> {
+  try {
+    const b = await browser;
+    return b ? `${b.browserType().name()} ${b.version()}` : "unknown";
+  } catch {
+    return "unknown";
+  }
+}
+
 export async function closeContexts() {
   const all = [...pages.values()];
   pages.clear();
