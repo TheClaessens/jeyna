@@ -238,15 +238,15 @@ Run family:
 | `save_flow` | `{run, name}` | writes `flows/<name>.md` from that run's `session.json` scenarios and `entry` (F2.4); refuses if the file exists, a bad name, or a scenario that would not read back the same (D29) |
 | `scenario_verdict` | `{case, result, note?, findings?}` | ok; refused if `fail` has no finding of this case, or `blocked`/`skipped` has no note |
 | `record_finding` | `{case, finding: FindingInput}` | `{id, path}`; refused if kind is `bug` with no evidence, or an evidence file does not exist |
-| `update_status` | `{id, status, of?, note?}` | ok; `of` required when status is `duplicate` |
-| `validate` | `{run?}` | `{errors: string[]}` |
+| `update_status` | `{id, status, of?, note?, run?}` | ok; `of` required when status is `duplicate`. Looks in `run` if given, else the current run; with no run running and the id in several runs, refused with their ids (D30) |
+| `validate` | `{run?}` | `{errors: string[]}`; `run` is a run id under `.jeyna/playtests/`, anything outside is refused (D30) |
 | `session_finish` | `{summary}` | `{reportPath, counts, elapsedSeconds, testers}` (elapsed since `session_start`, N5), or a tool error listing validation errors (run stays `running`) |
 
 Browser family (all `{case, …}`; `case: "scout"` is reserved for the pre-session look, F2.3):
 
 | tool | input | output |
 |---|---|---|
-| `goto` | `{url \| path}` | final url, title |
+| `goto` | `{url \| path}` | final url, title; `path` is relative to the app url including its base path (D30) |
 | `click` | `{selector}` | ok, or error with nearest candidates |
 | `fill` | `{selector, value}` | ok; placeholders substituted; `<select>` handled via `selectOption` |
 | `press` | `{key}` | ok |
