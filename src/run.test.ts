@@ -162,3 +162,35 @@ test("with Chrome forced to fail and no Playwright Chromium, the error names npx
   expect(r.isError).toBe(true);
   expect(text(r)).toMatch(/npx playwright install chromium/);
 });
+
+const sessionOf = (runDir: string) => JSON.parse(readFileSync(join(runDir, "session.json"), "utf8"));
+
+test("scenario_verdict records one verdict per case in session.json; a second one replaces it", async () => {
+  const { call, runDir } = await started();
+  expect((await call("scenario_verdict", { case: "t1-390x844", result: "pass" })).isError).toBeFalsy();
+  expect((await call("scenario_verdict", { case: "t1-1440x900", result: "fail" })).isError).toBeFalsy();
+  await call("scenario_verdict", { case: "t1-390x844", result: "skipped", note: "app down" });
+  expect(sessionOf(runDir).verdicts).toEqual([
+    { case: "t1-1440x900", result: "fail", findings: [] },
+    { case: "t1-390x844", result: "skipped", note: "app down", findings: [] },
+  ]);
+});
+
+test("blocked and skipped need a note; unknown cases are refused", async () => {
+  const { call, text, runDir } = await started();
+  for (const result of ["blocked", "skipped"]) {
+    const r = await call("scenario_verdict", { case: "t1-390x844", result });
+    expect(r.isError).toBe(true);
+    expect(text(r)).toMatch(/note/);
+  }
+  const r = await call("scenario_verdict", { case: "t9-390x844", result: "pass" });
+  expect(r.isError).toBe(true);
+  expect(text(r)).toMatch(/t1-1440x900, t1-390x844/);
+  expect(sessionOf(runDir).verdicts).toEqual([]);
+});
+
+test("parallel verdicts are all kept", async () => {
+  const { call, runDir } = await started();
+  await Promise.all(["t1-1440x900", "t1-390x844"].map((c) => call("scenario_verdict", { case: c, result: "pass" })));
+  expect(sessionOf(runDir).verdicts.map((v: { case: string }) => v.case).sort()).toEqual(["t1-1440x900", "t1-390x844"]);
+});

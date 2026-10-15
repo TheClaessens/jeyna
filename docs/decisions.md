@@ -590,3 +590,27 @@ Claude Code 2.1.299, node 20.12.2, macOS arm64, Google Chrome 155.0.8059.41, pla
 **Changed**
 - New: `src/session.ts`, `src/browser.ts`, `src/session.test.ts`, `src/run.test.ts`, `plugin/agents/jeyna-tester.md`, `sample-app/server.mjs`, `sample-app/.env.example`, `sample-app/SEEDED-BUGS.md`.
 - `src/server.ts` registers the new tools. `src/schema.ts` adds `Scenario` and `Case`. The bundle is rebuilt.
+
+## D23 · 2026-10-15 · Probes P6 and P7, verdicts (slice 1, issue #4)
+
+Claude Code 2.1.299, node 20.12.2, macOS arm64. No headless Claude Code session was run (the owner ruled out `claude -p` for cost). Verified locally: `scenario_verdict` over MCP stdio against the committed bundle (`src/run.test.ts`), and `plugin/hooks/check-exit.sh` fed synthetic SubagentStop JSON plus a synthetic subagent transcript in the real JSONL shape (`src/hooks.test.ts`). `claude plugin validate` passes for `./plugin` and `.`.
+
+**P6 · hook fires, `agent_type` matches: pending live verification**
+- `hooks.json` registers SubagentStop with matcher `^jeyna:jeyna-tester$` (a `:` makes Claude Code treat the matcher as an unanchored regex, so it is anchored).
+- While a run is `running`, every call appends a line to `<runDir>/hooks.log`: time, `agent_type`, `agent_id`, the marker's cases, the missing ones, and the decision. That line is where P6 reads the observed `agent_type`.
+- Not verified: that the hook fires for a spawned tester and the logged string is `jeyna:jeyna-tester`. To probe: in `sample-app/`, start a run, spawn `jeyna:jeyna-tester` with a prompt opening `jeyna-tester-cases: t1-390x844` and telling it to stop without a verdict, then read `hooks.log`. If nothing is logged, retry with matcher `*` to see the real string, then set the matcher to it (fallback, D2).
+
+**P7 · blocked once, then allowed: pending live verification**
+- Verified locally: with a case of the marker unverdicted, the hook prints `{"decision":"block","reason":…}` naming only this tester's missing cases and `scenario_verdict`. With `stop_hook_active: true` it allows the stop and logs `allow (stop_hook_active)`. With every case verdicted it allows. With no `running` run it prints and writes nothing.
+- The marker is read from the first user record of `agent_transcript_path` whose content is a string (or text blocks), so a later system reminder cannot supply case ids. A leading `~` is expanded.
+- Not verified: that the live tester receives the reason, records its verdict, and that the second stop arrives with `stop_hook_active: true`. Same probe as P6; then check `session.json` has the verdict and `hooks.log` shows `block` then `allow`. If the marker is not in the transcript, the fallback is to read case ids from the tester's tool calls (D2); not built.
+
+**Also decided in building**
+- `scenario_verdict {case, result, note?, findings?}`: one verdict per case, a second call replaces it. `blocked` and `skipped` without a note are refused (D8). `fail` is accepted without a finding until `record_finding` exists (ticket 6). Unknown cases are refused with the run's case ids.
+- The session is written with synchronous temp + rename after each change in memory; node runs tool handlers one at a time between awaits, so that sync write is the one write queue (D11). Parallel verdicts are all kept (test).
+- The hook reads `session.json` from disk; the server never does mid-run. Project root: `CLAUDE_PROJECT_DIR`, then the payload's `cwd`.
+- A transcript without a marker is allowed and logged as `allow (no marker)`: without case ids the hook cannot judge.
+- The `jeyna-tester` allowlist gains `scenario_verdict`; its instructions add the verdict step.
+
+**Changed**
+- New: `plugin/hooks/check-exit.sh`. `src/session.ts` adds `scenario_verdict`. `plugin/hooks/hooks.json`, `plugin/agents/jeyna-tester.md`, `src/run.test.ts`, `src/hooks.test.ts`. The bundle is rebuilt.

@@ -7,6 +7,14 @@
           { "type": "command", "command": "sh", "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/guard-write.sh"], "onFailure": "block" }
         ]
       }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "^jeyna:jeyna-tester$",
+        "hooks": [
+          { "type": "command", "command": "sh", "args": ["${CLAUDE_PLUGIN_ROOT}/hooks/check-exit.sh"] }
+        ]
+      }
     ]
   }
 }
