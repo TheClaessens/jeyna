@@ -168,10 +168,10 @@ const sessionOf = (runDir: string) => JSON.parse(readFileSync(join(runDir, "sess
 test("scenario_verdict records one verdict per case in session.json; a second one replaces it", async () => {
   const { call, runDir } = await started();
   expect((await call("scenario_verdict", { case: "t1-390x844", result: "pass" })).isError).toBeFalsy();
-  expect((await call("scenario_verdict", { case: "t1-1440x900", result: "fail" })).isError).toBeFalsy();
+  expect((await call("scenario_verdict", { case: "t1-1440x900", result: "pass" })).isError).toBeFalsy();
   await call("scenario_verdict", { case: "t1-390x844", result: "skipped", note: "app down" });
   expect(sessionOf(runDir).verdicts).toEqual([
-    { case: "t1-1440x900", result: "fail", findings: [] },
+    { case: "t1-1440x900", result: "pass", findings: [] },
     { case: "t1-390x844", result: "skipped", note: "app down", findings: [] },
   ]);
 });
@@ -193,6 +193,111 @@ test("parallel verdicts are all kept", async () => {
   const { call, runDir } = await started();
   await Promise.all(["t1-1440x900", "t1-390x844"].map((c) => call("scenario_verdict", { case: c, result: "pass" })));
   expect(sessionOf(runDir).verdicts.map((v: { case: string }) => v.case).sort()).toEqual(["t1-1440x900", "t1-390x844"]);
+});
+
+const A11Y = {
+  title: "Password field has no label",
+  kind: "a11y",
+  severity: "major",
+  route: "/login",
+  steps: ["Open /login", "Read the accessibility snapshot"],
+  expected: "The password field is announced as Password.",
+  actual: "The snapshot shows a nameless textbox after Email.",
+};
+
+test("record_finding writes findings/PT-<slug>-001.md with frontmatter copied from the case and the five sections (bug 3)", async () => {
+  const { call, text, runDir } = await started();
+  await call("goto", { case: "t1-390x844", path: "/login" });
+  const shot = text(await call("screenshot", { case: "t1-390x844", label: "login" }));
+  const r = await call("record_finding", {
+    case: "t1-390x844",
+    finding: { ...A11Y, evidence: [shot], next: "Add a <label> to the password input." },
+  });
+  expect(r.isError).toBeFalsy();
+  const out = JSON.parse(text(r));
+  expect(out).toEqual({ id: "PT-exploratory-001", path: join(runDir, "findings", "PT-exploratory-001.md") });
+  const md = readFileSync(out.path, "utf8");
+  const [, front, body] = md.split(/^---$/m);
+  expect(front).toMatch(/^schema: 1$/m);
+  expect(front).toMatch(/^id: PT-exploratory-001$/m);
+  expect(front).toMatch(/^kind: a11y$/m);
+  expect(front).toMatch(/^status: open$/m);
+  expect(front).toMatch(/^flow: exploratory:exploratory$/m);
+  expect(front).toMatch(/^case: t1-390x844$/m);
+  expect(front).toMatch(/^scenario: Sign in$/m);
+  expect(front).toMatch(/^viewport: 390x844$/m);
+  expect(front).toMatch(/^route: \/login$/m);
+  expect(front).toMatch(/^author: sonnet$/m);
+  expect(front).toMatch(/^browser: \S+/m);
+  expect(front).toMatch(/^build: \S+/m);
+  expect(front).toMatch(/^created: \S+/m);
+  expect(front).toMatch(/^evidence:\n {2}- t1-390x844-1-login.png$/m);
+  expect(body).toMatch(/^# Password field has no label$/m);
+  for (const h of ["Steps", "Expected", "Actual", "Evidence", "Suggested next step"]) expect(body).toMatch(new RegExp(`^## ${h}$`, "m"));
+  expect(body).toMatch(/^1\. Open \/login$/m);
+  expect(body).toMatch(/!\[t1-390x844-1-login.png\]\(\.\.\/evidence\/t1-390x844-1-login.png\)/);
+  expect(body).toMatch(/Add a <label> to the password input\./);
+});
+
+test("a bug with no evidence is refused, telling the tester to take a screenshot; with one it is recorded (AC5)", async () => {
+  const { call, text } = await started();
+  const bug = { ...A11Y, kind: "bug" };
+  const r = await call("record_finding", { case: "t1-390x844", finding: bug });
+  expect(r.isError).toBe(true);
+  expect(text(r)).toMatch(/evidence/);
+  expect(text(r)).toMatch(/screenshot/);
+  await call("goto", { case: "t1-390x844", path: "/login" });
+  const shot = text(await call("screenshot", { case: "t1-390x844" }));
+  const retry = await call("record_finding", { case: "t1-390x844", finding: { ...bug, evidence: [shot] } });
+  expect(retry.isError).toBeFalsy();
+  expect(JSON.parse(text(retry)).id).toBe("PT-exploratory-001");
+});
+
+test("evidence that does not exist is refused with the files that do", async () => {
+  const { call, text } = await started();
+  await call("goto", { case: "t1-390x844", path: "/login" });
+  await call("screenshot", { case: "t1-390x844" });
+  for (const name of ["t1-390x844-9.png", "../session.json"]) {
+    const r = await call("record_finding", { case: "t1-390x844", finding: { ...A11Y, evidence: [name] } });
+    expect(r.isError).toBe(true);
+    expect(text(r)).toMatch(/t1-390x844-1\.png/);
+  }
+});
+
+test("kinds are bug, ux, a11y, question; perf and unknown cases are refused", async () => {
+  const { call, text } = await started();
+  const perf = await call("record_finding", { case: "t1-390x844", finding: { ...A11Y, kind: "perf" } });
+  expect(perf.isError).toBe(true);
+  for (const kind of ["ux", "a11y", "question"]) {
+    expect((await call("record_finding", { case: "t1-390x844", finding: { ...A11Y, kind } })).isError).toBeFalsy();
+  }
+  const r = await call("record_finding", { case: "t9-390x844", finding: A11Y });
+  expect(r.isError).toBe(true);
+  expect(text(r)).toMatch(/t1-1440x900, t1-390x844/);
+});
+
+test("concurrent record_finding calls never get the same id", async () => {
+  const { call, text, runDir } = await started();
+  const results = await Promise.all(
+    Array.from({ length: 8 }, (_, i) => call("record_finding", { case: i % 2 ? "t1-390x844" : "t1-1440x900", finding: A11Y })),
+  );
+  const ids = results.map((r) => JSON.parse(text(r)).id).sort();
+  expect(ids).toEqual(Array.from({ length: 8 }, (_, i) => `PT-exploratory-00${i + 1}`));
+  for (const id of ids) expect(existsSync(join(runDir, "findings", `${id}.md`))).toBe(true);
+});
+
+test("fail needs a finding of that case; findings of another case or unknown ids are refused", async () => {
+  const { call, text, runDir } = await started();
+  const none = await call("scenario_verdict", { case: "t1-390x844", result: "fail" });
+  expect(none.isError).toBe(true);
+  expect(text(none)).toMatch(/record_finding/);
+  const id = JSON.parse(text(await call("record_finding", { case: "t1-1440x900", finding: A11Y }))).id;
+  const other = await call("scenario_verdict", { case: "t1-390x844", result: "fail", findings: [id] });
+  expect(other.isError).toBe(true);
+  expect(text(other)).toMatch(id);
+  expect((await call("scenario_verdict", { case: "t1-390x844", result: "pass", findings: ["PT-nope-001"] })).isError).toBe(true);
+  expect((await call("scenario_verdict", { case: "t1-1440x900", result: "fail", findings: [id] })).isError).toBeFalsy();
+  expect(sessionOf(runDir).verdicts).toEqual([{ case: "t1-1440x900", result: "fail", findings: [id] }]);
 });
 
 // P8: two cases driven concurrently over one connection, as two testers in one batch would be.

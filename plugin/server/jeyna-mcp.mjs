@@ -172,10 +172,10 @@ var require_code = __commonJS2({
     function interpolate(x) {
       return typeof x == "number" || typeof x == "boolean" || x === null ? x : safeStringify(Array.isArray(x) ? x.join(",") : x);
     }
-    function stringify(x) {
+    function stringify2(x) {
       return new _Code(safeStringify(x));
     }
-    exports2.stringify = stringify;
+    exports2.stringify = stringify2;
     function safeStringify(x) {
       return JSON.stringify(x).replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
     }
@@ -8680,7 +8680,7 @@ var require_stringify = __commonJS2({
         props.push(doc.directives.tagString(tag));
       return props.join(" ");
     }
-    function stringify(item, ctx, onComment, onChompKeep) {
+    function stringify2(item, ctx, onComment, onChompKeep) {
       if (identity.isPair(item))
         return item.toString(ctx, onComment, onChompKeep);
       if (identity.isAlias(item)) {
@@ -8709,7 +8709,7 @@ var require_stringify = __commonJS2({
 ${ctx.indent}${str}`;
     }
     exports2.createStringifyContext = createStringifyContext;
-    exports2.stringify = stringify;
+    exports2.stringify = stringify2;
   }
 });
 
@@ -8719,7 +8719,7 @@ var require_stringifyPair = __commonJS2({
     "use strict";
     var identity = require_identity();
     var Scalar = require_Scalar();
-    var stringify = require_stringify();
+    var stringify2 = require_stringify();
     var stringifyComment = require_stringifyComment();
     function stringifyPair({ key, value: value2 }, ctx, onComment, onChompKeep) {
       const { allNullValues, doc, indent: indent2, indentStep, options: { commentString, indentSeq, simpleKeys } } = ctx;
@@ -8741,7 +8741,7 @@ var require_stringifyPair = __commonJS2({
       });
       let keyCommentDone = false;
       let chompKeep = false;
-      let str = stringify.stringify(key, ctx, () => keyCommentDone = true, () => chompKeep = true);
+      let str = stringify2.stringify(key, ctx, () => keyCommentDone = true, () => chompKeep = true);
       if (!explicitKey && !ctx.inFlow && str.length > 1024) {
         if (simpleKeys)
           throw new Error("With simple keys, single line scalar must not span more than 1024 characters");
@@ -8793,7 +8793,7 @@ ${indent2}:`;
         ctx.indent = ctx.indent.substring(2);
       }
       let valueCommentDone = false;
-      const valueStr = stringify.stringify(value2, ctx, () => valueCommentDone = true, () => chompKeep = true);
+      const valueStr = stringify2.stringify(value2, ctx, () => valueCommentDone = true, () => chompKeep = true);
       let ws4 = " ";
       if (keyComment || vsb || vcb) {
         ws4 = vsb ? "\n" : "";
@@ -8934,7 +8934,7 @@ var require_addPairToJSMap = __commonJS2({
     "use strict";
     var log4 = require_log();
     var merge2 = require_merge();
-    var stringify = require_stringify();
+    var stringify2 = require_stringify();
     var identity = require_identity();
     var toJS = require_toJS();
     function addPairToJSMap(ctx, map2, { key, value: value2 }) {
@@ -8970,7 +8970,7 @@ var require_addPairToJSMap = __commonJS2({
       if (typeof jsKey !== "object")
         return String(jsKey);
       if (identity.isNode(key) && ctx?.doc) {
-        const strCtx = stringify.createStringifyContext(ctx.doc, {});
+        const strCtx = stringify2.createStringifyContext(ctx.doc, {});
         strCtx.anchors = /* @__PURE__ */ new Set();
         for (const node2 of ctx.anchors.keys())
           strCtx.anchors.add(node2.anchor);
@@ -9037,12 +9037,12 @@ var require_stringifyCollection = __commonJS2({
   "node_modules/yaml/dist/stringify/stringifyCollection.js"(exports2) {
     "use strict";
     var identity = require_identity();
-    var stringify = require_stringify();
+    var stringify2 = require_stringify();
     var stringifyComment = require_stringifyComment();
     function stringifyCollection(collection, ctx, options2) {
       const flow = ctx.inFlow ?? collection.flow;
-      const stringify2 = flow ? stringifyFlowCollection : stringifyBlockCollection;
-      return stringify2(collection, ctx, options2);
+      const stringify3 = flow ? stringifyFlowCollection : stringifyBlockCollection;
+      return stringify3(collection, ctx, options2);
     }
     function stringifyBlockCollection({ comment, items }, ctx, { blockItemPrefix, flowChars, itemIndent, onChompKeep, onComment }) {
       const { indent: indent2, options: { commentString } } = ctx;
@@ -9067,7 +9067,7 @@ var require_stringifyCollection = __commonJS2({
           }
         }
         chompKeep = false;
-        let str2 = stringify.stringify(item, itemCtx, () => comment2 = null, () => chompKeep = true);
+        let str2 = stringify2.stringify(item, itemCtx, () => comment2 = null, () => chompKeep = true);
         if (comment2)
           str2 += stringifyComment.lineComment(str2, itemIndent, commentString(comment2));
         if (chompKeep && comment2)
@@ -9134,7 +9134,7 @@ ${indent2}${line}` : "\n";
         }
         if (comment)
           reqNewline = true;
-        let str = stringify.stringify(item, itemCtx, () => comment = null);
+        let str = stringify2.stringify(item, itemCtx, () => comment = null);
         reqNewline || (reqNewline = lines.length > linesAtValue || str.includes("\n"));
         if (i < items.length - 1) {
           str += ",";
@@ -10495,7 +10495,7 @@ var require_stringifyDocument = __commonJS2({
   "node_modules/yaml/dist/stringify/stringifyDocument.js"(exports2) {
     "use strict";
     var identity = require_identity();
-    var stringify = require_stringify();
+    var stringify2 = require_stringify();
     var stringifyComment = require_stringifyComment();
     function stringifyDocument(doc, options2) {
       const lines = [];
@@ -10510,7 +10510,7 @@ var require_stringifyDocument = __commonJS2({
       }
       if (hasDirectives)
         lines.push("---");
-      const ctx = stringify.createStringifyContext(doc, options2);
+      const ctx = stringify2.createStringifyContext(doc, options2);
       const { commentString } = ctx.options;
       if (doc.commentBefore) {
         if (lines.length !== 1)
@@ -10532,7 +10532,7 @@ var require_stringifyDocument = __commonJS2({
           contentComment = doc.contents.comment;
         }
         const onChompKeep = contentComment ? void 0 : () => chompKeep = true;
-        let body = stringify.stringify(doc.contents, ctx, () => contentComment = null, onChompKeep);
+        let body = stringify2.stringify(doc.contents, ctx, () => contentComment = null, onChompKeep);
         if (contentComment)
           body += stringifyComment.lineComment(body, "", commentString(contentComment));
         if ((body[0] === "|" || body[0] === ">") && lines[lines.length - 1] === "---") {
@@ -10540,7 +10540,7 @@ var require_stringifyDocument = __commonJS2({
         } else
           lines.push(body);
       } else {
-        lines.push(stringify.stringify(doc.contents, ctx));
+        lines.push(stringify2.stringify(doc.contents, ctx));
       }
       if (doc.directives?.docEnd) {
         if (doc.comment) {
@@ -12676,7 +12676,7 @@ var require_cst_scalar = __commonJS2({
 var require_cst_stringify = __commonJS2({
   "node_modules/yaml/dist/parse/cst-stringify.js"(exports2) {
     "use strict";
-    var stringify = (cst) => "type" in cst ? stringifyToken(cst) : stringifyItem(cst);
+    var stringify2 = (cst) => "type" in cst ? stringifyToken(cst) : stringifyItem(cst);
     function stringifyToken(token) {
       switch (token.type) {
         case "block-scalar": {
@@ -12729,7 +12729,7 @@ var require_cst_stringify = __commonJS2({
         res += stringifyToken(value2);
       return res;
     }
-    exports2.stringify = stringify;
+    exports2.stringify = stringify2;
   }
 });
 
@@ -14459,7 +14459,7 @@ var require_public_api = __commonJS2({
       }
       return doc.toJS(Object.assign({ reviver: _reviver }, options2));
     }
-    function stringify(value2, replacer, options2) {
+    function stringify2(value2, replacer, options2) {
       let _replacer = null;
       if (typeof replacer === "function" || Array.isArray(replacer)) {
         _replacer = replacer;
@@ -14484,7 +14484,7 @@ var require_public_api = __commonJS2({
     exports2.parse = parse4;
     exports2.parseAllDocuments = parseAllDocuments;
     exports2.parseDocument = parseDocument;
-    exports2.stringify = stringify;
+    exports2.stringify = stringify2;
   }
 });
 
@@ -30561,7 +30561,7 @@ ${indent2}`);
             props.push(doc.directives.tagString(tag));
           return props.join(" ");
         }
-        function stringify(item, ctx, onComment, onChompKeep) {
+        function stringify2(item, ctx, onComment, onChompKeep) {
           if (identity2.isPair(item))
             return item.toString(ctx, onComment, onChompKeep);
           if (identity2.isAlias(item)) {
@@ -30590,7 +30590,7 @@ ${indent2}`);
 ${ctx.indent}${str}`;
         }
         exports22.createStringifyContext = createStringifyContext;
-        exports22.stringify = stringify;
+        exports22.stringify = stringify2;
       }
     });
     var require_stringifyPair2 = __commonJS3({
@@ -30598,7 +30598,7 @@ ${ctx.indent}${str}`;
         "use strict";
         var identity2 = require_identity2();
         var Scalar = require_Scalar2();
-        var stringify = require_stringify2();
+        var stringify2 = require_stringify2();
         var stringifyComment = require_stringifyComment2();
         function stringifyPair({ key, value: value2 }, ctx, onComment, onChompKeep) {
           const { allNullValues, doc, indent: indent2, indentStep, options: { commentString, indentSeq, simpleKeys } } = ctx;
@@ -30620,7 +30620,7 @@ ${ctx.indent}${str}`;
           });
           let keyCommentDone = false;
           let chompKeep = false;
-          let str = stringify.stringify(key, ctx, () => keyCommentDone = true, () => chompKeep = true);
+          let str = stringify2.stringify(key, ctx, () => keyCommentDone = true, () => chompKeep = true);
           if (!explicitKey && !ctx.inFlow && str.length > 1024) {
             if (simpleKeys)
               throw new Error("With simple keys, single line scalar must not span more than 1024 characters");
@@ -30672,7 +30672,7 @@ ${indent2}:`;
             ctx.indent = ctx.indent.substring(2);
           }
           let valueCommentDone = false;
-          const valueStr = stringify.stringify(value2, ctx, () => valueCommentDone = true, () => chompKeep = true);
+          const valueStr = stringify2.stringify(value2, ctx, () => valueCommentDone = true, () => chompKeep = true);
           let ws22 = " ";
           if (keyComment || vsb || vcb) {
             ws22 = vsb ? "\n" : "";
@@ -30807,7 +30807,7 @@ ${ctx.indent}`;
         "use strict";
         var log4 = require_log2();
         var merge22 = require_merge2();
-        var stringify = require_stringify2();
+        var stringify2 = require_stringify2();
         var identity2 = require_identity2();
         var toJS = require_toJS2();
         function addPairToJSMap(ctx, map22, { key, value: value2 }) {
@@ -30843,7 +30843,7 @@ ${ctx.indent}`;
           if (typeof jsKey !== "object")
             return String(jsKey);
           if (identity2.isNode(key) && ctx?.doc) {
-            const strCtx = stringify.createStringifyContext(ctx.doc, {});
+            const strCtx = stringify2.createStringifyContext(ctx.doc, {});
             strCtx.anchors = /* @__PURE__ */ new Set();
             for (const node2 of ctx.anchors.keys())
               strCtx.anchors.add(node2.anchor);
@@ -30906,12 +30906,12 @@ ${ctx.indent}`;
       "node_modules/yaml/dist/stringify/stringifyCollection.js"(exports22) {
         "use strict";
         var identity2 = require_identity2();
-        var stringify = require_stringify2();
+        var stringify2 = require_stringify2();
         var stringifyComment = require_stringifyComment2();
         function stringifyCollection(collection, ctx, options2) {
           const flow = ctx.inFlow ?? collection.flow;
-          const stringify2 = flow ? stringifyFlowCollection : stringifyBlockCollection;
-          return stringify2(collection, ctx, options2);
+          const stringify22 = flow ? stringifyFlowCollection : stringifyBlockCollection;
+          return stringify22(collection, ctx, options2);
         }
         function stringifyBlockCollection({ comment, items }, ctx, { blockItemPrefix, flowChars, itemIndent, onChompKeep, onComment }) {
           const { indent: indent2, options: { commentString } } = ctx;
@@ -30936,7 +30936,7 @@ ${ctx.indent}`;
               }
             }
             chompKeep = false;
-            let str2 = stringify.stringify(item, itemCtx, () => comment2 = null, () => chompKeep = true);
+            let str2 = stringify2.stringify(item, itemCtx, () => comment2 = null, () => chompKeep = true);
             if (comment2)
               str2 += stringifyComment.lineComment(str2, itemIndent, commentString(comment2));
             if (chompKeep && comment2)
@@ -31003,7 +31003,7 @@ ${indent2}${line}` : "\n";
             }
             if (comment)
               reqNewline = true;
-            let str = stringify.stringify(item, itemCtx, () => comment = null);
+            let str = stringify2.stringify(item, itemCtx, () => comment = null);
             reqNewline || (reqNewline = lines.length > linesAtValue || str.includes("\n"));
             if (i2 < items.length - 1) {
               str += ",";
@@ -32316,7 +32316,7 @@ ${cn.comment}` : item.comment;
       "node_modules/yaml/dist/stringify/stringifyDocument.js"(exports22) {
         "use strict";
         var identity2 = require_identity2();
-        var stringify = require_stringify2();
+        var stringify2 = require_stringify2();
         var stringifyComment = require_stringifyComment2();
         function stringifyDocument(doc, options2) {
           const lines = [];
@@ -32331,7 +32331,7 @@ ${cn.comment}` : item.comment;
           }
           if (hasDirectives)
             lines.push("---");
-          const ctx = stringify.createStringifyContext(doc, options2);
+          const ctx = stringify2.createStringifyContext(doc, options2);
           const { commentString } = ctx.options;
           if (doc.commentBefore) {
             if (lines.length !== 1)
@@ -32353,7 +32353,7 @@ ${cn.comment}` : item.comment;
               contentComment = doc.contents.comment;
             }
             const onChompKeep = contentComment ? void 0 : () => chompKeep = true;
-            let body = stringify.stringify(doc.contents, ctx, () => contentComment = null, onChompKeep);
+            let body = stringify2.stringify(doc.contents, ctx, () => contentComment = null, onChompKeep);
             if (contentComment)
               body += stringifyComment.lineComment(body, "", commentString(contentComment));
             if ((body[0] === "|" || body[0] === ">") && lines[lines.length - 1] === "---") {
@@ -32361,7 +32361,7 @@ ${cn.comment}` : item.comment;
             } else
               lines.push(body);
           } else {
-            lines.push(stringify.stringify(doc.contents, ctx));
+            lines.push(stringify2.stringify(doc.contents, ctx));
           }
           if (doc.directives?.docEnd) {
             if (doc.comment) {
@@ -34456,7 +34456,7 @@ ${end.comment}` : end.comment;
     var require_cst_stringify2 = __commonJS3({
       "node_modules/yaml/dist/parse/cst-stringify.js"(exports22) {
         "use strict";
-        var stringify = (cst) => "type" in cst ? stringifyToken(cst) : stringifyItem(cst);
+        var stringify2 = (cst) => "type" in cst ? stringifyToken(cst) : stringifyItem(cst);
         function stringifyToken(token) {
           switch (token.type) {
             case "block-scalar": {
@@ -34509,7 +34509,7 @@ ${end.comment}` : end.comment;
             res += stringifyToken(value2);
           return res;
         }
-        exports22.stringify = stringify;
+        exports22.stringify = stringify2;
       }
     });
     var require_cst_visit2 = __commonJS3({
@@ -36227,7 +36227,7 @@ ${end.comment}` : end.comment;
           }
           return doc.toJS(Object.assign({ reviver: _reviver }, options2));
         }
-        function stringify(value2, replacer, options2) {
+        function stringify2(value2, replacer, options2) {
           let _replacer = null;
           if (typeof replacer === "function" || Array.isArray(replacer)) {
             _replacer = replacer;
@@ -36252,7 +36252,7 @@ ${end.comment}` : end.comment;
         exports22.parse = parse32;
         exports22.parseAllDocuments = parseAllDocuments;
         exports22.parseDocument = parseDocument;
-        exports22.stringify = stringify;
+        exports22.stringify = stringify2;
       }
     });
     var require_dist3 = __commonJS3({
@@ -37182,7 +37182,7 @@ ${end.comment}` : end.comment;
     var require_stringify22 = __commonJS3({
       "node_modules/json5/lib/stringify.js"(exports22, module22) {
         var util22 = require_util22();
-        module22.exports = function stringify(value2, replacer, space) {
+        module22.exports = function stringify2(value2, replacer, space) {
           const stack = [];
           let indent2 = "";
           let propertyList;
@@ -37399,10 +37399,10 @@ ${end.comment}` : end.comment;
     var require_lib = __commonJS3({
       "node_modules/json5/lib/index.js"(exports22, module22) {
         var parse32 = require_parse();
-        var stringify = require_stringify22();
+        var stringify2 = require_stringify22();
         var JSON5 = {
           parse: parse32,
-          stringify
+          stringify: stringify2
         };
         module22.exports = JSON5;
       }
@@ -47499,10 +47499,10 @@ ${end.comment}` : end.comment;
         function interpolate(x) {
           return typeof x == "number" || typeof x == "boolean" || x === null ? x : safeStringify(Array.isArray(x) ? x.join(",") : x);
         }
-        function stringify(x) {
+        function stringify2(x) {
           return new _Code(safeStringify(x));
         }
-        exports22.stringify = stringify;
+        exports22.stringify = stringify2;
         function safeStringify(x) {
           return JSON.stringify(x).replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
         }
@@ -54412,10 +54412,10 @@ ${end.comment}` : end.comment;
         function interpolate(x) {
           return typeof x == "number" || typeof x == "boolean" || x === null ? x : safeStringify(Array.isArray(x) ? x.join(",") : x);
         }
-        function stringify(x) {
+        function stringify2(x) {
           return new _Code(safeStringify(x));
         }
-        exports22.stringify = stringify;
+        exports22.stringify = stringify2;
         function safeStringify(x) {
           return JSON.stringify(x).replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
         }
@@ -65726,7 +65726,7 @@ ${end.comment}` : end.comment;
     minimatch.escape = escape2;
     minimatch.unescape = unescape2;
     var import_node_process7 = __toESM3(__require("node:process"), 1);
-    var import_node_path4 = __toESM3(__require("node:path"), 1);
+    var import_node_path5 = __toESM3(__require("node:path"), 1);
     var import_node_url = __require("node:url");
     var import_node_child_process7 = __toESM3(__require("node:child_process"), 1);
     var import_promises2 = __toESM3(__require("node:fs/promises"), 1);
@@ -65737,11 +65737,11 @@ ${end.comment}` : end.comment;
     var import_node_os = __toESM3(__require("node:os"), 1);
     var import_node_fs32 = __toESM3(__require("node:fs"), 1);
     var import_node_fs22 = __toESM3(__require("node:fs"), 1);
-    var import_node_fs4 = __toESM3(__require("node:fs"), 1);
+    var import_node_fs5 = __toESM3(__require("node:fs"), 1);
     var isDockerCached;
     function hasDockerEnv() {
       try {
-        import_node_fs4.default.statSync("/.dockerenv");
+        import_node_fs5.default.statSync("/.dockerenv");
         return true;
       } catch {
         return false;
@@ -65749,7 +65749,7 @@ ${end.comment}` : end.comment;
     }
     function hasDockerCGroup() {
       try {
-        return import_node_fs4.default.readFileSync("/proc/self/cgroup", "utf8").includes("docker");
+        return import_node_fs5.default.readFileSync("/proc/self/cgroup", "utf8").includes("docker");
       } catch {
         return false;
       }
@@ -66027,8 +66027,8 @@ tell application "System Events" to get value of property list item "CFBundleNam
     var is_in_ssh_default = isInSsh;
     var import_meta = {};
     var fallbackAttemptSymbol = /* @__PURE__ */ Symbol("fallbackAttempt");
-    var __dirname2 = import_meta.url ? import_node_path4.default.dirname((0, import_node_url.fileURLToPath)(import_meta.url)) : "";
-    var localXdgOpenPath = import_node_path4.default.join(__dirname2, "xdg-open");
+    var __dirname2 = import_meta.url ? import_node_path5.default.dirname((0, import_node_url.fileURLToPath)(import_meta.url)) : "";
+    var localXdgOpenPath = import_node_path5.default.join(__dirname2, "xdg-open");
     var { platform, arch } = import_node_process7.default;
     var tryEachApp = async (apps2, opener) => {
       if (apps2.length === 0) {
@@ -66102,17 +66102,17 @@ tell application "System Events" to get value of property list item "CFBundleNam
           browser2 = await defaultBrowser2();
         }
         if (browser2.id in ids) {
-          const browserName = ids[browser2.id.toLowerCase()];
+          const browserName2 = ids[browser2.id.toLowerCase()];
           if (app === "browserPrivate") {
-            if (browserName === "safari") {
+            if (browserName2 === "safari") {
               throw new Error("Safari doesn't support opening in private mode via command line");
             }
-            appArguments.push(flags[browserName]);
+            appArguments.push(flags[browserName2]);
           }
           return baseOpen({
             ...options2,
             app: {
-              name: apps[browserName],
+              name: apps[browserName2],
               arguments: appArguments
             }
           });
@@ -69823,7 +69823,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
     var import_websocket = __toESM3(require_websocket(), 1);
     var import_websocket_server = __toESM3(require_websocket_server(), 1);
     var wrapper_default = import_websocket.default;
-    var import_yaml2 = __toESM3(require_dist3());
+    var import_yaml3 = __toESM3(require_dist3());
     var import_json5 = __toESM3(require_lib());
     var import_source_map_support = __toESM3(require_source_map_support());
     var import_enquirer = __toESM3(require_enquirer());
@@ -99425,7 +99425,7 @@ data:
     var wsServer3 = import_websocket_server.default;
     var wsReceiver = import_receiver.default;
     var wsSender = import_sender.default;
-    var yaml3 = import_yaml2.default;
+    var yaml3 = import_yaml3.default;
     var json5 = import_json5.default;
     var sourceMapSupport = import_source_map_support.default;
     var enquirer = import_enquirer.default;
@@ -133075,12 +133075,12 @@ ${details.join("\n")}`;
       }
       throw new Error("\n" + wrapInASCIIBox(errorLines.join("\n"), 1));
     }
-    function isSharedLib(basename) {
+    function isSharedLib(basename2) {
       switch (import_os6.default.platform()) {
         case "linux":
-          return basename.endsWith(".so") || basename.includes(".so.");
+          return basename2.endsWith(".so") || basename2.includes(".so.");
         case "win32":
-          return basename.endsWith(".dll");
+          return basename2.endsWith(".dll");
         default:
           return false;
       }
@@ -133092,8 +133092,8 @@ ${details.join("\n")}`;
       const allStats = await Promise.all(allPaths.map((aPath) => import_fs15.default.promises.stat(aPath)));
       const filePaths = allPaths.filter((aPath, index) => allStats[index].isFile());
       const executablersOrLibraries = (await Promise.all(filePaths.map(async (filePath) => {
-        const basename = import_path16.default.basename(filePath).toLowerCase();
-        if (isSharedLib(basename))
+        const basename2 = import_path16.default.basename(filePath).toLowerCase();
+        if (isSharedLib(basename2))
           return filePath;
         if (await checkExecutable(filePath))
           return filePath;
@@ -133502,8 +133502,8 @@ ${details.join("\n")}`;
     }
     function isBrowserDirectory(browserDirectory) {
       const baseName = import_path19.default.basename(browserDirectory);
-      for (const browserName of allDownloadableDirectoriesThatEverExisted) {
-        if (baseName.startsWith(browserName.replace(/-/g, "_") + "-"))
+      for (const browserName2 of allDownloadableDirectoriesThatEverExisted) {
+        if (baseName.startsWith(browserName2.replace(/-/g, "_") + "-"))
           return true;
       }
       return false;
@@ -133557,10 +133557,10 @@ ${details.join("\n")}`;
       const executables = [];
       if (process.platform === "win32")
         executables.push(registry.findExecutable("winldd"));
-      for (const browserName of browsers) {
-        const executable = registry.findExecutable(browserName);
+      for (const browserName2 of browsers) {
+        const executable = registry.findExecutable(browserName2);
         if (!executable || executable.installType === "none")
-          throw new Error(`Cannot install ${browserName}`);
+          throw new Error(`Cannot install ${browserName2}`);
         executables.push(executable);
       }
       await registry.install(executables);
@@ -134616,14 +134616,14 @@ ${e.stack}`);
                 linkTarget = (await import_fs18.default.promises.readFile(linkPath)).toString();
                 const browsersJSON = __require(import_path19.default.join(linkTarget, "browsers.json"));
                 const descriptors = readDescriptors(browsersJSON);
-                for (const browserName of allDownloadableDirectoriesThatEverExisted) {
-                  const descriptor = descriptors.find((d) => d.name === browserName);
+                for (const browserName2 of allDownloadableDirectoriesThatEverExisted) {
+                  const descriptor = descriptors.find((d) => d.name === browserName2);
                   if (!descriptor)
                     continue;
                   const browserPath = descriptor.dir;
                   const browserVersion = parseInt(descriptor.revision, 10);
                   browserList.push({
-                    browserName,
+                    browserName: browserName2,
                     browserVersion,
                     browserPath,
                     referenceDir: linkTarget
@@ -134638,9 +134638,9 @@ ${e.stack}`);
           async _deleteStaleBrowsers(browserList) {
             const usedBrowserPaths = /* @__PURE__ */ new Set();
             for (const browser2 of browserList) {
-              const { browserName, browserVersion, browserPath } = browser2;
-              const shouldHaveMarkerFile = browserName === "chromium" && (browserVersion >= 786218 || browserVersion < 3e5) || browserName === "firefox" && browserVersion >= 1128 || browserName === "webkit" && browserVersion >= 1307 || // All new applications have a marker file right away.
-              browserName !== "firefox" && browserName !== "chromium" && browserName !== "webkit";
+              const { browserName: browserName2, browserVersion, browserPath } = browser2;
+              const shouldHaveMarkerFile = browserName2 === "chromium" && (browserVersion >= 786218 || browserVersion < 3e5) || browserName2 === "firefox" && browserVersion >= 1128 || browserName2 === "webkit" && browserVersion >= 1307 || // All new applications have a marker file right away.
+              browserName2 !== "firefox" && browserName2 !== "chromium" && browserName2 !== "webkit";
               if (!shouldHaveMarkerFile || await existsAsync(browserDirectoryToMarkerFilePath(browserPath)))
                 usedBrowserPaths.add(browserPath);
             }
@@ -140576,10 +140576,10 @@ ${Buffer.concat(chunks)}` : errorPrefix;
         init_transport();
         kNoXServerRunningError = "Looks like you launched a headed browser without having a XServer running.\nSet either 'headless: true' or use 'xvfb-run <your-playwright-app>' before running Playwright.\n\n<3 Playwright Team";
         BrowserType = class extends SdkObject {
-          constructor(parent, browserName) {
+          constructor(parent, browserName2) {
             super(parent, "browser-type");
             this.attribution.browserType = this;
-            this._name = browserName;
+            this._name = browserName2;
             this.logName = "browser";
           }
           executablePath() {
@@ -152764,8 +152764,8 @@ if (self.ServiceWorkerContainer) ServiceWorkerContainer.prototype.register = asy
             const defaultPage = await this.loadDefaultContextAsIs(progress2);
             if (!defaultPage)
               return;
-            const browserName = this._browser.options.name;
-            if (this._options.isMobile && browserName === "chromium" || this._options.locale && browserName === "webkit") {
+            const browserName2 = this._browser.options.name;
+            if (this._options.isMobile && browserName2 === "chromium" || this._options.locale && browserName2 === "webkit") {
               await this.newPage(progress2);
               await defaultPage.close(progress2);
             }
@@ -157339,12 +157339,12 @@ This does not look like a Playwright server, try connecting via ws://.`);
         return true;
       });
     }
-    async function runTraceViewerApp(traceUrl, browserName, options2) {
+    async function runTraceViewerApp(traceUrl, browserName2, options2) {
       traceUrl = validateTraceUrlOrPath(traceUrl);
       const allowedFileRoots = traceFileRoots(traceUrl);
       const server3 = await startTraceViewerServer({ ...options2, allowedFileRoots: () => allowedFileRoots });
       await installRootRedirect(server3, traceUrl, options2);
-      const page2 = await openTraceViewerApp(server3.urlPrefix("precise"), browserName, options2);
+      const page2 = await openTraceViewerApp(server3.urlPrefix("precise"), browserName2, options2);
       page2.on("close", () => gracefullyProcessExitDoNotHang(0));
       return page2;
     }
@@ -157371,9 +157371,9 @@ This does not look like a Playwright server, try connecting via ws://.`);
       }
       return [process.cwd()];
     }
-    async function openTraceViewerApp(url3, browserName, options2) {
+    async function openTraceViewerApp(url3, browserName2, options2) {
       const traceViewerPlaywright = createPlaywright({ sdkLanguage: "javascript", isInternalPlaywright: true });
-      const traceViewerBrowser = isUnderTest() ? "chromium" : browserName;
+      const traceViewerBrowser = isUnderTest() ? "chromium" : browserName2;
       const { context, page: page2 } = await launchApp(traceViewerPlaywright[traceViewerBrowser], {
         sdkLanguage: traceViewerPlaywright.options.sdkLanguage,
         windowSize: { width: 1280, height: 800 },
@@ -157825,7 +157825,7 @@ ${uaError}` };
               },
               onConnection: (request22, url3, ws4, id) => {
                 const browserHeader = request22.headers["x-playwright-browser"];
-                const browserName = url3.searchParams.get("browser") || (Array.isArray(browserHeader) ? browserHeader[0] : browserHeader) || null;
+                const browserName2 = url3.searchParams.get("browser") || (Array.isArray(browserHeader) ? browserHeader[0] : browserHeader) || null;
                 const proxyHeader = request22.headers["x-playwright-proxy"];
                 const proxyValue = url3.searchParams.get("proxy") || (Array.isArray(proxyHeader) ? proxyHeader[0] : proxyHeader);
                 const launchOptionsHeader = request22.headers["x-playwright-launch-options"] || "";
@@ -157852,7 +157852,7 @@ ${uaError}` };
                       new WebSocketServerTransport(ws4),
                       false,
                       this._playwright,
-                      () => this._initConnectMode(id, connectFilter, browserName, launchOptions),
+                      () => this._initConnectMode(id, connectFilter, browserName2, launchOptions),
                       id
                     );
                   }
@@ -157873,7 +157873,7 @@ ${uaError}` };
                     new WebSocketServerTransport(ws4),
                     false,
                     this._playwright,
-                    () => this._initReuseBrowsersMode(browserName, launchOptions, id),
+                    () => this._initReuseBrowsersMode(browserName2, launchOptions, id),
                     id
                   );
                 }
@@ -157902,17 +157902,17 @@ ${uaError}` };
                   new WebSocketServerTransport(ws4),
                   false,
                   this._playwright,
-                  () => this._initLaunchBrowserMode(browserName, proxyValue, launchOptions, id),
+                  () => this._initLaunchBrowserMode(browserName2, proxyValue, launchOptions, id),
                   id
                 );
               }
             });
           }
-          async _initReuseBrowsersMode(browserName, launchOptions, id) {
-            debugLogger.log("server", `[${id}] engaged reuse browsers mode for ${browserName}`);
+          async _initReuseBrowsersMode(browserName2, launchOptions, id) {
+            debugLogger.log("server", `[${id}] engaged reuse browsers mode for ${browserName2}`);
             const requestedOptions = launchOptionsHash(launchOptions);
             let browser2 = this._playwright.allBrowsers().find((b) => {
-              if (b.options.name !== browserName)
+              if (b.options.name !== browserName2)
                 return false;
               if (this._dontReuseBrowsers.has(b))
                 return false;
@@ -157924,11 +157924,11 @@ ${uaError}` };
                 continue;
               if (this._dontReuseBrowsers.has(b))
                 continue;
-              if (b.options.name === browserName && b.options.channel === launchOptions.channel)
+              if (b.options.name === browserName2 && b.options.channel === launchOptions.channel)
                 await b.close(nullProgress, { reason: "Connection terminated" });
             }
             if (!browser2) {
-              const browserType = this._playwright[browserName || "chromium"];
+              const browserType = this._playwright[browserName2 || "chromium"];
               const controller = new ProgressController();
               browser2 = await controller.run((progress2) => browserType.launch(progress2, {
                 ...launchOptions,
@@ -157946,12 +157946,12 @@ ${uaError}` };
               }
             };
           }
-          async _initConnectMode(id, filter2, browserName, launchOptions) {
-            browserName ??= "chromium";
+          async _initConnectMode(id, filter2, browserName2, launchOptions) {
+            browserName2 ??= "chromium";
             debugLogger.log("server", `[${id}] engaged connect mode`);
-            let browser2 = this._playwright.allBrowsers().find((b) => b.options.name === browserName);
+            let browser2 = this._playwright.allBrowsers().find((b) => b.options.name === browserName2);
             if (!browser2) {
-              const browserType = this._playwright[browserName];
+              const browserType = this._playwright[browserName2];
               const controller = new ProgressController();
               browser2 = await controller.run((progress2) => browserType.launch(progress2, launchOptions), launchOptions.timeout);
               this._dontReuse(browser2);
@@ -157984,8 +157984,8 @@ ${uaError}` };
               denyLaunch: true
             };
           }
-          async _initLaunchBrowserMode(browserName, proxyValue, launchOptions, id) {
-            debugLogger.log("server", `[${id}] engaged launch mode for "${browserName}"`);
+          async _initLaunchBrowserMode(browserName2, proxyValue, launchOptions, id) {
+            debugLogger.log("server", `[${id}] engaged launch mode for "${browserName2}"`);
             let socksProxy;
             if (proxyValue) {
               socksProxy = new SocksProxy();
@@ -157995,7 +157995,7 @@ ${uaError}` };
             } else {
               launchOptions.socksProxyPort = void 0;
             }
-            const browserType = this._playwright[browserName];
+            const browserType = this._playwright[browserName2];
             const controller = new ProgressController();
             const browser2 = await controller.run((progress2) => browserType.launch(progress2, launchOptions), launchOptions.timeout);
             this._dontReuseBrowsers.add(browser2);
@@ -158114,8 +158114,8 @@ ${uaError}` };
         init_playwright();
         init_progress();
         BrowserServerLauncherImpl = class {
-          constructor(browserName) {
-            this._browserName = browserName;
+          constructor(browserName2) {
+            this._browserName = browserName2;
           }
           async launchServer(options2 = {}) {
             const playwright22 = createPlaywright({ sdkLanguage: "javascript", isServer: true });
@@ -171693,11 +171693,11 @@ ${itemTexts.map((t) => `  - listitem: ${escapeWithQuotes(t, '"')}`).join("\n")}`
       console.log("Listening on " + wsEndpoint);
       process.stdin.on("close", () => gracefullyProcessExitDoNotHang(0));
     }
-    async function launchBrowserServer(browserName, configFile) {
+    async function launchBrowserServer(browserName2, configFile) {
       let options2 = {};
       if (configFile)
         options2 = JSON.parse(import_fs57.default.readFileSync(configFile).toString());
-      const browserType = playwright[browserName];
+      const browserType = playwright[browserName2];
       const server3 = await browserType.launchServer(options2);
       console.log(server3.wsEndpoint());
     }
@@ -174085,13 +174085,13 @@ to start the browser session.`);
       return { channel: channel ?? "chrome", executablePath, profileDirName };
     }
     async function validateBrowserConfig(browser2) {
-      let browserName = browser2.browserName;
-      if (!browserName) {
-        browserName = "chromium";
+      let browserName2 = browser2.browserName;
+      if (!browserName2) {
+        browserName2 = "chromium";
         if (browser2.launchOptions.channel === void 0)
           browser2.launchOptions.channel = "chrome";
       }
-      if (browserName === "chromium" && browser2.launchOptions.chromiumSandbox === void 0) {
+      if (browserName2 === "chromium" && browser2.launchOptions.chromiumSandbox === void 0) {
         if (process.platform === "linux") {
           const { channel } = browser2.launchOptions;
           browser2.launchOptions.chromiumSandbox = channel !== void 0 && channel !== "chromium" && channel !== "chrome-for-testing";
@@ -174119,12 +174119,12 @@ to start the browser session.`);
         else
           browser2.contextOptions.viewport = null;
       }
-      if (browserName === "chromium") {
+      if (browserName2 === "chromium") {
         browser2.launchOptions.args = browser2.launchOptions.args ?? [];
         if (!browser2.launchOptions.args.some((a) => a.includes("--disable-blink-features")))
           browser2.launchOptions.args.push(`--disable-blink-features=AutomationControlled`);
       }
-      return { ...browser2, browserName };
+      return { ...browser2, browserName: browserName2 };
     }
     function resolveBrowserParam(browserOption) {
       switch (browserOption) {
@@ -174152,7 +174152,7 @@ to start the browser session.`);
       }
     }
     function configFromCLIOptions(cliOptions) {
-      const { browserName, channel } = resolveBrowserParam(cliOptions.browser);
+      const { browserName: browserName2, channel } = resolveBrowserParam(cliOptions.browser);
       const launchOptions = {
         channel,
         executablePath: cliOptions.executablePath,
@@ -174164,9 +174164,9 @@ to start the browser session.`);
       if (cliOptions.mobile) {
         if (device)
           throw new Error("Cannot use --mobile together with --device, pick one.");
-        if (browserName === "firefox")
+        if (browserName2 === "firefox")
           throw new Error("--mobile is not supported with the Firefox browser.");
-        device = browserName === "webkit" ? "iPhone 17" : "Pixel 10";
+        device = browserName2 === "webkit" ? "iPhone 17" : "Pixel 10";
       }
       if (device && cliOptions.cdpEndpoint)
         throw new Error("Device emulation is not supported with cdpEndpoint.");
@@ -174192,7 +174192,7 @@ to start the browser session.`);
         contextOptions.permissions = cliOptions.grantPermissions;
       const config2 = {
         browser: {
-          browserName,
+          browserName: browserName2,
           isolated: cliOptions.isolated,
           userDataDir: cliOptions.userDataDir,
           launchOptions,
@@ -175261,8 +175261,8 @@ ${data.toString()}
       } catch (error62) {
         throwIfExecutableMissing(error62, config2);
         if (error62.message.includes("cannot open shared object file: No such file or directory")) {
-          const browserName = launchOptions.channel ?? config2.browser.browserName;
-          throw new Error(`Missing system dependencies required to run browser ${browserName}. Install them with: sudo npx playwright install-deps ${browserName}`);
+          const browserName2 = launchOptions.channel ?? config2.browser.browserName;
+          throw new Error(`Missing system dependencies required to run browser ${browserName2}. Install them with: sudo npx playwright install-deps ${browserName2}`);
         }
         if (error62.message.includes("ProcessSingleton") || error62.message.includes("exitCode=21"))
           throw new Error(`Browser is already in use for ${userDataDir}, use --isolated to run multiple instances of the same browser`);
@@ -176213,10 +176213,10 @@ ${c.title}:`);
       if (import_fs67.default.existsSync(defaultConfigFile()) || import_fs67.default.existsSync(globalConfigFile())) {
         const clientInfo = createClientInfo();
         const config2 = await resolveCLIConfigForCLI(clientInfo.daemonProfilesDir, "default", {});
-        const browserName = config2.browser.browserName;
+        const browserName2 = config2.browser.browserName;
         const channel = config2.browser.launchOptions.channel;
         if (!channel || channel.startsWith("chromium"))
-          await resolveAndInstall(channel ?? browserName);
+          await resolveAndInstall(channel ?? browserName2);
       } else {
         const channel = await findOrInstallDefaultBrowser();
         if (channel !== "chrome")
@@ -177103,11 +177103,11 @@ ${c.title}:`);
       }
     });
     function synthesiseDescriptor(browser2) {
-      const browserName = browser2.browserType().name();
+      const browserName2 = browser2.browserType().name();
       const browserInfo2 = {
         // eslint-disable-next-line no-restricted-syntax -- _guid is very conservative.
         guid: browser2._guid,
-        browserName,
+        browserName: browserName2,
         launchOptions: {}
       };
       return {
@@ -207030,9 +207030,9 @@ var StdioServerTransport2 = class {
 };
 
 // src/server.ts
-var import_yaml = __toESM2(require_dist2(), 1);
-import { existsSync as existsSync2, readFileSync as readFileSync2 } from "node:fs";
-import { dirname, join as join3, resolve } from "node:path";
+var import_yaml2 = __toESM2(require_dist2(), 1);
+import { existsSync as existsSync3, readFileSync as readFileSync2 } from "node:fs";
+import { dirname, join as join4, resolve } from "node:path";
 import { parseArgs, parseEnv } from "node:util";
 
 // src/schema.ts
@@ -207053,6 +207053,17 @@ var Scenario = external_exports.strictObject({
   description: external_exports.string().min(1),
   pass: external_exports.string().min(1),
   account: external_exports.enum(["none", "consumes"]).optional()
+});
+var FindingInput = external_exports.strictObject({
+  title: external_exports.string().min(8).max(140).describe("One line, no severity words"),
+  kind: external_exports.enum(["bug", "ux", "a11y", "question"]),
+  severity: external_exports.enum(["critical", "major", "minor", "note"]),
+  route: external_exports.string().min(1).describe("e.g. /login"),
+  steps: external_exports.array(external_exports.string().min(1)).min(1).max(12),
+  expected: external_exports.string().min(1),
+  actual: external_exports.string().min(1),
+  evidence: external_exports.array(external_exports.string()).default([]).describe("File names returned by screenshot, e.g. t1-390x844-2-login.png"),
+  next: external_exports.string().min(1).optional().describe("Suggested next step")
 });
 
 // src/session.ts
@@ -207144,6 +207155,14 @@ async function launch(headed) {
 }
 var pages = /* @__PURE__ */ new Map();
 var shots = /* @__PURE__ */ new Map();
+async function browserName() {
+  try {
+    const b = await browser;
+    return b ? `${b.browserType().name()} ${b.version()}` : "unknown";
+  } catch {
+    return "unknown";
+  }
+}
 async function closeContexts() {
   const all = [...pages.values()];
   pages.clear();
@@ -207348,7 +207367,7 @@ function registerSessionTools(server3, getContext2) {
           verdicts: []
         };
         save(runDir, session);
-        current = { runDir, session };
+        current = { runDir, session, findings: [] };
         return ok({
           id,
           runDir,
@@ -207378,10 +207397,100 @@ function registerSessionTools(server3, getContext2) {
           throw new Error(`Unknown case "${caseId}". Cases in this run: ${session.cases.map((c) => c.id).join(", ")}.`);
         }
         if ((result2 === "blocked" || result2 === "skipped") && !note) throw new Error(`A ${result2} verdict needs a note saying why.`);
+        const ofCase = current.findings.filter((f) => f.case === caseId).map((f) => f.id);
+        const foreign = findings.filter((id) => !ofCase.includes(id));
+        if (foreign.length) {
+          throw new Error(`Not findings of case ${caseId}: ${foreign.join(", ")}. Its findings: ${ofCase.join(", ") || "none"}.`);
+        }
+        if (result2 === "fail" && !findings.length) {
+          throw new Error(`A fail needs at least one finding of case ${caseId}: record it with record_finding, then list its id in findings.`);
+        }
         const verdict = { case: caseId, result: result2, ...note && { note }, findings };
         session.verdicts = [...session.verdicts.filter((v) => v.case !== caseId), verdict];
         save(runDir, session);
         return ok({ recorded: verdict });
+      } catch (e) {
+        return fail(e);
+      }
+    }
+  );
+}
+
+// src/findings.ts
+var import_yaml = __toESM2(require_dist2(), 1);
+import { existsSync as existsSync2, mkdirSync as mkdirSync2, readdirSync as readdirSync2, writeFileSync as writeFileSync3 } from "node:fs";
+import { basename, join as join3 } from "node:path";
+function findingMarkdown(front, f) {
+  return [
+    `---
+${(0, import_yaml.stringify)(front)}---`,
+    `# ${f.title}`,
+    `## Steps
+
+${f.steps.map((s, i) => `${i + 1}. ${s}`).join("\n")}`,
+    `## Expected
+
+${f.expected}`,
+    `## Actual
+
+${f.actual}`,
+    `## Evidence
+
+${f.evidence.map((e) => `![${e}](../evidence/${e})`).join("\n") || "None."}`,
+    `## Suggested next step
+
+${f.next ?? "None given."}`
+  ].join("\n\n") + "\n";
+}
+function registerFindingTools(server3) {
+  server3.registerTool(
+    "record_finding",
+    {
+      description: "Record one distinct problem seen in this case as a finding; returns its id (PT-<slug>-<nnn>) to list in scenario_verdict. A bug needs evidence: take a screenshot first and pass its file name. Evidence names must be files screenshot returned in this run.",
+      inputSchema: { case: external_exports.string().describe("Case id from session_start, e.g. t1-390x844"), finding: FindingInput }
+    },
+    async ({ case: caseId, finding }) => {
+      try {
+        if (!current) throw new Error("No running session. Call session_start first.");
+        const run = current;
+        const c = run.session.cases.find((c2) => c2.id === caseId);
+        if (!c) throw new Error(`Unknown case "${caseId}". Cases in this run: ${run.session.cases.map((c2) => c2.id).join(", ")}.`);
+        const evidenceDir = join3(run.runDir, "evidence");
+        const have = () => readdirSync2(evidenceDir).filter((f) => f.startsWith(`${caseId}-`));
+        if (finding.kind === "bug" && !finding.evidence.length) {
+          throw new Error(
+            `A bug needs evidence. Call screenshot {case: "${caseId}"} on the page that shows it, then call record_finding again with its file name in evidence. Screenshots of this case so far: ${have().join(", ") || "none"}.`
+          );
+        }
+        const missing = finding.evidence.filter((e) => basename(e) !== e || !existsSync2(join3(evidenceDir, e)));
+        if (missing.length) {
+          throw new Error(`No such evidence: ${missing.join(", ")}. Screenshots of this case: ${have().join(", ") || "none"}.`);
+        }
+        const browser2 = await browserName();
+        const slug = run.session.flow.replace(/^exploratory:/, "");
+        const id = `PT-${slug}-${String(run.findings.length + 1).padStart(3, "0")}`;
+        const front = {
+          schema: 1,
+          id,
+          kind: finding.kind,
+          severity: finding.severity,
+          status: "open",
+          flow: run.session.flow,
+          case: caseId,
+          scenario: c.scenario,
+          route: finding.route,
+          viewport: c.viewport,
+          browser: browser2,
+          build: run.session.build,
+          author: run.session.testers.find((t) => t.cases.includes(caseId))?.model,
+          created: (/* @__PURE__ */ new Date()).toISOString(),
+          evidence: finding.evidence
+        };
+        mkdirSync2(join3(run.runDir, "findings"), { recursive: true });
+        const path = join3(run.runDir, "findings", `${id}.md`);
+        writeFileSync3(path, findingMarkdown(front, finding), { flag: "wx" });
+        run.findings.push({ id, case: caseId });
+        return ok({ id, path });
       } catch (e) {
         return fail(e);
       }
@@ -207398,7 +207507,7 @@ function projectRoot() {
   const root = given(values.project) ?? given(process.env.CLAUDE_PROJECT_DIR);
   if (root) return resolve(root);
   for (let dir = process.cwd(); ; dir = dirname(dir)) {
-    if (existsSync2(join3(dir, ".jeyna"))) return dir;
+    if (existsSync3(join4(dir, ".jeyna"))) return dir;
     if (dirname(dir) === dir) break;
   }
   throw new Error(
@@ -207407,11 +207516,11 @@ function projectRoot() {
 }
 function getContext() {
   const root = projectRoot();
-  const file2 = join3(root, ".jeyna", "jeyna.config.yaml");
-  if (!existsSync2(file2)) throw new Error(`No ${file2}. Run /jeyna:init in ${root} to create it.`);
+  const file2 = join4(root, ".jeyna", "jeyna.config.yaml");
+  if (!existsSync3(file2)) throw new Error(`No ${file2}. Run /jeyna:init in ${root} to create it.`);
   let raw;
   try {
-    raw = (0, import_yaml.parse)(readFileSync2(file2, "utf8"));
+    raw = (0, import_yaml2.parse)(readFileSync2(file2, "utf8"));
   } catch (e) {
     throw new Error(`.jeyna/jeyna.config.yaml is not valid YAML: ${e.message}`);
   }
@@ -207423,8 +207532,8 @@ ${external_exports.prettifyError(parsed.error)}`);
   return { root, config: parsed.data, secrets: secretSources(root, parsed.data) };
 }
 function secretSources(root, config2) {
-  const file2 = join3(root, ".jeyna", ".env");
-  const dotenv3 = existsSync2(file2) ? parseEnv(readFileSync2(file2, "utf8")) : {};
+  const file2 = join4(root, ".jeyna", ".env");
+  const dotenv3 = existsSync3(file2) ? parseEnv(readFileSync2(file2, "utf8")) : {};
   const names = config2.accounts.flatMap((a) => [a.user_env, a.pass_env]);
   return Object.fromEntries(names.map((n) => [n, process.env[n] ? "env" : dotenv3[n] ? ".env" : "missing"]));
 }
@@ -207459,6 +207568,7 @@ server2.registerTool(
 );
 registerSessionTools(server2, getContext);
 registerBrowserTools(server2, getContext);
+registerFindingTools(server2);
 await server2.connect(new StdioServerTransport2());
 log3("jeyna-mcp ready", process.argv.slice(2).join(" "));
 /*! Bundled license information:
