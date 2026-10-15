@@ -1,11 +1,12 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
-import { join, relative, resolve } from "node:path";
+import { basename, join, relative, resolve } from "node:path";
 import { parse, stringify } from "yaml";
 import { z } from "zod";
 import { closeContexts } from "./browser.js";
 import { FindingInput } from "./schema.js";
 import { current, endRun, fail, ok, save, type Session } from "./session.js";
+import { runDirOf, splitFront } from "./shared.js";
 
 const SEVERITIES = FindingInput.shape.severity.options;
 const KINDS = FindingInput.shape.kind.options;
@@ -35,8 +36,6 @@ const FindingFront = z.strictObject({
 type FindingFront = z.infer<typeof FindingFront>;
 
 type Finding = { path: string; id: string; front?: FindingFront; title?: string; errors: string[] };
-
-const splitFront = (md: string) => /^---\n([\s\S]*?)\n?---\n([\s\S]*)$/.exec(md);
 
 // Every findings/*.md of a run, parsed, with its own errors (F8.1). Paths are relative to the run folder.
 function readFindings(runDir: string, session: Session): Finding[] {
@@ -220,13 +219,13 @@ export function registerFinishTools(server: McpServer, getContext: () => { root:
     {
       description:
         "Check a run folder: every finding parses with its sections, evidence exists, bugs have evidence, every case has a verdict, report.md exists when done. Returns {run, errors}; each error is `path: message`. Defaults to the running run, else the latest.",
-      inputSchema: { run: z.string().optional().describe("Run id or run folder path; default: the current run") },
+      inputSchema: { run: z.string().optional().describe("Run id (or its folder under .jeyna/playtests/); default: the current run") },
       annotations: { readOnlyHint: true },
     },
     async ({ run }) => {
       try {
         const root = getContext().root;
-        const dir = run ? resolve(root, ".jeyna", "playtests", run) : (current?.runDir ?? runs(root)[0]);
+        const dir = run !== undefined ? runDirOf(root, run) : (current?.runDir ?? runs(root)[0]);
         if (!dir) throw new Error("No run to validate: no run is running and .jeyna/playtests/ has none.");
         if (!existsSync(dir)) throw new Error(`No run folder ${dir}.`);
         return ok({ run: dir, errors: validateRun(dir) });
@@ -269,21 +268,35 @@ export function registerFinishTools(server: McpServer, getContext: () => { root:
     "update_status",
     {
       description:
-        "Change a finding's status (the only mutable field, D11). During a run, mark a cross-scenario duplicate with status duplicate and of: the finding it repeats. wontfix and fixed are for later sessions. Looks in the current run, then the newest run holding the id.",
+        "Change a finding's status (the only mutable field, D11). During a run, mark a cross-scenario duplicate with status duplicate and of: the finding it repeats. wontfix and fixed are for later sessions. Looks in `run` if given, else the current run; with no run running, the one run holding the id. Ids repeat across runs of the same flow, so when several runs hold it, it refuses and lists them: give run.",
       inputSchema: {
         id: z.string().describe("Finding id, e.g. PT-login-003"),
         status: z.enum(STATUSES),
         of: z.string().optional().describe("Required for duplicate: the id of the finding this one repeats"),
         note: z.string().min(1).optional(),
+        run: z.string().min(1).optional().describe("Run id holding the finding, e.g. 2026-10-15-login; needed when several runs hold the id"),
       },
     },
-    async ({ id, status, of, note }) => {
+    async ({ id, status, of, note, run }) => {
       try {
         if (status === "duplicate" && !of) throw new Error(`A duplicate needs of: the id of the finding ${id} repeats.`);
         if (status !== "duplicate" && of) throw new Error("of is only for status duplicate.");
-        const dirs = [...(current ? [current.runDir] : []), ...runs(getContext().root)];
-        const runDir = dirs.find((d) => existsSync(join(d, "findings", `${id}.md`)));
-        if (!runDir) throw new Error(`No finding ${id} in any run under .jeyna/playtests/.`);
+        const holds = (d: string) => existsSync(join(d, "findings", `${id}.md`));
+        let runDir: string;
+        if (run !== undefined) {
+          runDir = runDirOf(getContext().root, run);
+          if (!holds(runDir)) throw new Error(`No finding ${id} in run ${run}.`);
+        } else if (current && holds(current.runDir)) {
+          runDir = current.runDir;
+        } else {
+          const all = runs(getContext().root).filter(holds);
+          if (!all.length) throw new Error(`No finding ${id} in any run under .jeyna/playtests/.`);
+          if (all.length > 1) {
+            const ids = all.map((d) => basename(d));
+            throw new Error(`${all.length} runs hold a finding ${id}: ${ids.join(", ")} (newest first). Call update_status again with run set to one of them.`);
+          }
+          runDir = all[0];
+        }
         if (of === id) throw new Error("A finding cannot be a duplicate of itself.");
         if (of && !existsSync(join(runDir, "findings", `${of}.md`))) throw new Error(`No finding ${of} in ${runDir}; of must name a finding of the same run.`);
         const path = join(runDir, "findings", `${id}.md`);

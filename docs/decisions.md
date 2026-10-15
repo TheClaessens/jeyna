@@ -775,3 +775,29 @@ Claude Code 2.1.299. No headless Claude Code session was run (the owner ruled ou
 - New: `src/explore.test.ts`.
 - `src/browser.ts` (scout), `src/session.ts` (`entry`), `src/flows.ts` (`save_flow`, `flowMarkdown`), `plugin/skills/playtest/SKILL.md` (step 2b, step 8), `sample-app/server.mjs` (real port).
 - analysis: §5.2 session `entry`; §5.4 `session_start` and `save_flow` rows. The bundle is rebuilt.
+
+---
+
+## D30 · 2026-10-15 · Code review fixes on the v0 integration branch
+
+A code review of the integration branch found races, leaks and duplicated logic. Fixed with tests; verified locally (vitest over MCP stdio against the bundle, `claude plugin validate`). No headless Claude Code session was run.
+
+**Behaviour changes**
+- `goto` `path` resolves under the app url's base path: with `app.url: http://host/app/`, `/login` opens `http://host/app/login` (before: `http://host/login`). The path keeps its query and hash and cannot climb above the base path. A full `url` (or a `path` with a scheme or `//`) resolves as before.
+- `update_status` takes an optional `run` (a run id). Without it, it looks in the current run; with no run running (or the id not in it), finding ids repeat across runs of the same flow, so when several runs hold the id it is refused with their ids, newest first, asking for `run`. One run holding it: as before.
+- Redaction (D9) boundaries: a username (and its encoded forms) is replaced only as a whole token, not next to a letter, digit or one of `_ % + @ - .`; a `.` that ends a sentence and a `%XX` byte (an encoded quote or space) still bound it. So `admin` leaves `Administrator`, `admins` and `admin@example.test` alone. Matching still ignores case (emails are case-insensitive in practice). Passwords stay replaced wherever they appear, even inside a larger token: a leaked password is worse than a mangled word, and passwords are rarely ordinary words.
+- `snapshot` is redacted before it is cut at 90,000 characters (D14), so a value straddling the cut leaves no prefix. The transport redacts again; placeholders survive a second pass.
+- `validate` and `save_flow` (and `update_status`'s `run`) resolve a run through one resolver: a direct child of `.jeyna/playtests/`, anything else refused. The shell `validate <runDir>` still takes any path.
+- `session_start` with neither `flow` nor `scenarios` says to give one of them (it said "not both").
+
+**Robustness (no interface change)**
+- A browser that disconnects (crash, headed window closed) is forgotten; the next browser call launches a new one with fresh pages. A page closed under the server is replaced on the next call. A failed page creation only drops its own map entry.
+- `record_finding` and `screenshot` re-check after their awaits that the same run is still current and running; if `session_start` (force) or `session_finish` ended it meanwhile, they refuse and write nothing.
+- The transport's redactor is cached per message and rebuilt only when the config's or `.jeyna/.env`'s mtime or size, or the env values of the configured variables, change. A `.jeyna/.env` edited mid-run is still honoured.
+- One frontmatter splitter and one duplicate-name check (`src/shared.ts`) serve flows, findings and `session_start`.
+- Tests start the sample app on port 0 through one helper (`src/testkit.ts`), so test files running in parallel never collide.
+
+**Changed**
+- New: `src/shared.ts`, `src/shared.test.ts`, `src/testkit.ts`.
+- `src/browser.ts`, `src/accounts.ts`, `src/findings.ts`, `src/finish.ts`, `src/flows.ts`, `src/session.ts`, `src/server.ts`, and the tests.
+- analysis: §5.4 `update_status`, `validate` and `goto` rows. The bundle is rebuilt.

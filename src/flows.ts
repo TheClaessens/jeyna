@@ -1,10 +1,11 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { join } from "node:path";
 import { parse, stringify } from "yaml";
 import { z } from "zod";
 import { Scenario } from "./schema.js";
 import { fail, ok, type Session } from "./session.js";
+import { duplicateNames, runDirOf, splitFront } from "./shared.js";
 
 // Flow frontmatter (§5.2). The name is the file name, so it doubles as the run slug (D7).
 const FlowName = z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "lowercase words joined by '-', the same as the file name");
@@ -22,7 +23,7 @@ export const flowNames = (root: string) =>
 
 // Under `## Scenarios`: `### <name>`, a description paragraph, one `Pass:` line, an optional `Account:` line (D6, D10).
 export function parseFlow(md: string, file: string): Flow {
-  const m = /^---\n([\s\S]*?)\n?---\n([\s\S]*)$/.exec(md);
+  const m = splitFront(md);
   if (!m) throw new Error(`${file}: no YAML frontmatter between --- lines.`);
   const front = FlowFront.safeParse(parse(m[1]) ?? {});
   if (!front.success) throw new Error(`${file}: frontmatter is invalid:\n${z.prettifyError(front.error)}`);
@@ -47,8 +48,7 @@ export function parseFlow(md: string, file: string): Flow {
       return { name, description, pass, ...(account && { account }) } as Scenario;
     });
   if (!scenarios.length) throw new Error(`${file}: ## Scenarios has no ### scenario.`);
-  const names = scenarios.map((s) => s.name);
-  const dupes = names.filter((n, i) => names.indexOf(n) !== i);
+  const dupes = duplicateNames(scenarios);
   if (dupes.length) throw new Error(`${file}: scenario names must be unique: ${dupes.join(", ")}.`);
   return { frontmatter: front.data, body, scenarios };
 }
@@ -126,9 +126,7 @@ export function registerFlowTools(server: McpServer, getContext: () => { root: s
     async ({ run, name }) => {
       try {
         const root = getContext().root;
-        const playtests = resolve(root, ".jeyna", "playtests");
-        const runDir = resolve(playtests, run);
-        if (!runDir.startsWith(playtests + "/") && !runDir.startsWith(playtests + "\\")) throw new Error(`run must be a run id under .jeyna/playtests/, not ${run}.`);
+        const runDir = runDirOf(root, run);
         const file = join(runDir, "session.json");
         if (!existsSync(file)) throw new Error(`No run ${run}: ${file} does not exist.`);
         const session = JSON.parse(readFileSync(file, "utf8")) as Session;

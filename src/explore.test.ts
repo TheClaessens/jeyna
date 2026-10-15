@@ -2,15 +2,16 @@
 // guided, driven over MCP stdio against the committed bundle in the order plugin/skills/playtest/SKILL.md makes the calls.
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-import { spawn, spawnSync, type ChildProcess } from "node:child_process";
+import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, afterEach, beforeAll, expect, test } from "vitest";
+import { type App, startApp } from "./testkit.js";
 
 let bundle: string;
-let app: ChildProcess;
+let app: App;
 let APP: string;
 const clients: Client[] = [];
 
@@ -18,12 +19,10 @@ beforeAll(async () => {
   const dir = mkdtempSync(join(tmpdir(), "jeyna-bundle-"));
   cpSync("plugin/server", dir, { recursive: true });
   bundle = join(dir, "jeyna-mcp.mjs");
-  // Port 0: the sample app picks a free port and prints it, so test files running in parallel never collide.
-  app = spawn("node", ["sample-app/server.mjs"], { env: { ...process.env, PORT: "0" }, stdio: "pipe" });
-  const line = await new Promise<string>((r) => app.stdout!.once("data", (d) => r(String(d))));
-  APP = /http:\/\/localhost:\d+/.exec(line)![0];
+  app = await startApp();
+  APP = app.url;
 });
-afterAll(() => app.kill());
+afterAll(() => app.stop());
 afterEach(async () => {
   await Promise.all(clients.splice(0).map((c) => c.close()));
 });

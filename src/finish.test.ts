@@ -19,8 +19,9 @@ afterEach(async () => {
   await Promise.all(clients.splice(0).map((c) => c.close()));
 });
 
+// No app runs here: these tests never open a browser, so the url is never fetched.
 const CONFIG = `
-app: { name: todo-sample, url: http://localhost:4931 }
+app: { name: todo-sample, url: http://localhost:9 }
 viewports: [1440x900, 390x844]
 accounts:
   - { handle: user_a, user_env: JEYNA_USER_A_USER, pass_env: JEYNA_USER_A_PASS }
@@ -144,6 +145,40 @@ test("after the run, wontfix and fixed can be set on its findings", async () => 
   expect((await call("update_status", { id: "PT-login-099", status: "fixed" })).isError).toBe(true);
 });
 
+// Finding ids restart in every run of a flow, so after the run an id alone can be ambiguous (D30).
+test("with no run running, update_status refuses an id two runs hold and lists them; run picks one", async () => {
+  const { root, call, text, runDir, ids } = await recorded();
+  await call("session_finish", { summary: "Done." });
+  const first = sessionOf(runDir);
+  const secondId = `${first.id}-2`;
+  const second = join(root, ".jeyna", "playtests", secondId);
+  cpSync(runDir, second, { recursive: true });
+  writeFileSync(join(second, "session.json"), JSON.stringify({ ...first, id: secondId, started: new Date(Date.parse(first.started) + 1000).toISOString() }));
+
+  const r = await call("update_status", { id: ids.ux, status: "wontfix" });
+  expect(r.isError).toBe(true);
+  expect(text(r)).toBe(`2 runs hold a finding ${ids.ux}: ${secondId}, ${first.id} (newest first). Call update_status again with run set to one of them.`);
+  for (const d of [runDir, second]) expect(readFileSync(join(d, "findings", `${ids.ux}.md`), "utf8")).toMatch(/^status: open$/m);
+
+  expect((await call("update_status", { id: ids.ux, status: "wontfix", run: first.id })).isError).toBeFalsy();
+  expect(readFileSync(join(runDir, "findings", `${ids.ux}.md`), "utf8")).toMatch(/^status: wontfix$/m);
+  expect(readFileSync(join(second, "findings", `${ids.ux}.md`), "utf8")).toMatch(/^status: open$/m);
+
+  expect(text(await call("update_status", { id: "PT-login-099", status: "fixed", run: secondId }))).toBe(`No finding PT-login-099 in run ${secondId}.`);
+  const outside = await call("update_status", { id: ids.ux, status: "fixed", run: "../.." });
+  expect(outside.isError).toBe(true);
+  expect(text(outside)).toMatch(/^run must be a run id under \.jeyna\/playtests\//);
+});
+
+test("validate refuses a run outside .jeyna/playtests/", async () => {
+  const { call, text } = await started();
+  for (const run of ["..", "../../..", "/etc", "x/../../flows"]) {
+    const r = await call("validate", { run });
+    expect(r.isError, run).toBe(true);
+    expect(text(r)).toMatch(/^run must be a run id under \.jeyna\/playtests\//);
+  }
+});
+
 test("validate reports broken findings, missing evidence and a missing report, one path: message each", async () => {
   const { call, text, runDir, ids } = await recorded();
   const file = (id: string) => join(runDir, "findings", `${id}.md`);
@@ -191,4 +226,4 @@ test("validate runs from a shell via the bundle: one path: message line per erro
   const gone = shell(["validate", rel], root);
   expect(gone.status).toBe(1);
   expect(gone.stdout).toBe(`${rel}/report.md: missing, but the run is done\n`);
-});
+}, 20_000); // three bundle starts from a shell: slow when test files run in parallel

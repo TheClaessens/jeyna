@@ -1,31 +1,30 @@
 // Flows: parsing, get_flow, get_context's flow list and guided session_start, driven over MCP stdio against the committed bundle.
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-import { execFileSync, spawn, spawnSync, type ChildProcess } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { cpSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, afterEach, beforeAll, expect, test } from "vitest";
+import { type App, startApp } from "./testkit.js";
 
-const PORT = 4933;
 let bundle: string;
-let app: ChildProcess;
+let app: App;
 const clients: Client[] = [];
 
 beforeAll(async () => {
   const dir = mkdtempSync(join(tmpdir(), "jeyna-bundle-"));
   cpSync("plugin/server", dir, { recursive: true });
   bundle = join(dir, "jeyna-mcp.mjs");
-  app = spawn("node", ["sample-app/server.mjs"], { env: { ...process.env, PORT: String(PORT) }, stdio: "pipe" });
-  await new Promise((r) => app.stdout!.once("data", r));
+  app = await startApp();
 });
-afterAll(() => app.kill());
+afterAll(() => app.stop());
 afterEach(async () => {
   await Promise.all(clients.splice(0).map((c) => c.close()));
 });
 
-const CONFIG = `
-app: { name: todo-sample, url: http://localhost:${PORT} }
+const CONFIG = () => `
+app: { name: todo-sample, url: ${app.url} }
 viewports: [1440x900, 390x844]
 accounts:
   - { handle: user_a, user_env: JEYNA_USER_A_USER, pass_env: JEYNA_USER_A_PASS }
@@ -38,7 +37,7 @@ type Result = { isError?: boolean; content: ({ type: "text"; text: string } | { 
 function project(flows: Record<string, string> = {}): string {
   const root = realpathSync(mkdtempSync(join(tmpdir(), "jeyna-project-")));
   mkdirSync(join(root, ".jeyna", "flows"), { recursive: true });
-  writeFileSync(join(root, ".jeyna", "jeyna.config.yaml"), CONFIG);
+  writeFileSync(join(root, ".jeyna", "jeyna.config.yaml"), CONFIG());
   cpSync("sample-app/flows/todos.md", join(root, ".jeyna", "flows", "todos.md"));
   for (const [name, md] of Object.entries(flows)) writeFileSync(join(root, ".jeyna", "flows", `${name}.md`), md);
   return root;
@@ -142,7 +141,10 @@ test("only and viewports narrow a guided run; unknown names are refused with the
 
 test("session_start needs exactly one of flow and scenarios", async () => {
   const { call, text } = await connect(project());
-  expect(text(await call("session_start", {}))).toMatch(/flow \(guided\) or scenarios \(exploratory\)/);
+  const neither = await call("session_start", {});
+  expect(neither.isError).toBe(true);
+  expect(text(neither)).toMatch(/flow \(guided\) or scenarios \(exploratory\): give one of them/);
+  expect(text(neither)).not.toMatch(/not both/);
   const both = await call("session_start", { flow: "todos", scenarios: [{ name: "x", description: "d", pass: "p" }] });
   expect(both.isError).toBe(true);
   expect(text(both)).toMatch(/not both/);
