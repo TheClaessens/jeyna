@@ -101,7 +101,7 @@ const form = (req) =>
     req.on("end", () => resolve(new URLSearchParams(body)));
   });
 
-createServer(async (req, res) => {
+const server = createServer(async (req, res) => {
   const send = (status, html, headers = {}) =>
     res.writeHead(status, { "content-type": "text/html; charset=utf-8", ...headers }).end(html);
   const redirect = (to, headers = {}) => res.writeHead(303, { location: to, ...headers }).end();
@@ -159,4 +159,6 @@ createServer(async (req, res) => {
     }
   }
   send(404, page("Not found", "<h1>Not found</h1>"));
-}).listen(PORT, () => console.log(`Todo sample on http://localhost:${PORT}`));
+});
+// PORT=0 picks a free port; the line names the real one, so tests can read it.
+server.listen(PORT, () => console.log(`Todo sample on http://localhost:${server.address().port}`));

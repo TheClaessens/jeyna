@@ -172,10 +172,10 @@ var require_code = __commonJS2({
     function interpolate(x) {
       return typeof x == "number" || typeof x == "boolean" || x === null ? x : safeStringify(Array.isArray(x) ? x.join(",") : x);
     }
-    function stringify3(x) {
+    function stringify4(x) {
       return new _Code(safeStringify(x));
     }
-    exports2.stringify = stringify3;
+    exports2.stringify = stringify4;
     function safeStringify(x) {
       return JSON.stringify(x).replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
     }
@@ -2995,7 +2995,7 @@ var require_compile = __commonJS2({
       const schOrFunc = root.refs[ref];
       if (schOrFunc)
         return schOrFunc;
-      let _sch = resolve3.call(this, root, ref);
+      let _sch = resolve4.call(this, root, ref);
       if (_sch === void 0) {
         const schema = (_a3 = root.localRefs) === null || _a3 === void 0 ? void 0 : _a3[ref];
         const { schemaId } = this.opts;
@@ -3022,7 +3022,7 @@ var require_compile = __commonJS2({
     function sameSchemaEnv(s1, s2) {
       return s1.schema === s2.schema && s1.root === s2.root && s1.baseId === s2.baseId;
     }
-    function resolve3(root, ref) {
+    function resolve4(root, ref) {
       let sch;
       while (typeof (sch = this.refs[ref]) == "string")
         ref = sch;
@@ -3852,7 +3852,7 @@ var require_fast_uri = __commonJS2({
       }
       return uri;
     }
-    function resolve3(baseURI, relativeURI, options2) {
+    function resolve4(baseURI, relativeURI, options2) {
       const schemelessOptions = options2 ? Object.assign({ scheme: "null" }, options2) : { scheme: "null" };
       const {
         parsed: baseParsed,
@@ -4221,7 +4221,7 @@ var require_fast_uri = __commonJS2({
     var fastUri = {
       SCHEMES,
       normalize,
-      resolve: resolve3,
+      resolve: resolve4,
       resolveComponent,
       equal,
       serialize: serialize2,
@@ -8680,7 +8680,7 @@ var require_stringify = __commonJS2({
         props.push(doc.directives.tagString(tag));
       return props.join(" ");
     }
-    function stringify3(item, ctx, onComment, onChompKeep) {
+    function stringify4(item, ctx, onComment, onChompKeep) {
       if (identity.isPair(item))
         return item.toString(ctx, onComment, onChompKeep);
       if (identity.isAlias(item)) {
@@ -8709,7 +8709,7 @@ var require_stringify = __commonJS2({
 ${ctx.indent}${str}`;
     }
     exports2.createStringifyContext = createStringifyContext;
-    exports2.stringify = stringify3;
+    exports2.stringify = stringify4;
   }
 });
 
@@ -8719,7 +8719,7 @@ var require_stringifyPair = __commonJS2({
     "use strict";
     var identity = require_identity();
     var Scalar = require_Scalar();
-    var stringify3 = require_stringify();
+    var stringify4 = require_stringify();
     var stringifyComment = require_stringifyComment();
     function stringifyPair({ key, value: value2 }, ctx, onComment, onChompKeep) {
       const { allNullValues, doc, indent: indent2, indentStep, options: { commentString, indentSeq, simpleKeys } } = ctx;
@@ -8741,7 +8741,7 @@ var require_stringifyPair = __commonJS2({
       });
       let keyCommentDone = false;
       let chompKeep = false;
-      let str = stringify3.stringify(key, ctx, () => keyCommentDone = true, () => chompKeep = true);
+      let str = stringify4.stringify(key, ctx, () => keyCommentDone = true, () => chompKeep = true);
       if (!explicitKey && !ctx.inFlow && str.length > 1024) {
         if (simpleKeys)
           throw new Error("With simple keys, single line scalar must not span more than 1024 characters");
@@ -8793,7 +8793,7 @@ ${indent2}:`;
         ctx.indent = ctx.indent.substring(2);
       }
       let valueCommentDone = false;
-      const valueStr = stringify3.stringify(value2, ctx, () => valueCommentDone = true, () => chompKeep = true);
+      const valueStr = stringify4.stringify(value2, ctx, () => valueCommentDone = true, () => chompKeep = true);
       let ws4 = " ";
       if (keyComment || vsb || vcb) {
         ws4 = vsb ? "\n" : "";
@@ -8934,7 +8934,7 @@ var require_addPairToJSMap = __commonJS2({
     "use strict";
     var log4 = require_log();
     var merge2 = require_merge();
-    var stringify3 = require_stringify();
+    var stringify4 = require_stringify();
     var identity = require_identity();
     var toJS = require_toJS();
     function addPairToJSMap(ctx, map2, { key, value: value2 }) {
@@ -8970,7 +8970,7 @@ var require_addPairToJSMap = __commonJS2({
       if (typeof jsKey !== "object")
         return String(jsKey);
       if (identity.isNode(key) && ctx?.doc) {
-        const strCtx = stringify3.createStringifyContext(ctx.doc, {});
+        const strCtx = stringify4.createStringifyContext(ctx.doc, {});
         strCtx.anchors = /* @__PURE__ */ new Set();
         for (const node2 of ctx.anchors.keys())
           strCtx.anchors.add(node2.anchor);
@@ -9037,12 +9037,12 @@ var require_stringifyCollection = __commonJS2({
   "node_modules/yaml/dist/stringify/stringifyCollection.js"(exports2) {
     "use strict";
     var identity = require_identity();
-    var stringify3 = require_stringify();
+    var stringify4 = require_stringify();
     var stringifyComment = require_stringifyComment();
     function stringifyCollection(collection, ctx, options2) {
       const flow = ctx.inFlow ?? collection.flow;
-      const stringify4 = flow ? stringifyFlowCollection : stringifyBlockCollection;
-      return stringify4(collection, ctx, options2);
+      const stringify5 = flow ? stringifyFlowCollection : stringifyBlockCollection;
+      return stringify5(collection, ctx, options2);
     }
     function stringifyBlockCollection({ comment, items }, ctx, { blockItemPrefix, flowChars, itemIndent, onChompKeep, onComment }) {
       const { indent: indent2, options: { commentString } } = ctx;
@@ -9067,7 +9067,7 @@ var require_stringifyCollection = __commonJS2({
           }
         }
         chompKeep = false;
-        let str2 = stringify3.stringify(item, itemCtx, () => comment2 = null, () => chompKeep = true);
+        let str2 = stringify4.stringify(item, itemCtx, () => comment2 = null, () => chompKeep = true);
         if (comment2)
           str2 += stringifyComment.lineComment(str2, itemIndent, commentString(comment2));
         if (chompKeep && comment2)
@@ -9134,7 +9134,7 @@ ${indent2}${line}` : "\n";
         }
         if (comment)
           reqNewline = true;
-        let str = stringify3.stringify(item, itemCtx, () => comment = null);
+        let str = stringify4.stringify(item, itemCtx, () => comment = null);
         reqNewline || (reqNewline = lines.length > linesAtValue || str.includes("\n"));
         if (i < items.length - 1) {
           str += ",";
@@ -10495,7 +10495,7 @@ var require_stringifyDocument = __commonJS2({
   "node_modules/yaml/dist/stringify/stringifyDocument.js"(exports2) {
     "use strict";
     var identity = require_identity();
-    var stringify3 = require_stringify();
+    var stringify4 = require_stringify();
     var stringifyComment = require_stringifyComment();
     function stringifyDocument(doc, options2) {
       const lines = [];
@@ -10510,7 +10510,7 @@ var require_stringifyDocument = __commonJS2({
       }
       if (hasDirectives)
         lines.push("---");
-      const ctx = stringify3.createStringifyContext(doc, options2);
+      const ctx = stringify4.createStringifyContext(doc, options2);
       const { commentString } = ctx.options;
       if (doc.commentBefore) {
         if (lines.length !== 1)
@@ -10532,7 +10532,7 @@ var require_stringifyDocument = __commonJS2({
           contentComment = doc.contents.comment;
         }
         const onChompKeep = contentComment ? void 0 : () => chompKeep = true;
-        let body = stringify3.stringify(doc.contents, ctx, () => contentComment = null, onChompKeep);
+        let body = stringify4.stringify(doc.contents, ctx, () => contentComment = null, onChompKeep);
         if (contentComment)
           body += stringifyComment.lineComment(body, "", commentString(contentComment));
         if ((body[0] === "|" || body[0] === ">") && lines[lines.length - 1] === "---") {
@@ -10540,7 +10540,7 @@ var require_stringifyDocument = __commonJS2({
         } else
           lines.push(body);
       } else {
-        lines.push(stringify3.stringify(doc.contents, ctx));
+        lines.push(stringify4.stringify(doc.contents, ctx));
       }
       if (doc.directives?.docEnd) {
         if (doc.comment) {
@@ -12676,7 +12676,7 @@ var require_cst_scalar = __commonJS2({
 var require_cst_stringify = __commonJS2({
   "node_modules/yaml/dist/parse/cst-stringify.js"(exports2) {
     "use strict";
-    var stringify3 = (cst) => "type" in cst ? stringifyToken(cst) : stringifyItem(cst);
+    var stringify4 = (cst) => "type" in cst ? stringifyToken(cst) : stringifyItem(cst);
     function stringifyToken(token) {
       switch (token.type) {
         case "block-scalar": {
@@ -12729,7 +12729,7 @@ var require_cst_stringify = __commonJS2({
         res += stringifyToken(value2);
       return res;
     }
-    exports2.stringify = stringify3;
+    exports2.stringify = stringify4;
   }
 });
 
@@ -14459,7 +14459,7 @@ var require_public_api = __commonJS2({
       }
       return doc.toJS(Object.assign({ reviver: _reviver }, options2));
     }
-    function stringify3(value2, replacer, options2) {
+    function stringify4(value2, replacer, options2) {
       let _replacer = null;
       if (typeof replacer === "function" || Array.isArray(replacer)) {
         _replacer = replacer;
@@ -14484,7 +14484,7 @@ var require_public_api = __commonJS2({
     exports2.parse = parse6;
     exports2.parseAllDocuments = parseAllDocuments;
     exports2.parseDocument = parseDocument;
-    exports2.stringify = stringify3;
+    exports2.stringify = stringify4;
   }
 });
 
@@ -24774,11 +24774,11 @@ var require_utilsBundle = __commonJS2({
         "use strict";
         var __awaiter = exports22 && exports22.__awaiter || function(thisArg, _arguments, P, generator) {
           function adopt(value2) {
-            return value2 instanceof P ? value2 : new P(function(resolve3) {
-              resolve3(value2);
+            return value2 instanceof P ? value2 : new P(function(resolve32) {
+              resolve32(value2);
             });
           }
-          return new (P || (P = Promise))(function(resolve3, reject) {
+          return new (P || (P = Promise))(function(resolve32, reject) {
             function fulfilled(value2) {
               try {
                 step(generator.next(value2));
@@ -24794,7 +24794,7 @@ var require_utilsBundle = __commonJS2({
               }
             }
             function step(result2) {
-              result2.done ? resolve3(result2.value) : adopt(result2.value).then(fulfilled, rejected);
+              result2.done ? resolve32(result2.value) : adopt(result2.value).then(fulfilled, rejected);
             }
             step((generator = generator.apply(thisArg, _arguments || [])).next());
           });
@@ -24828,13 +24828,13 @@ var require_utilsBundle = __commonJS2({
            * @returns { Promise }
            */
           static createConnection(options2, callback) {
-            return new Promise((resolve3, reject) => {
+            return new Promise((resolve32, reject) => {
               try {
                 (0, helpers_1.validateSocksClientOptions)(options2, ["connect"]);
               } catch (err) {
                 if (typeof callback === "function") {
                   callback(err);
-                  return resolve3(err);
+                  return resolve32(err);
                 } else {
                   return reject(err);
                 }
@@ -24845,16 +24845,16 @@ var require_utilsBundle = __commonJS2({
                 client.removeAllListeners();
                 if (typeof callback === "function") {
                   callback(null, info);
-                  resolve3(info);
+                  resolve32(info);
                 } else {
-                  resolve3(info);
+                  resolve32(info);
                 }
               });
               client.once("error", (err) => {
                 client.removeAllListeners();
                 if (typeof callback === "function") {
                   callback(err);
-                  resolve3(err);
+                  resolve32(err);
                 } else {
                   reject(err);
                 }
@@ -24871,13 +24871,13 @@ var require_utilsBundle = __commonJS2({
            * @returns { Promise }
            */
           static createConnectionChain(options2, callback) {
-            return new Promise((resolve3, reject) => __awaiter(this, void 0, void 0, function* () {
+            return new Promise((resolve32, reject) => __awaiter(this, void 0, void 0, function* () {
               try {
                 (0, helpers_1.validateSocksClientChainOptions)(options2);
               } catch (err) {
                 if (typeof callback === "function") {
                   callback(err);
-                  return resolve3(err);
+                  return resolve32(err);
                 } else {
                   return reject(err);
                 }
@@ -24903,14 +24903,14 @@ var require_utilsBundle = __commonJS2({
                 }
                 if (typeof callback === "function") {
                   callback(null, { socket: sock });
-                  resolve3({ socket: sock });
+                  resolve32({ socket: sock });
                 } else {
-                  resolve3({ socket: sock });
+                  resolve32({ socket: sock });
                 }
               } catch (err) {
                 if (typeof callback === "function") {
                   callback(err);
-                  resolve3(err);
+                  resolve32(err);
                 } else {
                   reject(err);
                 }
@@ -30561,7 +30561,7 @@ ${indent2}`);
             props.push(doc.directives.tagString(tag));
           return props.join(" ");
         }
-        function stringify3(item, ctx, onComment, onChompKeep) {
+        function stringify4(item, ctx, onComment, onChompKeep) {
           if (identity2.isPair(item))
             return item.toString(ctx, onComment, onChompKeep);
           if (identity2.isAlias(item)) {
@@ -30590,7 +30590,7 @@ ${indent2}`);
 ${ctx.indent}${str}`;
         }
         exports22.createStringifyContext = createStringifyContext;
-        exports22.stringify = stringify3;
+        exports22.stringify = stringify4;
       }
     });
     var require_stringifyPair2 = __commonJS3({
@@ -30598,7 +30598,7 @@ ${ctx.indent}${str}`;
         "use strict";
         var identity2 = require_identity2();
         var Scalar = require_Scalar2();
-        var stringify3 = require_stringify2();
+        var stringify4 = require_stringify2();
         var stringifyComment = require_stringifyComment2();
         function stringifyPair({ key, value: value2 }, ctx, onComment, onChompKeep) {
           const { allNullValues, doc, indent: indent2, indentStep, options: { commentString, indentSeq, simpleKeys } } = ctx;
@@ -30620,7 +30620,7 @@ ${ctx.indent}${str}`;
           });
           let keyCommentDone = false;
           let chompKeep = false;
-          let str = stringify3.stringify(key, ctx, () => keyCommentDone = true, () => chompKeep = true);
+          let str = stringify4.stringify(key, ctx, () => keyCommentDone = true, () => chompKeep = true);
           if (!explicitKey && !ctx.inFlow && str.length > 1024) {
             if (simpleKeys)
               throw new Error("With simple keys, single line scalar must not span more than 1024 characters");
@@ -30672,7 +30672,7 @@ ${indent2}:`;
             ctx.indent = ctx.indent.substring(2);
           }
           let valueCommentDone = false;
-          const valueStr = stringify3.stringify(value2, ctx, () => valueCommentDone = true, () => chompKeep = true);
+          const valueStr = stringify4.stringify(value2, ctx, () => valueCommentDone = true, () => chompKeep = true);
           let ws22 = " ";
           if (keyComment || vsb || vcb) {
             ws22 = vsb ? "\n" : "";
@@ -30807,7 +30807,7 @@ ${ctx.indent}`;
         "use strict";
         var log4 = require_log2();
         var merge22 = require_merge2();
-        var stringify3 = require_stringify2();
+        var stringify4 = require_stringify2();
         var identity2 = require_identity2();
         var toJS = require_toJS2();
         function addPairToJSMap(ctx, map22, { key, value: value2 }) {
@@ -30843,7 +30843,7 @@ ${ctx.indent}`;
           if (typeof jsKey !== "object")
             return String(jsKey);
           if (identity2.isNode(key) && ctx?.doc) {
-            const strCtx = stringify3.createStringifyContext(ctx.doc, {});
+            const strCtx = stringify4.createStringifyContext(ctx.doc, {});
             strCtx.anchors = /* @__PURE__ */ new Set();
             for (const node2 of ctx.anchors.keys())
               strCtx.anchors.add(node2.anchor);
@@ -30906,7 +30906,7 @@ ${ctx.indent}`;
       "node_modules/yaml/dist/stringify/stringifyCollection.js"(exports22) {
         "use strict";
         var identity2 = require_identity2();
-        var stringify3 = require_stringify2();
+        var stringify4 = require_stringify2();
         var stringifyComment = require_stringifyComment2();
         function stringifyCollection(collection, ctx, options2) {
           const flow = ctx.inFlow ?? collection.flow;
@@ -30936,7 +30936,7 @@ ${ctx.indent}`;
               }
             }
             chompKeep = false;
-            let str2 = stringify3.stringify(item, itemCtx, () => comment2 = null, () => chompKeep = true);
+            let str2 = stringify4.stringify(item, itemCtx, () => comment2 = null, () => chompKeep = true);
             if (comment2)
               str2 += stringifyComment.lineComment(str2, itemIndent, commentString(comment2));
             if (chompKeep && comment2)
@@ -31003,7 +31003,7 @@ ${indent2}${line}` : "\n";
             }
             if (comment)
               reqNewline = true;
-            let str = stringify3.stringify(item, itemCtx, () => comment = null);
+            let str = stringify4.stringify(item, itemCtx, () => comment = null);
             reqNewline || (reqNewline = lines.length > linesAtValue || str.includes("\n"));
             if (i2 < items.length - 1) {
               str += ",";
@@ -32316,7 +32316,7 @@ ${cn.comment}` : item.comment;
       "node_modules/yaml/dist/stringify/stringifyDocument.js"(exports22) {
         "use strict";
         var identity2 = require_identity2();
-        var stringify3 = require_stringify2();
+        var stringify4 = require_stringify2();
         var stringifyComment = require_stringifyComment2();
         function stringifyDocument(doc, options2) {
           const lines = [];
@@ -32331,7 +32331,7 @@ ${cn.comment}` : item.comment;
           }
           if (hasDirectives)
             lines.push("---");
-          const ctx = stringify3.createStringifyContext(doc, options2);
+          const ctx = stringify4.createStringifyContext(doc, options2);
           const { commentString } = ctx.options;
           if (doc.commentBefore) {
             if (lines.length !== 1)
@@ -32353,7 +32353,7 @@ ${cn.comment}` : item.comment;
               contentComment = doc.contents.comment;
             }
             const onChompKeep = contentComment ? void 0 : () => chompKeep = true;
-            let body = stringify3.stringify(doc.contents, ctx, () => contentComment = null, onChompKeep);
+            let body = stringify4.stringify(doc.contents, ctx, () => contentComment = null, onChompKeep);
             if (contentComment)
               body += stringifyComment.lineComment(body, "", commentString(contentComment));
             if ((body[0] === "|" || body[0] === ">") && lines[lines.length - 1] === "---") {
@@ -32361,7 +32361,7 @@ ${cn.comment}` : item.comment;
             } else
               lines.push(body);
           } else {
-            lines.push(stringify3.stringify(doc.contents, ctx));
+            lines.push(stringify4.stringify(doc.contents, ctx));
           }
           if (doc.directives?.docEnd) {
             if (doc.comment) {
@@ -34456,7 +34456,7 @@ ${end.comment}` : end.comment;
     var require_cst_stringify2 = __commonJS3({
       "node_modules/yaml/dist/parse/cst-stringify.js"(exports22) {
         "use strict";
-        var stringify3 = (cst) => "type" in cst ? stringifyToken(cst) : stringifyItem(cst);
+        var stringify4 = (cst) => "type" in cst ? stringifyToken(cst) : stringifyItem(cst);
         function stringifyToken(token) {
           switch (token.type) {
             case "block-scalar": {
@@ -34509,7 +34509,7 @@ ${end.comment}` : end.comment;
             res += stringifyToken(value2);
           return res;
         }
-        exports22.stringify = stringify3;
+        exports22.stringify = stringify4;
       }
     });
     var require_cst_visit2 = __commonJS3({
@@ -36227,7 +36227,7 @@ ${end.comment}` : end.comment;
           }
           return doc.toJS(Object.assign({ reviver: _reviver }, options2));
         }
-        function stringify3(value2, replacer, options2) {
+        function stringify4(value2, replacer, options2) {
           let _replacer = null;
           if (typeof replacer === "function" || Array.isArray(replacer)) {
             _replacer = replacer;
@@ -36252,7 +36252,7 @@ ${end.comment}` : end.comment;
         exports22.parse = parse32;
         exports22.parseAllDocuments = parseAllDocuments;
         exports22.parseDocument = parseDocument;
-        exports22.stringify = stringify3;
+        exports22.stringify = stringify4;
       }
     });
     var require_dist3 = __commonJS3({
@@ -37182,7 +37182,7 @@ ${end.comment}` : end.comment;
     var require_stringify22 = __commonJS3({
       "node_modules/json5/lib/stringify.js"(exports22, module22) {
         var util22 = require_util22();
-        module22.exports = function stringify3(value2, replacer, space) {
+        module22.exports = function stringify4(value2, replacer, space) {
           const stack = [];
           let indent2 = "";
           let propertyList;
@@ -37399,10 +37399,10 @@ ${end.comment}` : end.comment;
     var require_lib = __commonJS3({
       "node_modules/json5/lib/index.js"(exports22, module22) {
         var parse32 = require_parse();
-        var stringify3 = require_stringify22();
+        var stringify4 = require_stringify22();
         var JSON5 = {
           parse: parse32,
-          stringify: stringify3
+          stringify: stringify4
         };
         module22.exports = JSON5;
       }
@@ -41042,8 +41042,8 @@ ${end.comment}` : end.comment;
             throw new Error("expected prompt to have a custom render method");
           }
           run() {
-            return new Promise(async (resolve3, reject) => {
-              this.once("submit", resolve3);
+            return new Promise(async (resolve32, reject) => {
+              this.once("submit", resolve32);
               this.once("cancel", reject);
               if (await this.skip()) {
                 this.render = () => {
@@ -41560,14 +41560,14 @@ ${end.comment}` : end.comment;
               return this.render();
             };
             clearTimeout(this.numberTimeout);
-            return new Promise((resolve3) => {
+            return new Promise((resolve32) => {
               let len = this.choices.length;
               let num = this.num;
               let handle = (val = false, res) => {
                 clearTimeout(this.numberTimeout);
                 if (val) res = number42(num);
                 this.num = "";
-                resolve3(res);
+                resolve32(res);
               };
               if (num === "0" || num.length === 1 && Number(num + "0") > len) {
                 return handle(true);
@@ -45552,34 +45552,34 @@ ${end.comment}` : end.comment;
         exports22.LocalFileHeader = LocalFileHeader;
         exports22.RandomAccessReader = RandomAccessReader;
         function openPromise(path4, options2) {
-          return new Promise((resolve3, reject) => {
+          return new Promise((resolve32, reject) => {
             open42(path4, { ...options2, lazyEntries: true }, function(err, zipfile) {
               if (err) return reject(err);
-              resolve3(zipfile);
+              resolve32(zipfile);
             });
           });
         }
         function fromFdPromise(fd, options2) {
-          return new Promise((resolve3, reject) => {
+          return new Promise((resolve32, reject) => {
             fromFd(fd, { ...options2, lazyEntries: true }, function(err, zipfile) {
               if (err) return reject(err);
-              resolve3(zipfile);
+              resolve32(zipfile);
             });
           });
         }
         function fromBufferPromise(buffer, options2) {
-          return new Promise((resolve3, reject) => {
+          return new Promise((resolve32, reject) => {
             fromBuffer(buffer, { ...options2, lazyEntries: true }, function(err, zipfile) {
               if (err) return reject(err);
-              resolve3(zipfile);
+              resolve32(zipfile);
             });
           });
         }
         function fromRandomAccessReaderPromise(reader, totalSize, options2) {
-          return new Promise((resolve3, reject) => {
+          return new Promise((resolve32, reject) => {
             fromRandomAccessReader(reader, totalSize, { ...options2, lazyEntries: true }, function(err, zipfile) {
               if (err) return reject(err);
-              resolve3(zipfile);
+              resolve32(zipfile);
             });
           });
         }
@@ -45863,15 +45863,15 @@ ${end.comment}` : end.comment;
             if (self2.autoClose) self2.close();
           }
           function onEntry(entry) {
-            let { resolve: resolve3 } = pendingResolveReject;
+            let { resolve: resolve32 } = pendingResolveReject;
             pendingResolveReject = null;
-            resolve3({ value: entry });
+            resolve32({ value: entry });
           }
           function onEnd() {
-            let { resolve: resolve3 } = pendingResolveReject;
+            let { resolve: resolve32 } = pendingResolveReject;
             pendingResolveReject = null;
             cleanup();
-            resolve3({ done: true });
+            resolve32({ done: true });
           }
           function onError(err) {
             let { reject } = pendingResolveReject;
@@ -45884,9 +45884,9 @@ ${end.comment}` : end.comment;
               return this;
             },
             next() {
-              const promise22 = new Promise((resolve3, reject) => {
+              const promise22 = new Promise((resolve32, reject) => {
                 if (pendingResolveReject != null) throw new Error("next() called before previous Promise was resolved.");
-                pendingResolveReject = { resolve: resolve3, reject };
+                pendingResolveReject = { resolve: resolve32, reject };
               });
               self2.readEntry();
               return promise22;
@@ -46075,26 +46075,26 @@ ${end.comment}` : end.comment;
           });
         };
         ZipFile2.prototype.openReadStreamPromise = function(entry, options2) {
-          return new Promise((resolve3, reject) => {
+          return new Promise((resolve32, reject) => {
             this.openReadStream(entry, options2, function(err, readStream) {
               if (err) return reject(err);
-              resolve3(readStream);
+              resolve32(readStream);
             });
           });
         };
         ZipFile2.prototype.openReadStreamLowLevelPromise = function(fileDataStart, compressedSize, relativeStart, relativeEnd, decompress, uncompressedSize) {
-          return new Promise((resolve3, reject) => {
+          return new Promise((resolve32, reject) => {
             this.openReadStream(fileDataStart, compressedSize, relativeStart, relativeEnd, decompress, uncompressedSize, function(err, readStream) {
               if (err) return reject(err);
-              resolve3(readStream);
+              resolve32(readStream);
             });
           });
         };
         ZipFile2.prototype.readLocalFileHeaderPromise = function(entry, options2) {
-          return new Promise((resolve3, reject) => {
+          return new Promise((resolve32, reject) => {
             this.readLocalFileHeader(entry, options2, function(err, localFileHeader) {
               if (err) return reject(err);
-              resolve3(localFileHeader);
+              resolve32(localFileHeader);
             });
           });
         };
@@ -47499,10 +47499,10 @@ ${end.comment}` : end.comment;
         function interpolate(x) {
           return typeof x == "number" || typeof x == "boolean" || x === null ? x : safeStringify(Array.isArray(x) ? x.join(",") : x);
         }
-        function stringify3(x) {
+        function stringify4(x) {
           return new _Code(safeStringify(x));
         }
-        exports22.stringify = stringify3;
+        exports22.stringify = stringify4;
         function safeStringify(x) {
           return JSON.stringify(x).replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
         }
@@ -50282,7 +50282,7 @@ ${end.comment}` : end.comment;
           const schOrFunc = root.refs[ref];
           if (schOrFunc)
             return schOrFunc;
-          let _sch = resolve3.call(this, root, ref);
+          let _sch = resolve32.call(this, root, ref);
           if (_sch === void 0) {
             const schema = (_a4 = root.localRefs) === null || _a4 === void 0 ? void 0 : _a4[ref];
             const { schemaId } = this.opts;
@@ -50309,7 +50309,7 @@ ${end.comment}` : end.comment;
         function sameSchemaEnv(s1, s2) {
           return s1.schema === s2.schema && s1.root === s2.root && s1.baseId === s2.baseId;
         }
-        function resolve3(root, ref) {
+        function resolve32(root, ref) {
           let sch;
           while (typeof (sch = this.refs[ref]) == "string")
             ref = sch;
@@ -51131,7 +51131,7 @@ ${end.comment}` : end.comment;
           }
           return uri;
         }
-        function resolve3(baseURI, relativeURI, options2) {
+        function resolve32(baseURI, relativeURI, options2) {
           const schemelessOptions = options2 ? Object.assign({ scheme: "null" }, options2) : { scheme: "null" };
           const {
             parsed: baseParsed,
@@ -51499,7 +51499,7 @@ ${end.comment}` : end.comment;
         var fastUri = {
           SCHEMES,
           normalize: normalize2,
-          resolve: resolve3,
+          resolve: resolve32,
           resolveComponent,
           equal,
           serialize: serialize2,
@@ -54412,10 +54412,10 @@ ${end.comment}` : end.comment;
         function interpolate(x) {
           return typeof x == "number" || typeof x == "boolean" || x === null ? x : safeStringify(Array.isArray(x) ? x.join(",") : x);
         }
-        function stringify3(x) {
+        function stringify4(x) {
           return new _Code(safeStringify(x));
         }
-        exports22.stringify = stringify3;
+        exports22.stringify = stringify4;
         function safeStringify(x) {
           return JSON.stringify(x).replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
         }
@@ -57162,7 +57162,7 @@ ${end.comment}` : end.comment;
           const schOrFunc = root.refs[ref];
           if (schOrFunc)
             return schOrFunc;
-          let _sch = resolve3.call(this, root, ref);
+          let _sch = resolve32.call(this, root, ref);
           if (_sch === void 0) {
             const schema = (_a4 = root.localRefs) === null || _a4 === void 0 ? void 0 : _a4[ref];
             const { schemaId } = this.opts;
@@ -57189,7 +57189,7 @@ ${end.comment}` : end.comment;
         function sameSchemaEnv(s1, s2) {
           return s1.schema === s2.schema && s1.root === s2.root && s1.baseId === s2.baseId;
         }
-        function resolve3(root, ref) {
+        function resolve32(root, ref) {
           let sch;
           while (typeof (sch = this.refs[ref]) == "string")
             ref = sch;
@@ -60240,12 +60240,12 @@ ${end.comment}` : end.comment;
             if (typeof Promise !== "function") {
               throw new TypeError("callback not provided");
             }
-            return new Promise(function(resolve3, reject) {
+            return new Promise(function(resolve32, reject) {
               isexe(path4, options2 || {}, function(er, is) {
                 if (er) {
                   reject(er);
                 } else {
-                  resolve3(is);
+                  resolve32(is);
                 }
               });
             });
@@ -60309,27 +60309,27 @@ ${end.comment}` : end.comment;
             opt = {};
           const { pathEnv, pathExt, pathExtExe } = getPathInfo(cmd, opt);
           const found = [];
-          const step = (i2) => new Promise((resolve3, reject) => {
+          const step = (i2) => new Promise((resolve32, reject) => {
             if (i2 === pathEnv.length)
-              return opt.all && found.length ? resolve3(found) : reject(getNotFoundError(cmd));
+              return opt.all && found.length ? resolve32(found) : reject(getNotFoundError(cmd));
             const ppRaw = pathEnv[i2];
             const pathPart = /^".*"$/.test(ppRaw) ? ppRaw.slice(1, -1) : ppRaw;
             const pCmd = path4.join(pathPart, cmd);
             const p = !pathPart && /^\.[\\\/]/.test(cmd) ? cmd.slice(0, 2) + pCmd : pCmd;
-            resolve3(subStep(p, i2, 0));
+            resolve32(subStep(p, i2, 0));
           });
-          const subStep = (p, i2, ii) => new Promise((resolve3, reject) => {
+          const subStep = (p, i2, ii) => new Promise((resolve32, reject) => {
             if (ii === pathExt.length)
-              return resolve3(step(i2 + 1));
+              return resolve32(step(i2 + 1));
             const ext2 = pathExt[ii];
             isexe(p + ext2, { pathExt: pathExtExe }, (er, is) => {
               if (!er && is) {
                 if (opt.all)
                   found.push(p + ext2);
                 else
-                  return resolve3(p + ext2);
+                  return resolve32(p + ext2);
               }
-              return resolve3(subStep(p, i2, ii + 1));
+              return resolve32(subStep(p, i2, ii + 1));
             });
           });
           return cb ? step(0).then((res) => cb(null, res), cb) : step(0);
@@ -62484,7 +62484,7 @@ ${end.comment}` : end.comment;
     var import_debug = __toESM3(require_src(), 1);
     var debug17 = (0, import_debug.default)("https-proxy-agent:parse-proxy-response");
     function parseProxyResponse(socket) {
-      return new Promise((resolve3, reject) => {
+      return new Promise((resolve32, reject) => {
         let buffersLength = 0;
         const buffers = [];
         function read() {
@@ -62550,7 +62550,7 @@ ${end.comment}` : end.comment;
           }
           debug17("got proxy server response: %o %o", firstLine, headers);
           cleanup();
-          resolve3({
+          resolve32({
             connect: {
               statusCode,
               statusText: statusText2,
@@ -66199,19 +66199,19 @@ tell application "System Events" to get value of property list item "CFBundleNam
       }
       const subprocess = import_node_child_process7.default.spawn(command, cliArguments, childProcessOptions);
       if (options2.wait) {
-        return new Promise((resolve3, reject) => {
+        return new Promise((resolve32, reject) => {
           subprocess.once("error", reject);
           subprocess.once("close", (exitCode) => {
             if (!options2.allowNonzeroExitCode && exitCode !== 0) {
               reject(new Error(`Exited with code ${exitCode}`));
               return;
             }
-            resolve3(subprocess);
+            resolve32(subprocess);
           });
         });
       }
       if (isFallbackAttempt) {
-        return new Promise((resolve3, reject) => {
+        return new Promise((resolve32, reject) => {
           subprocess.once("error", reject);
           subprocess.once("spawn", () => {
             subprocess.once("close", (exitCode) => {
@@ -66221,17 +66221,17 @@ tell application "System Events" to get value of property list item "CFBundleNam
                 return;
               }
               subprocess.unref();
-              resolve3(subprocess);
+              resolve32(subprocess);
             });
           });
         });
       }
       subprocess.unref();
-      return new Promise((resolve3, reject) => {
+      return new Promise((resolve32, reject) => {
         subprocess.once("error", reject);
         subprocess.once("spawn", () => {
           subprocess.off("error", reject);
-          resolve3(subprocess);
+          resolve32(subprocess);
         });
       });
     };
@@ -69746,12 +69746,12 @@ Expecting one of '${allowedValues.join("', '")}'`);
         let { host } = opts;
         const { port, lookup: lookupFn = dns.lookup } = opts;
         if (shouldLookup) {
-          host = await new Promise((resolve3, reject) => {
+          host = await new Promise((resolve32, reject) => {
             lookupFn(host, {}, (err, address) => {
               if (err) {
                 reject(err);
               } else {
-                resolve3(typeof address === "string" ? address : address[0].address);
+                resolve32(typeof address === "string" ? address : address[0].address);
               }
             });
           });
@@ -70676,7 +70676,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
             this._addToNodeFs(path4, initialAdd, wh, depth + 1);
           }
         }).on(EV.ERROR, this._boundHandleError);
-        return new Promise((resolve3, reject) => {
+        return new Promise((resolve32, reject) => {
           if (!stream)
             return reject();
           stream.once(STR_END, () => {
@@ -70685,7 +70685,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
               return;
             }
             const wasThrottled = throttler ? throttler.clear() : false;
-            resolve3(void 0);
+            resolve32(void 0);
             previous.getChildren().filter((item) => {
               return item !== directory && !current2.has(item);
             }).forEach((item) => {
@@ -93923,7 +93923,7 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
               return;
             }
             const pollInterval = task2.pollInterval ?? this._options?.defaultTaskPollInterval ?? 1e3;
-            await new Promise((resolve3) => setTimeout(resolve3, pollInterval));
+            await new Promise((resolve32) => setTimeout(resolve32, pollInterval));
             options2?.signal?.throwIfAborted();
           }
         } catch (error512) {
@@ -93940,7 +93940,7 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
        */
       request(request3, resultSchema, options2) {
         const { relatedRequestId, resumptionToken, onresumptiontoken, task, relatedTask } = options2 ?? {};
-        return new Promise((resolve3, reject) => {
+        return new Promise((resolve32, reject) => {
           const earlyReject = (error512) => {
             reject(error512);
           };
@@ -94018,7 +94018,7 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
               if (!parseResult2.success) {
                 reject(parseResult2.error);
               } else {
-                resolve3(parseResult2.data);
+                resolve32(parseResult2.data);
               }
             } catch (error512) {
               reject(error512);
@@ -94279,12 +94279,12 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
           }
         } catch {
         }
-        return new Promise((resolve3, reject) => {
+        return new Promise((resolve32, reject) => {
           if (signal.aborted) {
             reject(new McpError2(ErrorCode2.InvalidRequest, "Request cancelled"));
             return;
           }
-          const timeoutId = setTimeout(resolve3, interval);
+          const timeoutId = setTimeout(resolve32, interval);
           signal.addEventListener("abort", () => {
             clearTimeout(timeoutId);
             reject(new McpError2(ErrorCode2.InvalidRequest, "Request cancelled"));
@@ -97119,7 +97119,7 @@ ${value2}`, dataLines++;
       }
       _startOrAuth() {
         const fetchImpl = this?._eventSourceInit?.fetch ?? this._fetch ?? fetch;
-        return new Promise((resolve3, reject) => {
+        return new Promise((resolve32, reject) => {
           this._eventSource = new EventSource(this._url.href, {
             ...this._eventSourceInit,
             fetch: async (url22, init) => {
@@ -97140,7 +97140,7 @@ ${value2}`, dataLines++;
           this._abortController = new AbortController();
           this._eventSource.onerror = (event) => {
             if (event.code === 401 && this._authProvider) {
-              this._authThenStart().then(resolve3, reject);
+              this._authThenStart().then(resolve32, reject);
               return;
             }
             const error512 = new SseError(event.code, event.message, event);
@@ -97162,7 +97162,7 @@ ${value2}`, dataLines++;
               void this.close();
               return;
             }
-            resolve3();
+            resolve32();
           });
           this._eventSource.onmessage = (event) => {
             const messageEvent = event;
@@ -97255,7 +97255,7 @@ ${value2}`, dataLines++;
     var import_bytes = __toESM3(require_bytes());
     function getRawBody(req, { limit, encoding }) {
       const limitNumber = import_bytes.default.parse(limit);
-      return new Promise((resolve3, reject) => {
+      return new Promise((resolve32, reject) => {
         let received = 0;
         const chunks = [];
         req.on("data", (chunk) => {
@@ -97266,7 +97266,7 @@ ${value2}`, dataLines++;
         });
         req.on("end", () => {
           try {
-            resolve3(Buffer.concat(chunks).toString(encoding));
+            resolve32(Buffer.concat(chunks).toString(encoding));
           } catch (error512) {
             reject(error512);
           }
@@ -97499,7 +97499,7 @@ data: ${JSON.stringify(message)}
         if (this._process) {
           throw new Error("StdioClientTransport already started! If using Client class, note that connect() calls start() automatically.");
         }
-        return new Promise((resolve3, reject) => {
+        return new Promise((resolve32, reject) => {
           this._process = (0, import_cross_spawn.default)(this._serverParams.command, this._serverParams.args ?? [], {
             // merge default env with server env because mcp server needs some env vars
             env: {
@@ -97516,7 +97516,7 @@ data: ${JSON.stringify(message)}
             this.onerror?.(error512);
           });
           this._process.on("spawn", () => {
-            resolve3();
+            resolve32();
           });
           this._process.on("close", (_code) => {
             this._process = void 0;
@@ -97575,22 +97575,22 @@ data: ${JSON.stringify(message)}
         if (this._process) {
           const processToClose = this._process;
           this._process = void 0;
-          const closePromise = new Promise((resolve3) => {
+          const closePromise = new Promise((resolve32) => {
             processToClose.once("close", () => {
-              resolve3();
+              resolve32();
             });
           });
           try {
             processToClose.stdin?.end();
           } catch {
           }
-          await Promise.race([closePromise, new Promise((resolve3) => setTimeout(resolve3, 2e3).unref())]);
+          await Promise.race([closePromise, new Promise((resolve32) => setTimeout(resolve32, 2e3).unref())]);
           if (processToClose.exitCode === null) {
             try {
               processToClose.kill("SIGTERM");
             } catch {
             }
-            await Promise.race([closePromise, new Promise((resolve3) => setTimeout(resolve3, 2e3).unref())]);
+            await Promise.race([closePromise, new Promise((resolve32) => setTimeout(resolve32, 2e3).unref())]);
           }
           if (processToClose.exitCode === null) {
             try {
@@ -97602,15 +97602,15 @@ data: ${JSON.stringify(message)}
         this._readBuffer.clear();
       }
       send(message) {
-        return new Promise((resolve3) => {
+        return new Promise((resolve32) => {
           if (!this._process?.stdin) {
             throw new Error("Not connected");
           }
           const json22 = serializeMessage2(message);
           if (this._process.stdin.write(json22)) {
-            resolve3();
+            resolve32();
           } else {
-            this._process.stdin.once("drain", resolve3);
+            this._process.stdin.once("drain", resolve32);
           }
         });
       }
@@ -97665,12 +97665,12 @@ data: ${JSON.stringify(message)}
         this.onclose?.();
       }
       send(message) {
-        return new Promise((resolve3) => {
+        return new Promise((resolve32) => {
           const json22 = serializeMessage2(message);
           if (this._stdout.write(json22)) {
-            resolve3();
+            resolve32();
           } else {
-            this._stdout.once("drain", resolve3);
+            this._stdout.once("drain", resolve32);
           }
         });
       }
@@ -98167,7 +98167,7 @@ data: ${JSON.stringify(message)}
             });
             if (!chunk) {
               if (i2 === 1) {
-                await new Promise((resolve3) => setTimeout(resolve3));
+                await new Promise((resolve32) => setTimeout(resolve32));
                 maxReadCount = 3;
                 continue;
               }
@@ -98665,9 +98665,9 @@ data:
           const initRequest = messages.find((m) => isInitializeRequest(m));
           const clientProtocolVersion = initRequest ? initRequest.params.protocolVersion : req.headers.get("mcp-protocol-version") ?? DEFAULT_NEGOTIATED_PROTOCOL_VERSION;
           if (this._enableJsonResponse) {
-            return new Promise((resolve3) => {
+            return new Promise((resolve32) => {
               this._streamMapping.set(streamId, {
-                resolveJson: resolve3,
+                resolveJson: resolve32,
                 cleanup: () => {
                   this._streamMapping.delete(streamId);
                 }
@@ -102995,8 +102995,8 @@ ${escaped2}
         return { promise: Promise.resolve(), dispose: () => {
         } };
       let dispose;
-      const promise2 = new Promise((resolve3) => {
-        const onAbort = () => resolve3();
+      const promise2 = new Promise((resolve4) => {
+        const onAbort = () => resolve4();
         signal.addEventListener("abort", onAbort, { once: true });
         dispose = () => signal.removeEventListener("abort", onAbort);
       });
@@ -103016,14 +103016,14 @@ ${escaped2}
         "use strict";
         ManualPromise = class extends Promise {
           constructor() {
-            let resolve3;
+            let resolve4;
             let reject;
             super((f, r) => {
-              resolve3 = f;
+              resolve4 = f;
               reject = r;
             });
             this._isDone = false;
-            this._resolve = resolve3;
+            this._resolve = resolve4;
             this._reject = reject;
           }
           isDone() {
@@ -104193,10 +104193,10 @@ ${escaped2}
         cb().then((result2) => {
           return { result: result2, timedOut: false };
         }),
-        new Promise((resolve3) => {
+        new Promise((resolve4) => {
           if (!deadline)
             return;
-          timer = setTimeout(() => resolve3({ timedOut: true }), Math.max(0, deadline - monotonicTime()));
+          timer = setTimeout(() => resolve4({ timedOut: true }), Math.max(0, deadline - monotonicTime()));
         })
       ]).finally(() => {
         clearTimeout(timer);
@@ -107693,8 +107693,8 @@ ${escaped2}
               var info = getWasmImports();
               var instantiateWasm = Module2["instantiateWasm"];
               if (instantiateWasm) {
-                return new Promise((resolve3) => {
-                  instantiateWasm(info, (inst) => resolve3(receiveInstance(inst)));
+                return new Promise((resolve4) => {
+                  instantiateWasm(info, (inst) => resolve4(receiveInstance(inst)));
                 });
               }
               wasmBinaryFile ??= findWasmBinary();
@@ -107850,7 +107850,7 @@ ${escaped2}
               var setStatus = Module2["setStatus"];
               if (setStatus) {
                 setStatus("Running...");
-                await new Promise((resolve3) => setTimeout(resolve3, 1));
+                await new Promise((resolve4) => setTimeout(resolve4, 1));
                 setTimeout(setStatus, 1, "");
               }
               if (ABORT) return;
@@ -108583,7 +108583,7 @@ ${escaped2}
         import_os2 = __toESM(__require("os"));
         import_path3 = __toESM(__require("path"));
         init_crypto();
-        existsAsync = (path66) => new Promise((resolve3) => import_fs3.default.stat(path66, (err) => resolve3(!err)));
+        existsAsync = (path66) => new Promise((resolve4) => import_fs3.default.stat(path66, (err) => resolve4(!err)));
         UNIX_SOCKET_PATH_MAX = 103;
       }
     });
@@ -109012,9 +109012,9 @@ ${lines.join("\n")}`;
       return error62;
     }
     async function createSocket(host, port) {
-      return new Promise((resolve3, reject) => {
+      return new Promise((resolve4, reject) => {
         const socket = import_net.default.createConnection({ host, port, ...happyEyeballsOptions });
-        socket.on("connect", () => resolve3(socket));
+        socket.on("connect", () => resolve4(socket));
         socket.on("error", (error62) => reject(flattenAggregateError(error62)));
       });
     }
@@ -109058,7 +109058,7 @@ ${lines.join("\n")}`;
       return statusCode >= 200 && statusCode < 404;
     }
     async function httpStatusCode(url3, ignoreHTTPSErrors, onLog, onStdErr) {
-      return new Promise((resolve3) => {
+      return new Promise((resolve4) => {
         onLog?.(`HTTP GET: ${url3}`);
         httpRequest({
           url: url3.toString(),
@@ -109068,12 +109068,12 @@ ${lines.join("\n")}`;
           res.resume();
           const statusCode = res.statusCode ?? 0;
           onLog?.(`HTTP Status: ${statusCode}`);
-          resolve3(statusCode);
+          resolve4(statusCode);
         }, (error62) => {
           if (error62.code === "DEPTH_ZERO_SELF_SIGNED_CERT")
             onStdErr?.(`[WebServer] Self-signed certificate detected. Try adding ignoreHTTPSErrors: true to config.webServer.`);
           onLog?.(`Error while checking if ${url3} is available: ${error62.message}`);
-          resolve3(0);
+          resolve4(0);
         });
       });
     }
@@ -109611,7 +109611,7 @@ ${lines.join("\n")}`;
     function spawnAsync(cmd, args, options2 = {}) {
       const { timeout, ...spawnOptions } = options2;
       const child = childProcess.spawn(cmd, args, { windowsHide: true, ...spawnOptions });
-      return new Promise((resolve3) => {
+      return new Promise((resolve4) => {
         let stdout = "";
         let stderr = "";
         if (child.stdout)
@@ -109621,15 +109621,15 @@ ${lines.join("\n")}`;
         const timer = timeout ? setTimeout(() => {
           if (child.pid)
             killProcessTree(child.pid);
-          resolve3({ stdout, stderr, code: null, timedOut: true });
+          resolve4({ stdout, stderr, code: null, timedOut: true });
         }, timeout) : void 0;
         child.on("close", (code) => {
           clearTimeout(timer);
-          resolve3({ stdout, stderr, code });
+          resolve4({ stdout, stderr, code });
         });
         child.on("error", (error62) => {
           clearTimeout(timer);
-          resolve3({ stdout, stderr, code: 0, error: error62 });
+          resolve4({ stdout, stderr, code: 0, error: error62 });
         });
       });
     }
@@ -110338,7 +110338,7 @@ ${lines.join("\n")}`;
             const server3 = createHttpServer((request22, response2) => this._onRequest(request22, response2));
             server3.on("error", (error62) => debugLogger.log("server", String(error62)));
             this.server = server3;
-            const wsEndpoint = await new Promise((resolve3, reject) => {
+            const wsEndpoint = await new Promise((resolve4, reject) => {
               server3.listen(port, hostname3, () => {
                 const address = server3.address();
                 if (!address) {
@@ -110346,11 +110346,11 @@ ${lines.join("\n")}`;
                   return;
                 }
                 if (typeof address === "string") {
-                  resolve3(`${address}${defaultPath}`);
+                  resolve4(`${address}${defaultPath}`);
                   return;
                 }
                 this._allowedHosts = computeAllowedHosts(hostname3, address.address);
-                resolve3(`ws://${urlHostFromAddress(address)}:${address.port}${defaultPath}`);
+                resolve4(`ws://${urlHostFromAddress(address)}:${address.port}${defaultPath}`);
               }).on("error", reject);
             });
             debugLogger.log("server", "Listening at " + wsEndpoint);
@@ -110477,7 +110477,7 @@ ${lines.join("\n")}`;
             const entry = this._entries.get(entryPath);
             if (!entry)
               throw new Error(`${entryPath} not found in file ${this._fileName}`);
-            return new Promise((resolve3, reject) => {
+            return new Promise((resolve4, reject) => {
               this._zipFile.openReadStream(entry, (error62, readStream) => {
                 if (error62 || !readStream) {
                   reject(error62 || "Entry not found");
@@ -110485,7 +110485,7 @@ ${lines.join("\n")}`;
                 }
                 const buffers = [];
                 readStream.on("data", (data) => buffers.push(data));
-                readStream.on("end", () => resolve3(Buffer.concat(buffers)));
+                readStream.on("end", () => resolve4(Buffer.concat(buffers)));
               });
             });
           }
@@ -110572,7 +110572,7 @@ ${lines.join("\n")}`;
             debug2("opening", this.zipPath, "with opts", this.opts);
             this.zipfile = await openZip(this.zipPath, { lazyEntries: true });
             this.canceled = false;
-            return new Promise((resolve3, reject) => {
+            return new Promise((resolve4, reject) => {
               this.zipfile.on("error", (err) => {
                 this.canceled = true;
                 reject(err);
@@ -110581,7 +110581,7 @@ ${lines.join("\n")}`;
               this.zipfile.on("close", () => {
                 if (!this.canceled) {
                   debug2("zip extraction complete");
-                  resolve3();
+                  resolve4();
                 }
               });
               this.zipfile.on("entry", async (entry) => {
@@ -110879,12 +110879,12 @@ ${lines.join("\n")}`;
       });
     }
     function toPromise(method2) {
-      return (...args) => new Promise((resolve3, reject) => {
+      return (...args) => new Promise((resolve4, reject) => {
         args.push((err, result2) => {
           if (err)
             reject(err);
           else
-            resolve3(result2);
+            resolve4(result2);
         });
         method2(...args);
       });
@@ -113330,8 +113330,8 @@ function inject(globalThis) {
               return;
             this._pauseAt = {};
             metadata.pauseStartTime = monotonicTime();
-            const result2 = new Promise((resolve3) => {
-              this._pausedCall = { metadata, sdkObject, resolve: resolve3 };
+            const result2 = new Promise((resolve4) => {
+              this._pausedCall = { metadata, sdkObject, resolve: resolve4 };
             });
             this.emit(_Debugger.Events.PausedStateChanged);
             return result2;
@@ -114777,7 +114777,7 @@ content-type: ${value2.mimeType || mime2.getType(value2.name) || "application/oc
             });
           }
           async _upgradeToTLSIfNeeded(socket, alpnProtocol) {
-            this._brorwserDecrypted ??= new Promise((resolve3, reject) => {
+            this._brorwserDecrypted ??= new Promise((resolve4, reject) => {
               const dummyServer = import_tls.default.createServer({
                 ...dummyServerTlsOptions,
                 ALPNProtocols: [alpnProtocol || "http/1.1"]
@@ -114785,7 +114785,7 @@ content-type: ${value2.mimeType || mime2.getType(value2.name) || "application/oc
               dummyServer.emit("connection", socket);
               dummyServer.once("secureConnection", (tlsSocket) => {
                 dummyServer.close();
-                resolve3(tlsSocket);
+                resolve4(tlsSocket);
               });
               dummyServer.once("error", (error62) => {
                 dummyServer.close();
@@ -121669,12 +121669,12 @@ ${snapshottedObjectBuiltins.map((n) => `  const ${n} = (typeof globalThis.${n} =
           static waitForEvent(progress2, emitter, event, predicate) {
             const listeners = [];
             const dispose = () => eventsHelper.removeEventListeners(listeners);
-            const promise2 = progress2.race(new Promise((resolve3, reject) => {
+            const promise2 = progress2.race(new Promise((resolve4, reject) => {
               listeners.push(eventsHelper.addEventListener(emitter, event, (eventArg) => {
                 try {
                   if (predicate && !predicate(eventArg))
                     return;
-                  resolve3(eventArg);
+                  resolve4(eventArg);
                 } catch (e) {
                   reject(e);
                 }
@@ -124742,13 +124742,13 @@ ${snapshottedObjectBuiltins.map((n) => `  const ${n} = (typeof globalThis.${n} =
             let error62;
             let cspMessage;
             const actionPromise = func().then((r) => result2 = r).catch((e) => error62 = e);
-            const errorPromise = new Promise((resolve3) => {
+            const errorPromise = new Promise((resolve4) => {
               listeners.push(eventsHelper.addEventListener(this._page.browserContext, BrowserContext.Events.Console, (message) => {
                 if (message.page() !== this._page || message.type() !== "error")
                   return;
                 if (message.text().includes("Content-Security-Policy") || message.text().includes("Content Security Policy")) {
                   cspMessage = message;
-                  resolve3();
+                  resolve4();
                 }
               }));
             });
@@ -132916,8 +132916,8 @@ with sync_playwright() as playwright:
       if (elevatedPermissions)
         console.log("Switching to root user to install dependencies...");
       const child = childProcess2.spawn(command, args, { stdio: "inherit" });
-      await new Promise((resolve3, reject) => {
-        child.on("exit", (code) => code === 0 ? resolve3() : reject(new Error(`Installation process exited with code: ${code}`)));
+      await new Promise((resolve4, reject) => {
+        child.on("exit", (code) => code === 0 ? resolve4() : reject(new Error(`Installation process exited with code: ${code}`)));
         child.on("error", reject);
       });
     }
@@ -135840,8 +135840,8 @@ ${e.stack}`);
             if (this._crashed || this._closed || this._connection._closed || this._connection._browserDisconnectedLogs)
               throw new ProtocolError(this._crashed ? "crashed" : "closed", void 0, this._connection._browserDisconnectedLogs);
             const id = this._connection._rawSend(this._sessionId, method2, params2);
-            return new Promise((resolve3, reject) => {
-              this._callbacks.set(id, { resolve: resolve3, reject, error: new ProtocolError("error", method2) });
+            return new Promise((resolve4, reject) => {
+              this._callbacks.set(id, { resolve: resolve4, reject, error: new ProtocolError("error", method2) });
             });
           }
           _sendMayFail(method2, params2) {
@@ -140757,7 +140757,7 @@ ${Buffer.concat(chunks)}` : errorPrefix;
               try {
                 await Promise.race([
                   gracefullyClose(),
-                  new Promise((resolve3, reject) => timer = setTimeout(reject, timeout))
+                  new Promise((resolve4, reject) => timer = setTimeout(reject, timeout))
                 ]);
               } catch (ignored) {
                 await kill().catch((ignored2) => {
@@ -140995,8 +140995,8 @@ ${updatedLog}`);
             const id = this.connection.nextMessageId();
             const messageObj = { id, method: method2, params: params2 };
             this._rawSend(messageObj);
-            return new Promise((resolve3, reject) => {
-              this._callbacks.set(id, { resolve: resolve3, reject, error: new ProtocolError("error", method2) });
+            return new Promise((resolve4, reject) => {
+              this._callbacks.set(id, { resolve: resolve4, reject, error: new ProtocolError("error", method2) });
             });
           }
           sendMayFail(method2, params2) {
@@ -143922,11 +143922,11 @@ This does not look like a DevTools server, try connecting via ws://.`)
       return url3;
     }
     function streamToString(stream4) {
-      return new Promise((resolve3, reject) => {
+      return new Promise((resolve4, reject) => {
         const chunks = [];
         stream4.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
         stream4.on("error", reject);
-        stream4.on("end", () => resolve3(Buffer.concat(chunks).toString("utf8")));
+        stream4.on("end", () => resolve4(Buffer.concat(chunks).toString("utf8")));
       });
     }
     function parseSeleniumRemoteParams(env, progress2) {
@@ -144797,10 +144797,10 @@ Workaround: Set the HOME=/root environment variable${process.env.GITHUB_ACTION ?
           async _attemptToGracefullyCloseBrowser(transport2) {
             if (!transport2.onmessage) {
               transport2.send({ method: "session.new", params: { capabilities: {} }, id: kShutdownSessionNewMessageId });
-              await new Promise((resolve3) => {
+              await new Promise((resolve4) => {
                 transport2.onmessage = (message) => {
                   if (message.id === kShutdownSessionNewMessageId)
-                    resolve3(true);
+                    resolve4(true);
                 };
               });
             }
@@ -145388,8 +145388,8 @@ Workaround: Set the HOME=/root environment variable${process.env.GITHUB_ACTION ?
               throw new ProtocolError("closed", void 0, this._connection._browserDisconnectedLogs);
             const id = this._connection.nextMessageId();
             this._rawSend({ method: method2, params: params2, id });
-            return new Promise((resolve3, reject) => {
-              this._callbacks.set(id, { resolve: resolve3, reject, error: new ProtocolError("error", method2) });
+            return new Promise((resolve4, reject) => {
+              this._callbacks.set(id, { resolve: resolve4, reject, error: new ProtocolError("error", method2) });
             });
           }
           sendMayFail(method2, params2) {
@@ -146973,8 +146973,8 @@ Workaround: Set the HOME=/root environment variable${process.env.GITHUB_ACTION ?
             const id = this.connection.nextMessageId();
             const messageObj = { id, method: method2, params: params2 };
             this._rawSend(messageObj);
-            return new Promise((resolve3, reject) => {
-              this._callbacks.set(id, { resolve: resolve3, reject, error: new ProtocolError("error", method2) });
+            return new Promise((resolve4, reject) => {
+              this._callbacks.set(id, { resolve: resolve4, reject, error: new ProtocolError("error", method2) });
             });
           }
           sendMayFail(method2, params2) {
@@ -149085,11 +149085,11 @@ Workaround: Set the HOME=/root environment variable${process.env.GITHUB_ACTION ?
           }
           static async start() {
             const server3 = createHttpServer();
-            await new Promise((resolve3, reject) => {
+            await new Promise((resolve4, reject) => {
               server3.once("error", reject);
               server3.listen(0, "127.0.0.1", () => {
                 server3.removeListener("error", reject);
-                resolve3();
+                resolve4();
               });
             });
             const address = server3.address();
@@ -149107,7 +149107,7 @@ Workaround: Set the HOME=/root environment variable${process.env.GITHUB_ACTION ?
           }
           async close() {
             this._handlers.clear();
-            await new Promise((resolve3) => this._server.close(() => resolve3()));
+            await new Promise((resolve4) => this._server.close(() => resolve4()));
           }
           _writeCorsHeaders(res) {
             res.setHeader("Access-Control-Allow-Origin", "*");
@@ -149227,8 +149227,8 @@ Workaround: Set the HOME=/root environment variable${process.env.GITHUB_ACTION ?
             const id = this.connection.nextMessageId();
             const messageObj = { id, method: method2, params: params2 };
             this._rawSend(messageObj);
-            return new Promise((resolve3, reject) => {
-              this._callbacks.set(id, { resolve: resolve3, reject, error: new ProtocolError("error", method2) });
+            return new Promise((resolve4, reject) => {
+              this._callbacks.set(id, { resolve: resolve4, reject, error: new ProtocolError("error", method2) });
             });
           }
           sendMayFail(method2, params2) {
@@ -150594,12 +150594,12 @@ function installDialogBridge(window, endpoint) {
               throw new Error(`Invalid dialog type: ${type3}`);
             const message = typeof body?.message === "string" ? body.message : "";
             const defaultValue = typeof body?.defaultValue === "string" ? body.defaultValue : "";
-            return await new Promise((resolve3) => {
+            return await new Promise((resolve4) => {
               this._page.browserContext.dialogManager.dialogDidOpen(new Dialog(
                 this._page,
                 type3,
                 message,
-                async (accept, promptText) => resolve3({ accept, promptText }),
+                async (accept, promptText) => resolve4({ accept, promptText }),
                 defaultValue
               ));
             });
@@ -150725,8 +150725,8 @@ function installDialogBridge(window, endpoint) {
             return await this._navigateMainFrame(frame, url3);
           }
           async _navigateMainFrame(frame, url3) {
-            const loaderIdPromise = new Promise((resolve3) => {
-              this._pendingMainFrameLoaderResolvers.set(frame._id, resolve3);
+            const loaderIdPromise = new Promise((resolve4) => {
+              this._pendingMainFrameLoaderResolvers.set(frame._id, resolve4);
             });
             try {
               this._session.sendMayFail("Runtime.evaluate", {
@@ -153216,8 +153216,8 @@ if (self.ServiceWorkerContainer) ServiceWorkerContainer.prototype.register = asy
               transport2.on("close", () => this._connections.delete(connection));
             });
             decorateServer(this._server);
-            await new Promise((resolve3, reject) => {
-              this._server.listen(pipeName, () => resolve3());
+            await new Promise((resolve4, reject) => {
+              this._server.listen(pipeName, () => resolve4());
               this._server.on("error", reject);
             });
             debugLogger.log("server", `Pipe server listening at ${pipeName}`);
@@ -153302,21 +153302,21 @@ if (self.ServiceWorkerContainer) ServiceWorkerContainer.prototype.register = asy
       if (!descriptor.endpoint)
         return false;
       if (descriptor.endpoint.startsWith("ws://") || descriptor.endpoint.startsWith("wss://")) {
-        return await new Promise((resolve3) => {
+        return await new Promise((resolve4) => {
           const url3 = new URL(descriptor.endpoint);
           const socket = import_net6.default.createConnection(Number(url3.port), url3.hostname, () => {
             socket.destroy();
-            resolve3(true);
+            resolve4(true);
           });
-          socket.on("error", () => resolve3(false));
+          socket.on("error", () => resolve4(false));
         });
       }
-      return await new Promise((resolve3) => {
+      return await new Promise((resolve4) => {
         const socket = import_net6.default.createConnection(descriptor.endpoint ?? descriptor.pipeName, () => {
           socket.destroy();
-          resolve3(true);
+          resolve4(true);
         });
-        socket.on("error", () => resolve3(false));
+        socket.on("error", () => resolve4(false));
       });
     }
     function computeDefaultCacheDirectory2() {
@@ -153476,8 +153476,8 @@ if (self.ServiceWorkerContainer) ServiceWorkerContainer.prototype.register = asy
               awaitWriteFinish: { stabilityThreshold: 50, pollInterval: 20 }
             });
             this._watcher = watcher;
-            this._ready = new Promise((resolve3, reject) => {
-              watcher.once("ready", () => resolve3());
+            this._ready = new Promise((resolve4, reject) => {
+              watcher.once("ready", () => resolve4());
               watcher.once("error", reject);
             });
             watcher.on("add", (file2) => this._onAddOrChange(file2, "added"));
@@ -153860,7 +153860,7 @@ if (self.ServiceWorkerContainer) ServiceWorkerContainer.prototype.register = asy
             return { value: path66 };
           }
           async saveAs(params2, progress2) {
-            return await progress2.race(new Promise((resolve3, reject) => {
+            return await progress2.race(new Promise((resolve4, reject) => {
               this._object.saveAs(progress2, async (localPath, error62) => {
                 if (error62) {
                   reject(error62);
@@ -153869,7 +153869,7 @@ if (self.ServiceWorkerContainer) ServiceWorkerContainer.prototype.register = asy
                 try {
                   await mkdirIfNeeded(params2.path);
                   await import_fs34.default.promises.copyFile(localPath, params2.path);
-                  resolve3();
+                  resolve4();
                 } catch (e) {
                   reject(e);
                 }
@@ -153877,7 +153877,7 @@ if (self.ServiceWorkerContainer) ServiceWorkerContainer.prototype.register = asy
             }));
           }
           async saveAsStream(params2, progress2) {
-            return await progress2.race(new Promise((resolve3, reject) => {
+            return await progress2.race(new Promise((resolve4, reject) => {
               this._object.saveAs(progress2, async (localPath, error62) => {
                 if (error62) {
                   reject(error62);
@@ -153886,7 +153886,7 @@ if (self.ServiceWorkerContainer) ServiceWorkerContainer.prototype.register = asy
                 try {
                   const readable = import_fs34.default.createReadStream(localPath, { highWaterMark: 1024 * 1024 });
                   const stream4 = new StreamDispatcher(this, readable);
-                  resolve3({ stream: stream4 });
+                  resolve4({ stream: stream4 });
                   await new Promise((resolve22) => {
                     readable.on("close", resolve22);
                     readable.on("end", resolve22);
@@ -154914,8 +154914,8 @@ function inject(globalThis) {
               args: args.map(serializeResult)
             });
             this._type_BindingCall = true;
-            this._promise = new Promise((resolve3, reject) => {
-              this._resolve = resolve3;
+            this._promise = new Promise((resolve4, reject) => {
+              this._resolve = resolve4;
               this._reject = reject;
             });
           }
@@ -157104,8 +157104,8 @@ This does not look like a Playwright server, try connecting via ws://.`);
             return { pipe: pipe2, headers: transport2.headers };
           }
           async _connectOverPipe(params2) {
-            const socket = await new Promise((resolve3, reject) => {
-              const conn = import_net7.default.connect(params2.endpoint, () => resolve3(conn));
+            const socket = await new Promise((resolve4, reject) => {
+              const conn = import_net7.default.connect(params2.endpoint, () => resolve4(conn));
               conn.on("error", reject);
             });
             const transport2 = new PipeTransport2(socket, socket);
@@ -159075,8 +159075,8 @@ ${uaError}` };
             const result2 = await this._channel.saveAsStream({}, kNoTimeout);
             const stream4 = Stream.from(result2.stream);
             await mkdirIfNeeded2(path66);
-            await new Promise((resolve3, reject) => {
-              stream4.stream().pipe(import_fs42.default.createWriteStream(path66)).on("finish", resolve3).on("error", reject);
+            await new Promise((resolve4, reject) => {
+              stream4.stream().pipe(import_fs42.default.createWriteStream(path66)).on("finish", resolve4).on("error", reject);
             });
           }
           async failure() {
@@ -159089,13 +159089,13 @@ ${uaError}` };
           }
           async readIntoBuffer() {
             const stream4 = await this.createReadStream();
-            return await new Promise((resolve3, reject) => {
+            return await new Promise((resolve4, reject) => {
               const chunks = [];
               stream4.on("data", (chunk) => {
                 chunks.push(chunk);
               });
               stream4.on("end", () => {
-                resolve3(Buffer.concat(chunks));
+                resolve4(Buffer.concat(chunks));
               });
               stream4.on("error", reject);
             });
@@ -159615,14 +159615,14 @@ ${uaError}` };
     });
     function waitForEvent(emitter, event, savedZone, predicate) {
       let listener;
-      const promise2 = new Promise((resolve3, reject) => {
+      const promise2 = new Promise((resolve4, reject) => {
         listener = async (eventArg) => {
           await savedZone.run(async () => {
             try {
               if (predicate && !await predicate(eventArg))
                 return;
               emitter.removeListener(event, listener);
-              resolve3(eventArg);
+              resolve4(eventArg);
             } catch (e) {
               emitter.removeListener(event, listener);
               reject(e);
@@ -159636,7 +159636,7 @@ ${uaError}` };
     }
     function waitForTimeout(timeout) {
       let timeoutId;
-      const promise2 = new Promise((resolve3) => timeoutId = setTimeout(resolve3, timeout));
+      const promise2 = new Promise((resolve4) => timeoutId = setTimeout(resolve4, timeout));
       const dispose = () => clearTimeout(timeoutId);
       return { promise: promise2, dispose };
     }
@@ -160089,10 +160089,10 @@ ${"=".repeat(headerLength)}`;
       };
     }
     async function readStreamToJson(stream4) {
-      const buffer = await new Promise((resolve3, reject) => {
+      const buffer = await new Promise((resolve4, reject) => {
         const chunks = [];
         stream4.on("data", (chunk) => chunks.push(chunk));
-        stream4.on("end", () => resolve3(Buffer.concat(chunks)));
+        stream4.on("end", () => resolve4(Buffer.concat(chunks)));
         stream4.on("error", (err) => reject(err));
       });
       const streamPath = Buffer.isBuffer(stream4.path) ? stream4.path.toString("utf8") : stream4.path;
@@ -164850,7 +164850,7 @@ ${colors3.dim(log22.join("\n"))}
               signal.addEventListener("abort", abortListener, { once: true });
             }
             try {
-              return await new Promise((resolve3, reject) => this._callbacks.set(id, { resolve: resolve3, reject, signal, title: options2.title, type: type3, method: method2 }));
+              return await new Promise((resolve4, reject) => this._callbacks.set(id, { resolve: resolve4, reject, signal, title: options2.title, type: type3, method: method2 }));
             } finally {
               if (abortListener)
                 signal.removeEventListener("abort", abortListener);
@@ -165109,7 +165109,7 @@ ${colors3.dim(log22.join("\n"))}
           promises2.push(request22.response().catch(() => {
           }));
       }
-      const timeout = new Promise((resolve3) => setTimeout(resolve3, 5e3));
+      const timeout = new Promise((resolve4) => setTimeout(resolve4, 5e3));
       await Promise.race([Promise.all(promises2), timeout]);
       if (requests2.length)
         await tab2.waitForTimeout(settleMs);
@@ -165117,13 +165117,13 @@ ${colors3.dim(log22.join("\n"))}
     }
     function eventWaiter(page2, event, timeout) {
       const disposables = [];
-      const eventPromise = new Promise((resolve3, reject) => {
-        page2.on(event, resolve3);
-        disposables.push(() => page2.off(event, resolve3));
+      const eventPromise = new Promise((resolve4, reject) => {
+        page2.on(event, resolve4);
+        disposables.push(() => page2.off(event, resolve4));
       });
       let abort;
-      const abortPromise = new Promise((resolve3, reject) => {
-        abort = () => resolve3(void 0);
+      const abortPromise = new Promise((resolve4, reject) => {
+        abort = () => resolve4(void 0);
       });
       const timeoutPromise = new Promise((f) => {
         const timeoutId = setTimeout(() => f(void 0), timeout);
@@ -166085,7 +166085,7 @@ ${pretty}`);
               const download = await downloadEvent;
               if (!download)
                 throw e;
-              await new Promise((resolve3) => setTimeout(resolve3, 500));
+              await new Promise((resolve4) => setTimeout(resolve4, 500));
               return;
             }
             if (modalStates.length)
@@ -167504,17 +167504,17 @@ ${z5.prettifyError(error62)}`);
           },
           handle: async (context, params2, response2) => {
             const browserContext = await context.ensureBrowserContext();
-            const pausedPromise = new Promise((resolve3) => {
+            const pausedPromise = new Promise((resolve4) => {
               const listener = () => {
                 if (browserContext.debugger.pausedDetails()) {
                   browserContext.debugger.off("pausedstatechanged", listener);
-                  resolve3();
+                  resolve4();
                 }
               };
               browserContext.debugger.on("pausedstatechanged", listener);
               browserContext.once("close", () => {
                 browserContext.debugger.off("pausedstatechanged", listener);
-                resolve3();
+                resolve4();
               });
             });
             if (params2.location) {
@@ -167598,7 +167598,7 @@ ${z5.prettifyError(error62)}`);
             signal?.addEventListener("abort", onAbort);
             const stdoutChunks = [];
             client.stdout.on("data", (chunk) => stdoutChunks.push(chunk));
-            const exitCode = await new Promise((resolve3) => client.on("exit", (code) => resolve3(code)));
+            const exitCode = await new Promise((resolve4) => client.on("exit", (code) => resolve4(code)));
             signal?.removeEventListener("abort", onAbort);
             if (signal?.aborted) {
               response2.addTextResult("Annotation cancelled.");
@@ -171426,7 +171426,7 @@ ${itemTexts.map((t) => `  - listitem: ${escapeWithQuotes(t, '"')}`).join("\n")}`
       await navigator.serviceWorker.register(swUrl, { scope: "/" });
       await navigator.serviceWorker.ready;
       if (!navigator.serviceWorker.controller)
-        await new Promise((resolve3) => navigator.serviceWorker.addEventListener("controllerchange", resolve3, { once: true }));
+        await new Promise((resolve4) => navigator.serviceWorker.addEventListener("controllerchange", resolve4, { once: true }));
       location.replace(snapshotUrl);
     }
     async function runCommandOnSnapshot(server3, browserArgs) {
@@ -172252,11 +172252,11 @@ To uninstall Playwright browsers for all installations, re-run with --all flag.`
       return `http://localhost:${port}`;
     }
     async function isPortOpen(port) {
-      return new Promise((resolve3) => {
+      return new Promise((resolve4) => {
         const socket = import_net8.default.createConnection(port, "127.0.0.1");
         const done = (value2) => {
           socket.destroy();
-          resolve3(value2);
+          resolve4(value2);
         };
         socket.once("connect", () => done(true));
         socket.once("error", () => done(false));
@@ -172829,13 +172829,13 @@ To uninstall Playwright browsers for all installations, re-run with --all flag.`
             socket.on("error", (e) => console.error(`error: ${e.message}`));
           }
           async send(message) {
-            await new Promise((resolve3, reject) => {
+            await new Promise((resolve4, reject) => {
               this._socket.write(`${JSON.stringify(message)}
 `, (error62) => {
                 if (error62)
                   reject(error62);
                 else
-                  resolve3(void 0);
+                  resolve4(void 0);
               });
             });
           }
@@ -172938,7 +172938,7 @@ to start the browser session.`);
                 } catch (e) {
                   if (e.code === "ENOENT")
                     break;
-                  await new Promise((resolve3) => setTimeout(resolve3, 1e3));
+                  await new Promise((resolve4) => setTimeout(resolve4, 1e3));
                   if (i === 4)
                     throw e;
                 }
@@ -172947,16 +172947,16 @@ to start the browser session.`);
             return { existed: true, deletedUserDataDir };
           }
           async _connect() {
-            return await new Promise((resolve3) => {
+            return await new Promise((resolve4) => {
               const socket = import_net9.default.createConnection(this.config.socketPath, () => {
-                resolve3({ socket });
+                resolve4({ socket });
               });
               socket.on("error", (error62) => {
                 if (import_os24.default.platform() !== "win32")
                   void import_fs62.default.promises.unlink(this.config.socketPath).catch(() => {
-                  }).then(() => resolve3({ error: error62 }));
+                  }).then(() => resolve4({ error: error62 }));
                 else
-                  resolve3({ error: error62 });
+                  resolve4({ error: error62 });
               });
             });
           }
@@ -173020,11 +173020,11 @@ to start the browser session.`);
             process.on("SIGTERM", sigtermHandler2);
             let outLog = "";
             const rejectWithPid = (reject, message) => reject(Object.assign(new Error(`Daemon pid=${child.pid}: ${message}`), { daemonPid: child.pid }));
-            await new Promise((resolve3, reject) => {
+            await new Promise((resolve4, reject) => {
               child.stdout.on("data", (data) => {
                 outLog += data.toString();
                 if (outLog.includes("Daemon listening on"))
-                  resolve3();
+                  resolve4();
               });
               child.on("close", (code) => {
                 if (!signalled) {
@@ -173068,8 +173068,8 @@ to start the browser session.`);
               method: method2,
               params: params2
             };
-            const responsePromise = new Promise((resolve3, reject) => {
-              this._callbacks.set(messageId, { resolve: resolve3, reject, method: method2, params: params2 });
+            const responsePromise = new Promise((resolve4, reject) => {
+              this._callbacks.set(messageId, { resolve: resolve4, reject, method: method2, params: params2 });
             });
             const [result2] = await Promise.all([responsePromise, this._connection.send(message)]);
             return result2;
@@ -173249,7 +173249,7 @@ to start the browser session.`);
           if (args.kill) {
             daemonArgs.push(`--kill`);
             const child2 = (0, import_child_process4.spawn)(process.execPath, daemonArgs, { stdio: "ignore" });
-            await new Promise((resolve3) => child2.on("exit", () => resolve3()));
+            await new Promise((resolve4) => child2.on("exit", () => resolve4()));
             return;
           }
           if (args.annotate) {
@@ -173268,21 +173268,21 @@ to start the browser session.`);
             windowsHide: true
           });
           if (foreground) {
-            await new Promise((resolve3) => child.on("exit", () => resolve3()));
+            await new Promise((resolve4) => child.on("exit", () => resolve4()));
             return;
           }
           const timer = setTimeout(() => child.stdin.destroy(), 6e4);
           child.unref();
           let daemonPid;
           try {
-            await new Promise((resolve3, reject) => {
+            await new Promise((resolve4, reject) => {
               let outLog = "";
               child.stdout.on("data", (data) => {
                 outLog += data.toString();
                 const match = outLog.match(/Dashboard is running pid=(\d+)/);
                 if (match) {
                   daemonPid = Number(match[1]);
-                  resolve3();
+                  resolve4();
                 }
               });
               child.once("exit", (code, signal) => reject(new Error(`Dashboard daemon exited (code=${code}, signal=${signal}) before signaling READY${outLog ? "\n" + outLog : ""}`)));
@@ -173339,14 +173339,14 @@ to start the browser session.`);
         "--init-workspace",
         ...args.skills ? [args.global ? "--init-skills-global" : "--init-skills", String(args.skills)] : []
       ];
-      await new Promise((resolve3, reject) => {
+      await new Promise((resolve4, reject) => {
         const child = (0, import_child_process4.spawn)(process.execPath, daemonArgs, {
           stdio: output2.installStdio(),
           cwd: process.cwd()
         });
         child.on("close", (code) => {
           if (code === 0)
-            resolve3();
+            resolve4();
           else
             reject(new Error(`Workspace initialization failed with exit code ${code}`));
         });
@@ -175017,8 +175017,8 @@ ${data.toString()}
             const id = ++this._lastId;
             this._ws.send(JSON.stringify({ id, method: method2, params: params2 }));
             const error62 = new Error(`Protocol error: ${method2}`);
-            return new Promise((resolve3, reject) => {
-              this._callbacks.set(id, { resolve: resolve3, reject, error: error62 });
+            return new Promise((resolve4, reject) => {
+              this._callbacks.set(id, { resolve: resolve4, reject, error: error62 });
             });
           }
           close(message) {
@@ -176064,9 +176064,9 @@ ${c.title}:`);
         if (options2?.exitOnClose)
           gracefullyProcessExitDoNotHang(0);
       }));
-      await new Promise((resolve3, reject) => {
+      await new Promise((resolve4, reject) => {
         server3.on("error", reject);
-        server3.listen(socketPath, () => resolve3());
+        server3.listen(socketPath, () => resolve4());
       });
       await saveSessionFile(clientInfo, sessionConfig);
       options2.idleTimer?.poke();
@@ -176313,14 +176313,14 @@ ${c.title}:`);
         const blob = await response2.blob();
         if (!blob.type.startsWith("image/"))
           return void 0;
-        return await new Promise((resolve3, reject) => {
+        return await new Promise((resolve4, reject) => {
           const reader = new FileReader();
-          reader.onloadend = () => resolve3(reader.result);
+          reader.onloadend = () => resolve4(reader.result);
           reader.onerror = reject;
           reader.readAsDataURL(blob);
         });
       })).catch(() => void 0);
-      const timeout = new Promise((resolve3) => setTimeout(() => resolve3(void 0), 3e3));
+      const timeout = new Promise((resolve4) => setTimeout(() => resolve4(void 0), 3e3));
       return await Promise.race([url3, timeout]);
     }
     var import_path64;
@@ -176537,9 +176537,9 @@ ${c.title}:`);
             this.sendEvent?.("debuggerSource", { source: source14 });
           }
           emitAnnotate({ signal }) {
-            return new Promise((resolve3) => {
+            return new Promise((resolve4) => {
               if (signal.aborted) {
-                resolve3({ type: "cancelled" });
+                resolve4({ type: "cancelled" });
                 return;
               }
               this._resolvePendingAnnotate({ type: "cancelled" });
@@ -176549,10 +176549,10 @@ ${c.title}:`);
                 this._pendingAnnotate = void 0;
                 pending.dispose();
                 this.sendEvent?.("cancelAnnotate", {});
-                resolve3({ type: "cancelled" });
+                resolve4({ type: "cancelled" });
               };
               const pending = {
-                resolve: resolve3,
+                resolve: resolve4,
                 dispose: () => signal.removeEventListener("abort", onAbort)
               };
               this._pendingAnnotate = pending;
@@ -177329,9 +177329,9 @@ ${c.title}:`);
       const socketPath = dashboardSocketPath();
       if (process.platform !== "win32")
         await import_fs69.default.promises.mkdir(import_path65.default.dirname(socketPath), { recursive: true });
-      return await new Promise((resolve3, reject) => {
+      return await new Promise((resolve4, reject) => {
         const server3 = import_net12.default.createServer(onConnection);
-        server3.listen(socketPath, () => resolve3({ role: "winner", server: server3 }));
+        server3.listen(socketPath, () => resolve4({ role: "winner", server: server3 }));
         server3.on("error", (err) => {
           if (err.code !== "EADDRINUSE" && err.code !== "EEXIST")
             return reject(err);
@@ -177345,7 +177345,7 @@ ${c.title}:`);
           client.on("end", () => {
             try {
               const { pid } = JSON.parse(ackBuffer.trim());
-              resolve3({ role: "loser", daemonPid: pid });
+              resolve4({ role: "loser", daemonPid: pid });
             } catch (e) {
               reject(e);
             }
@@ -177353,7 +177353,7 @@ ${c.title}:`);
           client.on("error", () => {
             if (process.platform !== "win32")
               import_fs69.default.unlinkSync(socketPath);
-            server3.listen(socketPath, () => resolve3({ role: "winner", server: server3 }));
+            server3.listen(socketPath, () => resolve4({ role: "winner", server: server3 }));
           });
         });
       });
@@ -177461,28 +177461,28 @@ ${c.title}:`);
     }
     async function runKillClient() {
       const socketPath = dashboardSocketPath();
-      await new Promise((resolve3) => {
+      await new Promise((resolve4) => {
         const client = import_net12.default.connect(socketPath);
         client.once("connect", () => {
           client.write(JSON.stringify({ kill: true }) + "\n");
         });
-        client.once("end", () => resolve3());
-        client.once("error", () => resolve3());
+        client.once("end", () => resolve4());
+        client.once("error", () => resolve4());
       });
     }
     async function runAnnotateClient(options2) {
       selfDestructOnParentGone();
       process.stdin.resume().unref();
       const socketPath = dashboardSocketPath();
-      const tryConnect = () => new Promise((resolve3) => {
+      const tryConnect = () => new Promise((resolve4) => {
         const s = import_net12.default.connect(socketPath);
         const onError = () => {
           s.destroy();
-          resolve3(void 0);
+          resolve4(void 0);
         };
         s.once("connect", () => {
           s.off("error", onError);
-          resolve3(s);
+          resolve4(s);
         });
         s.once("error", onError);
       });
@@ -177501,9 +177501,9 @@ ${c.title}:`);
       }
       socket.write(JSON.stringify(options2) + "\n");
       const chunks = [];
-      await new Promise((resolve3, reject) => {
+      await new Promise((resolve4, reject) => {
         socket.on("data", (chunk) => chunks.push(chunk));
-        socket.on("end", () => resolve3());
+        socket.on("end", () => resolve4());
         socket.on("error", reject);
       });
       socket.destroy();
@@ -186338,7 +186338,7 @@ var recursive = /* @__PURE__ */ new WeakMap();
 var NONE = 0;
 var ASSUMED = 1;
 var PROVEN = 2;
-function isRecursive(inst, stack, resolve3) {
+function isRecursive(inst, stack, resolve4) {
   const cached2 = recursive.get(inst);
   if (cached2 !== void 0)
     return cached2 ? PROVEN : NONE;
@@ -186348,7 +186348,7 @@ function isRecursive(inst, stack, resolve3) {
   let result2 = NONE;
   const check4 = (child) => {
     if (result2 !== PROVEN && child?._zod) {
-      const answer = isRecursive(child, stack, resolve3);
+      const answer = isRecursive(child, stack, resolve4);
       if (answer > result2)
         result2 = answer;
     }
@@ -186359,7 +186359,7 @@ function isRecursive(inst, stack, resolve3) {
       const desc = Object.getOwnPropertyDescriptor(sh, key);
       if (spread && !desc.enumerable)
         continue;
-      const child = desc.get ? ASSUMED : desc.value?._zod ? isRecursive(desc.value, stack, resolve3) : NONE;
+      const child = desc.get ? ASSUMED : desc.value?._zod ? isRecursive(desc.value, stack, resolve4) : NONE;
       if (child > answer)
         answer = child;
     }
@@ -186423,7 +186423,7 @@ function isRecursive(inst, stack, resolve3) {
       break;
     // `$ZodLazy` caches its inner on the def, so a resolved edge is followed exactly
     case "lazy": {
-      const inner = def._cachedInner ?? (resolve3 ? inst._zod.innerType : void 0);
+      const inner = def._cachedInner ?? (resolve4 ? inst._zod.innerType : void 0);
       merge2(inner ? isRecursive(inner, stack, false) : ASSUMED);
       break;
     }
@@ -204861,7 +204861,7 @@ var Protocol = class {
           return;
         }
         const pollInterval = task2.pollInterval ?? this._options?.defaultTaskPollInterval ?? 1e3;
-        await new Promise((resolve3) => setTimeout(resolve3, pollInterval));
+        await new Promise((resolve4) => setTimeout(resolve4, pollInterval));
         options2?.signal?.throwIfAborted();
       }
     } catch (error62) {
@@ -204878,7 +204878,7 @@ var Protocol = class {
    */
   request(request3, resultSchema, options2) {
     const { relatedRequestId, resumptionToken, onresumptiontoken, task, relatedTask } = options2 ?? {};
-    return new Promise((resolve3, reject) => {
+    return new Promise((resolve4, reject) => {
       const earlyReject = (error62) => {
         reject(error62);
       };
@@ -204956,7 +204956,7 @@ var Protocol = class {
           if (!parseResult2.success) {
             reject(parseResult2.error);
           } else {
-            resolve3(parseResult2.data);
+            resolve4(parseResult2.data);
           }
         } catch (error62) {
           reject(error62);
@@ -205218,12 +205218,12 @@ var Protocol = class {
       }
     } catch {
     }
-    return new Promise((resolve3, reject) => {
+    return new Promise((resolve4, reject) => {
       if (signal.aborted) {
         reject(new McpError(ErrorCode.InvalidRequest, "Request cancelled"));
         return;
       }
-      const timeoutId = setTimeout(resolve3, interval);
+      const timeoutId = setTimeout(resolve4, interval);
       signal.addEventListener("abort", () => {
         clearTimeout(timeoutId);
         reject(new McpError(ErrorCode.InvalidRequest, "Request cancelled"));
@@ -206354,7 +206354,7 @@ var McpServer = class {
     let task = createTaskResult.task;
     const pollInterval = task.pollInterval ?? 5e3;
     while (task.status !== "completed" && task.status !== "failed" && task.status !== "cancelled") {
-      await new Promise((resolve3) => setTimeout(resolve3, pollInterval));
+      await new Promise((resolve4) => setTimeout(resolve4, pollInterval));
       const updatedTask = await extra.taskStore.getTask(taskId);
       if (!updatedTask) {
         throw new McpError(ErrorCode.InternalError, `Task ${taskId} not found during polling`);
@@ -207018,12 +207018,12 @@ var StdioServerTransport2 = class {
     this.onclose?.();
   }
   send(message) {
-    return new Promise((resolve3) => {
+    return new Promise((resolve4) => {
       const json2 = serializeMessage(message);
       if (this._stdout.write(json2)) {
-        resolve3();
+        resolve4();
       } else {
-        this._stdout.once("drain", resolve3);
+        this._stdout.once("drain", resolve4);
       }
     });
   }
@@ -207032,7 +207032,7 @@ var StdioServerTransport2 = class {
 // src/server.ts
 var import_yaml4 = __toESM2(require_dist2(), 1);
 import { existsSync as existsSync6, readFileSync as readFileSync5 } from "node:fs";
-import { dirname, join as join7, resolve as resolve2 } from "node:path";
+import { dirname, join as join7, resolve as resolve3 } from "node:path";
 import { parseArgs, parseEnv as parseEnv2 } from "node:util";
 
 // src/schema.ts
@@ -207068,7 +207068,7 @@ var FindingInput = external_exports.strictObject({
 
 // src/session.ts
 import { execFileSync } from "node:child_process";
-import { existsSync as existsSync3, mkdirSync, readdirSync as readdirSync2, readFileSync as readFileSync3, renameSync, writeFileSync as writeFileSync2 } from "node:fs";
+import { existsSync as existsSync3, mkdirSync as mkdirSync2, readdirSync as readdirSync2, readFileSync as readFileSync3, renameSync, writeFileSync as writeFileSync3 } from "node:fs";
 import { join as join4 } from "node:path";
 
 // src/browser.ts
@@ -207213,13 +207213,21 @@ async function closeContexts() {
   shots.clear();
   await Promise.allSettled(all.map(async (p) => (await p).context().close()));
 }
-function page(caseId, config2) {
-  if (!current) throw new Error("No running session. Call session_start first; browser tools take a case id from its result.");
+var SCOUT = "scout";
+function viewportOf(caseId, config2) {
+  if (caseId === SCOUT) return config2.viewports[0];
+  if (!current) {
+    throw new Error("No running session. Call session_start first; browser tools take a case id from its result (or `scout` for the look before a run).");
+  }
   const c = current.session.cases.find((c2) => c2.id === caseId);
   if (!c) throw new Error(`Unknown case "${caseId}". Cases in this run: ${current.session.cases.map((c2) => c2.id).join(", ")}.`);
+  return c.viewport;
+}
+function page(caseId, config2) {
+  const viewport = viewportOf(caseId, config2);
   let p = pages.get(caseId);
   if (!p) {
-    const [width, height] = c.viewport.split("x").map(Number);
+    const [width, height] = viewport.split("x").map(Number);
     p = getBrowser(config2.browser.headed).then(async (b) => (await b.newContext({ viewport: { width, height } })).newPage());
     p.catch(() => pages.delete(caseId));
     pages.set(caseId, p);
@@ -207245,7 +207253,7 @@ async function settled(p) {
 }
 var SNAPSHOT_MAX = 9e4;
 function registerBrowserTools(server3, getContext2) {
-  const caseId = external_exports.string().describe("Case id from session_start, e.g. t1-390x844");
+  const caseId = external_exports.string().describe("Case id from session_start, e.g. t1-390x844; or scout for the look before a run");
   server3.registerTool(
     "goto",
     {
@@ -207300,7 +207308,8 @@ ${near.map((n) => `- ${n}`).join("\n")}` : "The page has no clickable controls."
       try {
         const { root, config: config2 } = getContext2();
         const p = await page(a.case, config2);
-        const handle = current.session.testers.find((t) => t.cases.includes(a.case))?.account;
+        const handle = a.case === SCOUT ? config2.accounts[0]?.handle : current.session.testers.find((t) => t.cases.includes(a.case))?.account;
+        if (a.case === SCOUT && !handle && /\{\{account\./.test(a.value)) throw new Error("jeyna.config.yaml lists no accounts, so scout cannot sign in.");
         const value2 = substitute(a.value, accountValues(root, config2).find((x) => x.handle === handle), a.case);
         const el = p.locator(a.selector);
         const tag = await el.evaluate((e) => e.tagName, void 0, { timeout: ACT_TIMEOUT });
@@ -207352,7 +207361,7 @@ ${near.map((n) => `- ${n}`).join("\n")}` : "The page has no clickable controls."
   server3.registerTool(
     "screenshot",
     {
-      description: "Save a PNG of this case's page as evidence and return its file name. Set look: true to also see the image, for visual questions (layout, overlap, cut-off or off-screen elements); otherwise prefer snapshot. Viewport only unless fullPage is true.",
+      description: "Save a PNG of this case's page as evidence and return its file name. Set look: true to also see the image, for visual questions (layout, overlap, cut-off or off-screen elements); otherwise prefer snapshot. Viewport only unless fullPage is true. For case scout nothing is saved: it returns the image only.",
       inputSchema: {
         case: caseId,
         label: external_exports.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "lowercase words joined by '-'").optional(),
@@ -207364,6 +207373,14 @@ ${near.map((n) => `- ${n}`).join("\n")}` : "The page has no clickable controls."
       try {
         const p = await page(a.case, getContext2().config);
         const png = await p.screenshot({ fullPage: a.fullPage });
+        if (a.case === SCOUT) {
+          return {
+            content: [
+              { type: "text", text: "scout: not saved (the look before a run writes nothing)" },
+              { type: "image", data: png.toString("base64"), mimeType: "image/png" }
+            ]
+          };
+        }
         const seq = (shots.get(a.case) ?? 0) + 1;
         shots.set(a.case, seq);
         const name = `${a.case}-${seq}${a.label ? `-${a.label}` : ""}.png`;
@@ -207391,10 +207408,11 @@ process.on("SIGINT", shutdown);
 
 // src/flows.ts
 var import_yaml = __toESM2(require_dist2(), 1);
-import { existsSync as existsSync2, readdirSync, readFileSync as readFileSync2 } from "node:fs";
-import { join as join3 } from "node:path";
+import { existsSync as existsSync2, mkdirSync, readdirSync, readFileSync as readFileSync2, writeFileSync as writeFileSync2 } from "node:fs";
+import { join as join3, resolve } from "node:path";
+var FlowName = external_exports.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "lowercase words joined by '-', the same as the file name");
 var FlowFront = external_exports.strictObject({
-  name: external_exports.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "lowercase words joined by '-', the same as the file name"),
+  name: FlowName,
   entry: external_exports.string().min(1),
   viewports: external_exports.array(external_exports.string().regex(/^\d+x\d+$/, "must look like 1440x900")).min(1).optional(),
   accounts: external_exports.array(external_exports.string().min(1)).min(1).optional()
@@ -207442,6 +207460,30 @@ var listFlows = (root) => flowNames(root).map((name) => {
     return { name, error: e.message };
   }
 });
+var oneLine = (s) => s.replace(/\s+/g, " ").trim();
+function flowMarkdown(name, session) {
+  const scenarios = session.scenarios.map((s) => ({ ...s, description: oneLine(s.description), pass: oneLine(s.pass) }));
+  const md = [
+    `---
+${(0, import_yaml.stringify)({ name, entry: session.entry ?? "/" })}---`,
+    `Saved by save_flow from run ${session.id}. Edit it freely: \`/jeyna:playtest ${name}\` now runs these scenarios guided.`,
+    "## Scenarios",
+    ...scenarios.map((s) => [`### ${s.name}`, s.description, `Pass: ${s.pass}`, ...s.account ? [`Account: ${s.account}`] : []].join("\n"))
+  ].join("\n\n") + "\n";
+  let back;
+  try {
+    back = parseFlow(md, `${name}.md`).scenarios;
+  } catch (e) {
+    throw new Error(`The run's scenarios do not make a valid flow file: ${e.message}`);
+  }
+  scenarios.forEach((s, i) => {
+    if (JSON.stringify(back[i]) !== JSON.stringify(s)) {
+      throw new Error(`Scenario "${s.name}" does not survive as a flow file (a name on one line, no description line starting Pass: or Account:). Nothing was written.`);
+    }
+  });
+  if (back.length !== scenarios.length) throw new Error("The run's scenarios do not survive as a flow file. Nothing was written.");
+  return md;
+}
 function registerFlowTools(server3, getContext2) {
   server3.registerTool(
     "get_flow",
@@ -207453,6 +207495,35 @@ function registerFlowTools(server3, getContext2) {
     async ({ name }) => {
       try {
         return ok(readFlow(getContext2().root, name));
+      } catch (e) {
+        return fail(e);
+      }
+    }
+  );
+  server3.registerTool(
+    "save_flow",
+    {
+      description: "Save a run's scenarios as .jeyna/flows/<name>.md, copied from that run's session.json, so the next /jeyna:playtest <name> runs them guided (F2.4). Refuses if the file exists. Offer it at the end of an exploratory run.",
+      inputSchema: {
+        run: external_exports.string().min(1).describe("Run id, as session_start returned it, e.g. 2026-10-15-authentication"),
+        name: FlowName.describe("Flow name and file name, e.g. authentication")
+      }
+    },
+    async ({ run, name }) => {
+      try {
+        const root = getContext2().root;
+        const playtests = resolve(root, ".jeyna", "playtests");
+        const runDir = resolve(playtests, run);
+        if (!runDir.startsWith(playtests + "/") && !runDir.startsWith(playtests + "\\")) throw new Error(`run must be a run id under .jeyna/playtests/, not ${run}.`);
+        const file2 = join3(runDir, "session.json");
+        if (!existsSync2(file2)) throw new Error(`No run ${run}: ${file2} does not exist.`);
+        const session = JSON.parse(readFileSync2(file2, "utf8"));
+        const path = join3(flowsDir(root), `${name}.md`);
+        if (existsSync2(path)) throw new Error(`.jeyna/flows/${name}.md already exists; save_flow never overwrites a flow. Choose another name, or edit that file.`);
+        const md = flowMarkdown(name, session);
+        mkdirSync(flowsDir(root), { recursive: true });
+        writeFileSync2(path, md, { flag: "wx" });
+        return ok({ path, name, scenarios: session.scenarios.map((s) => s.name) });
       } catch (e) {
         return fail(e);
       }
@@ -207490,7 +207561,7 @@ function planTesters(scenarios, pool, viewports) {
 var current;
 var endRun = () => current = void 0;
 function save(runDir, session) {
-  writeFileSync2(join4(runDir, "session.json.tmp"), JSON.stringify(session, null, 2) + "\n");
+  writeFileSync3(join4(runDir, "session.json.tmp"), JSON.stringify(session, null, 2) + "\n");
   renameSync(join4(runDir, "session.json.tmp"), join4(runDir, "session.json"));
 }
 function buildId(root, config2) {
@@ -207518,22 +207589,24 @@ function registerSessionTools(server3, getContext2) {
   server3.registerTool(
     "session_start",
     {
-      description: "Start a playtest run, guided from a flow in .jeyna/flows/ or exploratory from an explicit scenario list. only and viewports narrow the run; unknown names are refused with the valid ones. Plans one tester per scenario, one case per viewport, one account per tester, and the batch to spawn each tester in (no account is held by two testers in one batch). Refused while another run is running unless force is true.",
+      description: "Start a playtest run, guided from a flow in .jeyna/flows/ or exploratory from an explicit scenario list (with its slug and entry path). Closes the scout look. only and viewports narrow the run; unknown names are refused with the valid ones. Plans one tester per scenario, one case per viewport, one account per tester, and the batch to spawn each tester in (no account is held by two testers in one batch). Refused while another run is running unless force is true.",
       inputSchema: {
         flow: external_exports.string().optional().describe("Flow name from get_context (guided run)"),
         scenarios: external_exports.array(Scenario).min(1).optional().describe("Explicit scenario list (exploratory run)"),
         only: external_exports.array(external_exports.string()).min(1).optional().describe("Scenario names to run; default all"),
+        entry: external_exports.string().min(1).optional().describe("Entry path of an exploratory run, e.g. /login; save_flow writes it to the flow. Default /"),
         slug: external_exports.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "lowercase words joined by '-'").optional().describe("Run folder slug of an exploratory run; default exploratory"),
         viewports: external_exports.array(external_exports.string()).min(1).optional(),
         force: external_exports.boolean().default(false)
       }
     },
-    async ({ flow: flowName, scenarios: given2, only, slug, viewports, force }) => {
+    async ({ flow: flowName, scenarios: given2, only, entry, slug, viewports, force }) => {
       try {
         const { root, config: config2 } = getContext2();
         if (!flowName === !given2) throw new Error("session_start needs flow (guided) or scenarios (exploratory), not both.");
         const flow = flowName ? readFlow(root, flowName) : void 0;
         if (flow && slug) throw new Error("slug is for exploratory runs; a guided run is named after its flow.");
+        if (flow && entry) throw new Error("entry is for exploratory runs; a guided run starts at its flow's entry.");
         let scenarios = flow?.scenarios ?? given2;
         if (only) {
           const unknownScenarios = only.filter((n) => !scenarios.some((s) => s.name === n));
@@ -207572,7 +207645,7 @@ function registerSessionTools(server3, getContext2) {
         let id = base;
         for (let n = 2; existsSync3(join4(dir, id)); n++) id = `${base}-${n}`;
         const runDir = join4(dir, id);
-        mkdirSync(join4(runDir, "evidence"), { recursive: true });
+        mkdirSync2(join4(runDir, "evidence"), { recursive: true });
         const session = {
           schema: 1,
           id,
@@ -207582,6 +207655,7 @@ function registerSessionTools(server3, getContext2) {
           status: "running",
           started: (/* @__PURE__ */ new Date()).toISOString(),
           mode: flow ? "guided" : "exploratory",
+          entry: flow?.frontmatter.entry ?? entry ?? "/",
           scenarios,
           testers: testers.map((t) => ({ ...t, model: config2.tester.model, cases: t.cases.map((c) => c.id) })),
           cases: testers.flatMap((t) => t.cases),
@@ -207639,7 +207713,7 @@ function registerSessionTools(server3, getContext2) {
 
 // src/findings.ts
 var import_yaml2 = __toESM2(require_dist2(), 1);
-import { existsSync as existsSync4, mkdirSync as mkdirSync2, readdirSync as readdirSync3, writeFileSync as writeFileSync3 } from "node:fs";
+import { existsSync as existsSync4, mkdirSync as mkdirSync3, readdirSync as readdirSync3, writeFileSync as writeFileSync4 } from "node:fs";
 import { basename, join as join5 } from "node:path";
 function findingMarkdown(front, f) {
   return [
@@ -207707,9 +207781,9 @@ function registerFindingTools(server3) {
           created: (/* @__PURE__ */ new Date()).toISOString(),
           evidence: finding.evidence
         };
-        mkdirSync2(join5(run.runDir, "findings"), { recursive: true });
+        mkdirSync3(join5(run.runDir, "findings"), { recursive: true });
         const path = join5(run.runDir, "findings", `${id}.md`);
-        writeFileSync3(path, findingMarkdown(front, finding), { flag: "wx" });
+        writeFileSync4(path, findingMarkdown(front, finding), { flag: "wx" });
         run.findings.push({ id, case: caseId });
         return ok({ id, path });
       } catch (e) {
@@ -207721,8 +207795,8 @@ function registerFindingTools(server3) {
 
 // src/finish.ts
 var import_yaml3 = __toESM2(require_dist2(), 1);
-import { existsSync as existsSync5, readdirSync as readdirSync4, readFileSync as readFileSync4, writeFileSync as writeFileSync4 } from "node:fs";
-import { join as join6, relative, resolve } from "node:path";
+import { existsSync as existsSync5, readdirSync as readdirSync4, readFileSync as readFileSync4, writeFileSync as writeFileSync5 } from "node:fs";
+import { join as join6, relative, resolve as resolve2 } from "node:path";
 var SEVERITIES = FindingInput.shape.severity.options;
 var KINDS = FindingInput.shape.kind.options;
 var STATUSES = ["open", "duplicate", "wontfix", "fixed"];
@@ -207873,7 +207947,7 @@ ${table(["Scenario", ...viewports], matrix)}`,
       )
     ) : "No findings.")
   ].join("\n\n");
-  writeFileSync4(join6(runDir, "report.md"), md + "\n");
+  writeFileSync5(join6(runDir, "report.md"), md + "\n");
   return counts;
 }
 function runs(root) {
@@ -207890,7 +207964,7 @@ function runs(root) {
 }
 function validateCli(arg2, root) {
   try {
-    const dir = arg2 ? resolve(arg2) : runs(root())[0];
+    const dir = arg2 ? resolve2(arg2) : runs(root())[0];
     if (!dir) throw new Error(`No run folders in ${join6(root(), ".jeyna", "playtests")}.`);
     const errors2 = validateRun(dir);
     for (const e of errors2) console.log(relative(process.cwd(), join6(dir, e.slice(0, e.indexOf(": ")))) + e.slice(e.indexOf(": ")));
@@ -207912,7 +207986,7 @@ function registerFinishTools(server3, getContext2) {
     async ({ run }) => {
       try {
         const root = getContext2().root;
-        const dir = run ? resolve(root, ".jeyna", "playtests", run) : current?.runDir ?? runs(root)[0];
+        const dir = run ? resolve2(root, ".jeyna", "playtests", run) : current?.runDir ?? runs(root)[0];
         if (!dir) throw new Error("No run to validate: no run is running and .jeyna/playtests/ has none.");
         if (!existsSync5(dir)) throw new Error(`No run folder ${dir}.`);
         return ok({ run: dir, errors: validateRun(dir) });
@@ -207979,7 +208053,7 @@ ${errors2.join("\n")}`);
           next[k] = k === "status" ? status : v;
           if (k === "status") Object.assign(next, of && { of }, note && { note });
         }
-        writeFileSync4(path, `---
+        writeFileSync5(path, `---
 ${(0, import_yaml3.stringify)(next)}---
 ${m[2]}`);
         return ok({ id, status, ...of && { of }, path });
@@ -207997,7 +208071,7 @@ var { values, positionals } = parseArgs({ options: { project: { type: "string" }
 var given = (v) => typeof v === "string" && v !== "" && !v.includes("${") ? v : void 0;
 function projectRoot() {
   const root = given(values.project) ?? given(process.env.CLAUDE_PROJECT_DIR);
-  if (root) return resolve2(root);
+  if (root) return resolve3(root);
   for (let dir = process.cwd(); ; dir = dirname(dir)) {
     if (existsSync6(join7(dir, ".jeyna"))) return dir;
     if (dirname(dir) === dir) break;

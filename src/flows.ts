@@ -1,14 +1,15 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { existsSync, readdirSync, readFileSync } from "node:fs";
-import { join } from "node:path";
-import { parse } from "yaml";
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { join, resolve } from "node:path";
+import { parse, stringify } from "yaml";
 import { z } from "zod";
 import { Scenario } from "./schema.js";
-import { fail, ok } from "./session.js";
+import { fail, ok, type Session } from "./session.js";
 
 // Flow frontmatter (§5.2). The name is the file name, so it doubles as the run slug (D7).
+const FlowName = z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "lowercase words joined by '-', the same as the file name");
 const FlowFront = z.strictObject({
-  name: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "lowercase words joined by '-', the same as the file name"),
+  name: FlowName,
   entry: z.string().min(1),
   viewports: z.array(z.string().regex(/^\d+x\d+$/, "must look like 1440x900")).min(1).optional(),
   accounts: z.array(z.string().min(1)).min(1).optional(),
@@ -68,6 +69,33 @@ export const listFlows = (root: string) =>
     }
   });
 
+const oneLine = (s: string) => s.replace(/\s+/g, " ").trim();
+
+// The flow file save_flow writes from a run: the run's scenarios in the format parseFlow reads (§5.2, D6).
+// It is parsed back before it is written, so a scenario that would not survive the round trip is refused.
+export function flowMarkdown(name: string, session: Pick<Session, "id" | "entry" | "scenarios">): string {
+  const scenarios = session.scenarios.map((s) => ({ ...s, description: oneLine(s.description), pass: oneLine(s.pass) }));
+  const md = [
+    `---\n${stringify({ name, entry: session.entry ?? "/" })}---`,
+    `Saved by save_flow from run ${session.id}. Edit it freely: \`/jeyna:playtest ${name}\` now runs these scenarios guided.`,
+    "## Scenarios",
+    ...scenarios.map((s) => [`### ${s.name}`, s.description, `Pass: ${s.pass}`, ...(s.account ? [`Account: ${s.account}`] : [])].join("\n")),
+  ].join("\n\n") + "\n";
+  let back: Scenario[];
+  try {
+    back = parseFlow(md, `${name}.md`).scenarios;
+  } catch (e) {
+    throw new Error(`The run's scenarios do not make a valid flow file: ${(e as Error).message}`);
+  }
+  scenarios.forEach((s, i) => {
+    if (JSON.stringify(back[i]) !== JSON.stringify(s)) {
+      throw new Error(`Scenario "${s.name}" does not survive as a flow file (a name on one line, no description line starting Pass: or Account:). Nothing was written.`);
+    }
+  });
+  if (back.length !== scenarios.length) throw new Error("The run's scenarios do not survive as a flow file. Nothing was written.");
+  return md;
+}
+
 export function registerFlowTools(server: McpServer, getContext: () => { root: string }) {
   server.registerTool(
     "get_flow",
@@ -79,6 +107,37 @@ export function registerFlowTools(server: McpServer, getContext: () => { root: s
     async ({ name }) => {
       try {
         return ok(readFlow(getContext().root, name));
+      } catch (e) {
+        return fail(e);
+      }
+    },
+  );
+
+  server.registerTool(
+    "save_flow",
+    {
+      description:
+        "Save a run's scenarios as .jeyna/flows/<name>.md, copied from that run's session.json, so the next /jeyna:playtest <name> runs them guided (F2.4). Refuses if the file exists. Offer it at the end of an exploratory run.",
+      inputSchema: {
+        run: z.string().min(1).describe("Run id, as session_start returned it, e.g. 2026-10-15-authentication"),
+        name: FlowName.describe("Flow name and file name, e.g. authentication"),
+      },
+    },
+    async ({ run, name }) => {
+      try {
+        const root = getContext().root;
+        const playtests = resolve(root, ".jeyna", "playtests");
+        const runDir = resolve(playtests, run);
+        if (!runDir.startsWith(playtests + "/") && !runDir.startsWith(playtests + "\\")) throw new Error(`run must be a run id under .jeyna/playtests/, not ${run}.`);
+        const file = join(runDir, "session.json");
+        if (!existsSync(file)) throw new Error(`No run ${run}: ${file} does not exist.`);
+        const session = JSON.parse(readFileSync(file, "utf8")) as Session;
+        const path = join(flowsDir(root), `${name}.md`);
+        if (existsSync(path)) throw new Error(`.jeyna/flows/${name}.md already exists; save_flow never overwrites a flow. Choose another name, or edit that file.`);
+        const md = flowMarkdown(name, session);
+        mkdirSync(flowsDir(root), { recursive: true });
+        writeFileSync(path, md, { flag: "wx" });
+        return ok({ path, name, scenarios: session.scenarios.map((s) => s.name) });
       } catch (e) {
         return fail(e);
       }

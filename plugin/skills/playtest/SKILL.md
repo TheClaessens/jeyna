@@ -1,5 +1,5 @@
 ---
-description: Playtest this project's web app. Matches the request to a flow in .jeyna/flows/, starts a run, spawns one jeyna-tester per scenario batch by batch, marks duplicate findings and ends with a report.
+description: Playtest this project's web app. Matches the request to a flow in .jeyna/flows/ (or, with none, takes a short scout look and proposes scenarios), starts a run, spawns one jeyna-tester per scenario batch by batch, marks duplicate findings, ends with a report and offers to save an exploratory run as a flow.
 disable-model-invocation: true
 argument-hint: "[what to test]"
 ---
@@ -32,11 +32,48 @@ Match the request against the flow names and their scenario names from `get_cont
 - **One flow matches**: a guided run of that flow. Go on to 3.
 - **Several flows match**: ask the developer which one, listing them with their scenarios, and wait.
 - **The matching flow has an `error`**: show the error, tell the developer to fix `.jeyna/flows/<name>.md`, and stop.
-- **No flow matches**: exploratory mode. It is not built yet (it comes with the scout and `save_flow`). Say that no flow matches the request, list the flows that exist with their scenario names, and say: run `/jeyna:playtest <flow name>`, or write a flow in `.jeyna/flows/<name>.md` (see the format below). Stop.
+- **No flow matches**: an exploratory run. Say in one line that no flow matches (naming the flows that exist, if any), and go on to 2b.
 
-<!-- Exploratory mode goes here: scout look with case `scout`, derive scenarios and Pass: lines, confirm with the developer, session_start {scenarios, slug}, then the same steps 4 to 7, then offer save_flow. -->
 
 A flow file is YAML frontmatter (`name`, `entry`, optional `viewports`, `accounts`) and, under `## Scenarios`, one `### <name>` heading per scenario, a description paragraph, a `Pass:` line and an optional `Account: none` or `Account: consumes` line.
+
+## 2b. Exploratory: scout, propose, confirm
+
+Only when no flow matched. Otherwise skip to 3.
+
+**Scout.** Take a short look at the app with the browser tools and case `scout`: it needs no session, uses the first configured viewport, signs in with the first account, and writes nothing to disk. At most about 10 browser calls in all:
+- `goto {case: "scout", path: "/"}`, then `snapshot {case: "scout"}`.
+- If that page is a login wall and the config has accounts, sign in: `fill` the username field with `{{account.user}}`, the password field with `{{account.pass}}`, `click` the sign-in button, `snapshot`. Signing in is read-only; do nothing else that changes data.
+- Follow the visible navigation that bears on the request (`goto` or `click`, then `snapshot`). Stop once you know the pages the request touches.
+- `screenshot {case: "scout"}` only for a question the snapshot cannot answer; it returns the image and saves nothing.
+- Never call `record_finding` or `scenario_verdict` with `scout`. Problems you notice are for the testers to find; do not report them now.
+
+**Derive.** From the request and what the scout saw, write 2 to 5 scenarios that cover what the request asks for, each:
+- `name`: short, unique, in the developer's words where they gave any ("Sign in and sign out", "Reset password");
+- `description`: one paragraph of prose saying what the user does, not scripted clicks;
+- `pass`: one sentence a tester can check by looking at the app ("the todo list opens and Sign out returns to the sign-in page");
+- `account`: leave it out when the scenario signs in; `none` when it must not sign in (it judges the logged-out pages); `consumes` when it may lock or change its account (wrong passwords, a password reset). Consuming scenarios run last, at most one per account.
+
+Also choose:
+- `entry`: the path the scenarios start from (where the scout first landed, e.g. `/login`);
+- `slug`: the flow name the run would be saved as, lowercase words joined by `-`, taken from the request so the same request matches it next time ("let's test the authentication flow" → `authentication`).
+
+**Propose, in one message**, and wait:
+
+```
+No flow matches "<request>". I looked at <app url> (<what the scout saw, one line>) and propose an exploratory run "<slug>" from <entry>, at <viewports>:
+
+1. <name> (<Account: none | consumes, if set>)
+   <description>
+   Pass: <pass>
+2. ...
+
+Start this run, or tell me what to change?
+```
+
+Start only after the developer confirms. If they edit (add, drop or rename scenarios, change a Pass: line, the slug, the entry or the viewports), apply exactly what they said; if the edit is clear, start; if not, show the changed list once more and wait. If they decline, stop.
+
+**Start.** Call `session_start {scenarios, slug, entry, viewports?}` with the confirmed list: `[{name, description, pass, account?}]`, exactly as confirmed. It closes the scout. Then go on as in 3 from "The result has `runDir`": state the plan, and steps 4 to 7. In the tester prompt template, `Entry` is the confirmed entry, Preconditions is "None given." and What matters most here is the developer's request in their words. Afterwards, step 8.
 
 ## 3. Start the run
 
@@ -113,3 +150,9 @@ Its result has `reportPath`, `counts`, `elapsedSeconds` and `testers`. Tell the 
 - the most severe findings, one line each: id, kind, title;
 - the report path (`reportPath`);
 - elapsed time (from `elapsedSeconds`, as minutes and seconds) and the number of testers.
+
+## 8. Exploratory run: offer to save it as a flow
+
+Only after an exploratory run. In the same message as the report, ask: "Save these <n> scenarios as `.jeyna/flows/<slug>.md`, so `/jeyna:playtest <slug>` runs them guided next time?"
+
+On a yes (or another name), call `save_flow {run: <id from session_start>, name}`. It copies the scenarios that ran from the run's `session.json`; never write the flow file with your own tools. If it refuses because the file exists, say so and offer another name; never overwrite. Then give the path and say the developer may edit the file (preconditions, what matters most, scenarios).
