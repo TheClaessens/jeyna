@@ -525,3 +525,34 @@ Claude Code 2.1.299, node 20.12.2, macOS arm64. No headless Claude Code session 
 
 **Changed**
 - New: `package.json`, `tsconfig.json`, `build.mjs`, `src/server.ts`, `src/schema.ts`, `src/server.test.ts`, `.claude-plugin/marketplace.json`, `plugin/.claude-plugin/plugin.json`, `plugin/.mcp.json`, `plugin/server/` (committed bundle).
+
+---
+
+## D21 · 2026-10-15 · Probe P3, AC4 and `/jeyna:init` (slice 1, issue #2)
+
+Claude Code 2.1.299, node 20.12.2, macOS arm64. No headless Claude Code session was run (the owner ruled out `claude -p` for cost). Everything below was verified locally.
+
+**P3 · Secrets source: pending live verification**
+- `get_context` now returns `secrets`: for each account variable named in the config, `env`, `.env` or `missing`, never the value. A variable set to an empty string counts as absent, so the empty entries `/jeyna:init` writes read as `missing`. The process environment wins over `.jeyna/.env`, which is parsed with Node's built-in `util.parseEnv` (no dependency).
+- `src/server.test.ts` spawns the bundle over stdio with one variable in its environment and the other only in `.jeyna/.env`: they are reported `env` and `.env`, a third case reports both `missing`, and no value appears in the output.
+- Not yet observed: whether Claude Code passes the environment of the shell that started `claude` on to a plugin MCP server. That needs `get_context` from a real session with a variable exported. If it does not, the fallback from `docs/first-slice.md` applies: `.jeyna/.env` becomes the only documented source. No code change is needed for that; `/jeyna:init` already tells the developer both options.
+
+**AC4 · Write guard: verified locally, live denial pending**
+- `plugin/hooks/hooks.json` registers PreToolUse `Write|Edit|NotebookEdit` → `sh ${CLAUDE_PLUGIN_ROOT}/hooks/guard-write.sh`, with `onFailure: block` so a crashed guard does not let the write through.
+- The guard uses `node`, not `jq` (node is already required by the server). It reads `tool_input.file_path` or `notebook_path`, normalises backslashes and denies with `permissionDecision: "deny"`:
+  - under `.jeyna/playtests/`: the reason names `record_finding`, `scenario_verdict`, `session_finish`;
+  - on `.jeyna/.env`: the reason says only the developer fills it.
+- `src/hooks.test.ts` feeds PreToolUse JSON to the script: both paths denied for Write, Edit and NotebookEdit, Windows paths too; `jeyna.config.yaml`, `CONVENTIONS.md` and a root `.env` get no output (normal permission flow).
+- Not yet observed: the main agent being denied inside a live session.
+
+**`/jeyna:init` (init half of AC8): built, live run pending**
+- `plugin/skills/init/SKILL.md` has `disable-model-invocation: true`. It writes only `.jeyna/jeyna.config.yaml`, `.jeyna/CONVENTIONS.md`, `.jeyna/.env` and `.gitignore` lines (always `.jeyna/.env`; `.jeyna/playtests/*/evidence/` if evidence is not committed). No skill, agent or hook is copied (D13).
+- `.jeyna/.env` is created with Bash (`cp` + `printf`), because the write guard denies `Write`/`Edit` on it.
+- A test fills `plugin/templates/jeyna.config.yaml` the way the skill says and `get_context` accepts it.
+- Not done: the optional `.claude/settings.json` for teammates (F11.4). Add it when a team asks.
+- `claude plugin validate ./plugin` and `.` pass; `plugin details` lists skill `init`, one PreToolUse hook and MCP server `mcp`.
+
+**Changed**
+- New: `plugin/skills/init/SKILL.md`, `plugin/templates/{jeyna.config.yaml,CONVENTIONS.md,env}`, `plugin/hooks/{hooks.json,guard-write.sh}`, `src/hooks.test.ts`.
+- `src/server.ts`: `get_context` returns `secrets`.
+- analysis: §5.4 `get_context` row.
