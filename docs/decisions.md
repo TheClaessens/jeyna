@@ -650,7 +650,35 @@ Claude Code 2.1.299, node 20.12.2, macOS arm64. No headless Claude Code session 
 
 ---
 
-## D26 · 2026-10-15 · A run ends in a report: `validate`, `session_finish`, `update_status` (slice 2, issue #8)
+## D26 · 2026-10-15 · click, fill, press and redaction; AC3 proved locally (slice 2, issue #7)
+
+Claude Code 2.1.299, node 20.12.2, playwright-core 1.64.1. No headless Claude Code session was run (the owner ruled out `claude -p` for cost). Verified by driving the committed bundle over MCP stdio against the sample app (`src/operate.test.ts`).
+
+**Decision**
+- Redaction (D9) sits on the stdio transport's `send`: every outgoing JSON-RPC message, results and protocol errors alike, has every string redacted except MCP image `data`. No tool can forget it. Account values are re-read per message, so a `.jeyna/.env` edited mid-run is honoured.
+- Every configured value of every account (not only the case's own) becomes `{{account.user}}` or `{{account.pass}}`. Matching ignores case and also catches the URL-encoded and form-encoded forms, longest value first.
+- `{{account.*}}` resolves to the account of the case's tester (D10). A case without one (`Account: none`) gets an error saying so. A missing variable fails with `account <handle> not configured`.
+- `click`, `fill` and `press` give up after 5 s, not Playwright's 30 s. A missed `click` lists up to five `role=<role>[name="…"]` selectors from the aria tree, ranked by words shared with the selector that missed.
+- `click` and `press` return the url and title afterwards. `press` acts on the focused element through a locator, so a navigation it starts (Enter in a form) is waited for. `fill` returns `{filled: <selector>}`.
+- The sample app gains a Sign out button, which a tester needs to sign in again within one case (bugs 1 and 5).
+
+**AC3 · verified locally, pending live verification for the transcript**
+- A scripted run over both accounts (`user_a` from the server's env, `user_b` from `.jeyna/.env`) covers bugs 1, 4, 5 and 6, a missed click whose selector holds a username, and a failing `fill`. No tool result contains any account value in any of the forms above, and no file under `.jeyna/` except `.jeyna/.env` does either (PNGs checked for passwords only, D9).
+- With redaction removed, the test fails, so it is not vacuous.
+- Not verified: the transcript of a live session. A tester's own messages could still contain a value it never saw only if it guessed it. Check by running `/jeyna:playtest` on `sample-app/` and grepping the session JSONL for both accounts' values.
+
+**Allowlist**
+- The tester allowlist is now the full eight of D9: `goto`, `click`, `fill`, `press`, `snapshot`, `screenshot`, `record_finding`, `scenario_verdict`.
+
+**Changed**
+- New: `src/accounts.ts`, `src/accounts.test.ts`, `src/operate.test.ts`.
+- `src/browser.ts`: `click`, `fill`, `press`. `src/server.ts`: redaction on the transport.
+- `sample-app/server.mjs`: todo list, password reset, Sign out, seeded bugs 1, 4, 5, 6. `sample-app/SEEDED-BUGS.md` lists all six.
+- `plugin/agents/jeyna-tester.md`: allowlist and how to use the new tools and placeholders.
+
+---
+
+## D27 · 2026-10-15 · A run ends in a report: `validate`, `session_finish`, `update_status` (slice 2, issue #8)
 
 Claude Code 2.1.299. No headless Claude Code session was run (the owner ruled out `claude -p` for cost). Verified locally by driving the committed bundle over MCP stdio and from a shell (`src/finish.test.ts`). `claude plugin validate` passes for `./plugin` and `.`.
 

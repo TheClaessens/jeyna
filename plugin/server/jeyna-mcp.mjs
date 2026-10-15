@@ -42634,9 +42634,9 @@ ${end.comment}` : end.comment;
             if (pos === 0) return this.alert();
             let before = this.input.slice(0, pos);
             let after = this.input.slice(pos);
-            let words = before.split(" ");
-            this.state.clipboard.push(words.pop());
-            this.input = words.join(" ");
+            let words2 = before.split(" ");
+            this.state.clipboard.push(words2.pop());
+            this.input = words2.join(" ");
             this.cursor = this.input.length;
             this.input += after;
             this.render();
@@ -64912,7 +64912,7 @@ ${end.comment}` : end.comment;
       }
     };
     _a3 = AST;
-    var escape2 = (s, { windowsPathsNoEscape = false, magicalBraces = false } = {}) => {
+    var escape22 = (s, { windowsPathsNoEscape = false, magicalBraces = false } = {}) => {
       if (magicalBraces) {
         return windowsPathsNoEscape ? s.replace(/[?*()[\]{}]/g, "[$&]") : s.replace(/[?*()[\]\\{}]/g, "\\$&");
       }
@@ -65723,25 +65723,25 @@ ${end.comment}` : end.comment;
     };
     minimatch.AST = AST;
     minimatch.Minimatch = Minimatch;
-    minimatch.escape = escape2;
+    minimatch.escape = escape22;
     minimatch.unescape = unescape2;
     var import_node_process7 = __toESM3(__require("node:process"), 1);
-    var import_node_path6 = __toESM3(__require("node:path"), 1);
+    var import_node_path7 = __toESM3(__require("node:path"), 1);
     var import_node_url = __require("node:url");
     var import_node_child_process7 = __toESM3(__require("node:child_process"), 1);
     var import_promises2 = __toESM3(__require("node:fs/promises"), 1);
-    var import_node_util2 = __require("node:util");
+    var import_node_util22 = __require("node:util");
     var import_node_child_process2 = __toESM3(__require("node:child_process"), 1);
     var import_promises = __toESM3(__require("node:fs/promises"), 1);
     var import_node_process2 = __toESM3(__require("node:process"), 1);
     var import_node_os = __toESM3(__require("node:os"), 1);
     var import_node_fs32 = __toESM3(__require("node:fs"), 1);
     var import_node_fs22 = __toESM3(__require("node:fs"), 1);
-    var import_node_fs6 = __toESM3(__require("node:fs"), 1);
+    var import_node_fs7 = __toESM3(__require("node:fs"), 1);
     var isDockerCached;
     function hasDockerEnv() {
       try {
-        import_node_fs6.default.statSync("/.dockerenv");
+        import_node_fs7.default.statSync("/.dockerenv");
         return true;
       } catch {
         return false;
@@ -65749,7 +65749,7 @@ ${end.comment}` : end.comment;
     }
     function hasDockerCGroup() {
       try {
-        return import_node_fs6.default.readFileSync("/proc/self/cgroup", "utf8").includes("docker");
+        return import_node_fs7.default.readFileSync("/proc/self/cgroup", "utf8").includes("docker");
       } catch {
         return false;
       }
@@ -65842,7 +65842,7 @@ ${end.comment}` : end.comment;
         return match2.groups.mountPoint.trim().replaceAll(/^["']|["']$/g, "");
       }
     }
-    var execFile2 = (0, import_node_util2.promisify)(import_node_child_process2.default.execFile);
+    var execFile2 = (0, import_node_util22.promisify)(import_node_child_process2.default.execFile);
     var wslDrivesMountPoint = /* @__PURE__ */ (() => {
       const defaultMountPoint = "/mnt/";
       let mountPoint;
@@ -66027,8 +66027,8 @@ tell application "System Events" to get value of property list item "CFBundleNam
     var is_in_ssh_default = isInSsh;
     var import_meta = {};
     var fallbackAttemptSymbol = /* @__PURE__ */ Symbol("fallbackAttempt");
-    var __dirname2 = import_meta.url ? import_node_path6.default.dirname((0, import_node_url.fileURLToPath)(import_meta.url)) : "";
-    var localXdgOpenPath = import_node_path6.default.join(__dirname2, "xdg-open");
+    var __dirname2 = import_meta.url ? import_node_path7.default.dirname((0, import_node_url.fileURLToPath)(import_meta.url)) : "";
+    var localXdgOpenPath = import_node_path7.default.join(__dirname2, "xdg-open");
     var { platform, arch } = import_node_process7.default;
     var tryEachApp = async (apps2, opener) => {
       if (apps2.length === 0) {
@@ -93599,11 +93599,11 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
        *
        * The Protocol object assumes ownership of the Transport, replacing any callbacks that have already been set, and expects that it is the only user of the Transport instance going forward.
        */
-      async connect(transport) {
+      async connect(transport2) {
         if (this._transport) {
           throw new Error("Already connected to a transport. Call close() before connecting to a new transport, or use a separate Protocol instance per connection.");
         }
-        this._transport = transport;
+        this._transport = transport2;
         const _onclose = this.transport?.onclose;
         this._transport.onclose = () => {
           _onclose?.();
@@ -94839,9 +94839,9 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
           throw new Error(`Server does not support ${capability} (required for ${method2})`);
         }
       }
-      async connect(transport, options2) {
-        await super.connect(transport);
-        if (transport.sessionId !== void 0) {
+      async connect(transport2, options2) {
+        await super.connect(transport2);
+        if (transport2.sessionId !== void 0) {
           return;
         }
         try {
@@ -94861,8 +94861,8 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
           }
           this._serverCapabilities = result2.capabilities;
           this._serverVersion = result2.serverInfo;
-          if (transport.setProtocolVersion) {
-            transport.setProtocolVersion(result2.protocolVersion);
+          if (transport2.setProtocolVersion) {
+            transport2.setProtocolVersion(result2.protocolVersion);
           }
           this._instructions = result2.instructions;
           await this.notification({
@@ -109255,21 +109255,21 @@ ${lines.join("\n")}`;
             });
             wss.on("connection", (ws4, request22) => {
               const url3 = new URL(request22.url ?? "/", "http://localhost");
-              const transport = transportFactory(url3);
-              transport.sendEvent = (method2, params2) => ws4.send(JSON.stringify({ method: method2, params: params2 }));
-              transport.close = () => ws4.close();
-              transport.onconnect();
+              const transport2 = transportFactory(url3);
+              transport2.sendEvent = (method2, params2) => ws4.send(JSON.stringify({ method: method2, params: params2 }));
+              transport2.close = () => ws4.close();
+              transport2.onconnect();
               ws4.on("message", async (message) => {
                 const { id, method: method2, params: params2 } = JSON.parse(String(message));
                 try {
-                  const result2 = await transport.dispatch(method2, params2);
+                  const result2 = await transport2.dispatch(method2, params2);
                   ws4.send(JSON.stringify({ id, result: result2 }));
                 } catch (e) {
                   ws4.send(JSON.stringify({ id, error: String(e) }));
                 }
               });
-              ws4.on("close", () => transport.onclose());
-              ws4.on("error", () => transport.onclose());
+              ws4.on("close", () => transport2.onclose());
+              ws4.on("error", () => transport2.onclose());
             });
           }
           wsGuid() {
@@ -130937,11 +130937,11 @@ ${offset}});
       return escapeWithQuotes(text2, "'");
     }
     function quoteMultiline(text2, indent2 = "  ") {
-      const escape2 = (text3) => text3.replace(/\\/g, "\\\\").replace(/`/g, "\\`").replace(/\$\{/g, "\\${");
+      const escape3 = (text3) => text3.replace(/\\/g, "\\\\").replace(/`/g, "\\`").replace(/\$\{/g, "\\${");
       const lines = text2.split("\n");
       if (lines.length === 1)
-        return "`" + escape2(text2) + "`";
-      return "`\n" + lines.map((line) => indent2 + escape2(line).replace(/\${/g, "\\${")).join("\n") + `
+        return "`" + escape3(text2) + "`";
+      return "`\n" + lines.map((line) => indent2 + escape3(line).replace(/\${/g, "\\${")).join("\n") + `
 ${indent2}\``;
     }
     function isMultilineString(text2) {
@@ -135761,13 +135761,13 @@ ${e.stack}`);
         };
         kBrowserCloseMessageId = -9999;
         CRConnection = class extends SdkObject {
-          constructor(parent, transport, protocolLogger, browserLogsCollector) {
+          constructor(parent, transport2, protocolLogger, browserLogsCollector) {
             super(parent, "cr-connection");
             this._lastId = 0;
             this._sessions = /* @__PURE__ */ new Map();
             this._closed = false;
             this.setMaxListeners(0);
-            this._transport = transport;
+            this._transport = transport2;
             this._protocolLogger = protocolLogger;
             this._browserLogsCollector = browserLogsCollector;
             this.rootSession = new CRSession(this, null, "");
@@ -139250,9 +139250,9 @@ ${e.stack}`);
             this._session.on("Browser.downloadWillBegin", this._onDownloadWillBegin.bind(this));
             this._session.on("Browser.downloadProgress", this._onDownloadProgress.bind(this));
           }
-          static async connect(parent, transport, options2, devtools) {
+          static async connect(parent, transport2, options2, devtools) {
             options2 = { ...options2 };
-            const connection = new CRConnection(parent, transport, options2.protocolLogger, options2.browserLogsCollector);
+            const connection = new CRConnection(parent, transport2, options2.protocolLogger, options2.browserLogsCollector);
             const browser2 = new _CRBrowser(parent, connection, options2);
             browser2._devtools = devtools;
             if (browser2.isClank())
@@ -139858,8 +139858,8 @@ ${e.stack}`);
             debug3("pw:android")("Starting the new driver");
             this._shell("am instrument -w com.microsoft.playwright.androiddriver.test/androidx.test.runner.AndroidJUnitRunner").catch((e) => debug3("pw:android")(e));
             const socket = await this._waitForLocalAbstract(progress2, "playwright_android_driver_socket");
-            const transport = new PipeTransport(socket, socket, socket, "be");
-            transport.onmessage = (message) => {
+            const transport2 = new PipeTransport(socket, socket, socket, "be");
+            transport2.onmessage = (message) => {
               const response2 = JSON.parse(message);
               const { id, result: result2, error: error62 } = response2;
               const callback = this._callbacks.get(id);
@@ -139871,7 +139871,7 @@ ${e.stack}`);
                 callback.fulfill(result2);
               this._callbacks.delete(id);
             };
-            return transport;
+            return transport2;
           }
           async _waitForLocalAbstract(progress2, socketName) {
             let socket;
@@ -140054,14 +140054,14 @@ ${e.stack}`);
               buffer.writeUInt32LE(length, command.length);
               await progress3.race(socket.write(buffer));
             };
-            const send = async (progress3, command, data) => {
+            const send2 = async (progress3, command, data) => {
               await sendHeader(progress3, command, data.length);
               await progress3.race(socket.write(data));
             };
-            await send(progress2, "SEND", Buffer.from(`${path66},${mode}`));
+            await send2(progress2, "SEND", Buffer.from(`${path66},${mode}`));
             const maxChunk = 65535;
             for (let i = 0; i < content.length; i += maxChunk)
-              await send(progress2, "DATA", content.slice(i, i + maxChunk));
+              await send2(progress2, "DATA", content.slice(i, i + maxChunk));
             await sendHeader(progress2, "DONE", Date.now() / 1e3 | 0);
             const result2 = await progress2.race(new Promise((f) => socket.once("data", f)));
             const code = result2.slice(0, 4).toString();
@@ -140471,22 +140471,22 @@ Sec-WebSocket-Version: 13\r
           static async _connect(progress2, url3, options2, hadRedirects) {
             const logUrl = stripQueryParams(url3);
             progress2?.log(`<ws connecting> ${logUrl}`);
-            const transport = new _WebSocketTransport(progress2, url3, logUrl, { ...options2, followRedirects: !!options2.followRedirects && hadRedirects });
+            const transport2 = new _WebSocketTransport(progress2, url3, logUrl, { ...options2, followRedirects: !!options2.followRedirects && hadRedirects });
             const resultPromise = new Promise((fulfill, reject) => {
-              transport._ws.on("open", async () => {
+              transport2._ws.on("open", async () => {
                 progress2?.log(`<ws connected> ${logUrl}`);
                 fulfill({});
               });
-              transport._ws.on("error", (event) => {
+              transport2._ws.on("error", (event) => {
                 const message = flattenAggregateError(event).message;
                 progress2?.log(`<ws connect error> ${logUrl} ${message}`);
                 reject(new Error("WebSocket error: " + message));
-                transport._ws.close();
+                transport2._ws.close();
               });
-              transport._ws.on("unexpected-response", (request22, response2) => {
+              transport2._ws.on("unexpected-response", (request22, response2) => {
                 if (options2.followRedirects && !hadRedirects && (response2.statusCode === 301 || response2.statusCode === 302 || response2.statusCode === 307 || response2.statusCode === 308)) {
                   fulfill({ redirect: response2 });
-                  transport._ws.close();
+                  transport2._ws.close();
                   return;
                 }
                 for (let i = 0; i < response2.rawHeaders.length; i += 2) {
@@ -140501,7 +140501,7 @@ Sec-WebSocket-Version: 13\r
 ${Buffer.concat(chunks)}` : errorPrefix;
                   progress2?.log(`<ws unexpected response> ${error62}`);
                   reject(new Error("WebSocket error: " + error62));
-                  transport._ws.close();
+                  transport2._ws.close();
                 });
               });
             });
@@ -140519,9 +140519,9 @@ ${Buffer.concat(chunks)}` : errorPrefix;
                   /* hadRedirects */
                 );
               }
-              return transport;
+              return transport2;
             } catch (error62) {
-              await transport.closeAndWait();
+              await transport2.closeAndWait();
               throw error62;
             }
           }
@@ -140633,7 +140633,7 @@ ${Buffer.concat(chunks)}` : errorPrefix;
           async _innerLaunch(progress2, options2, persistent, protocolLogger, maybeUserDataDir) {
             options2.proxy = options2.proxy ? normalizeProxySettings(options2.proxy) : void 0;
             const browserLogsCollector = new RecentLogsCollector();
-            const { browserProcess, userDataDir, artifactsDir, transport, wsEndpoint } = await this._launchProcess(progress2, options2, !!persistent, browserLogsCollector, maybeUserDataDir);
+            const { browserProcess, userDataDir, artifactsDir, transport: transport2, wsEndpoint } = await this._launchProcess(progress2, options2, !!persistent, browserLogsCollector, maybeUserDataDir);
             try {
               if (options2.__testHookBeforeCreateBrowser)
                 await progress2.race(options2.__testHookBeforeCreateBrowser());
@@ -140659,7 +140659,7 @@ ${Buffer.concat(chunks)}` : errorPrefix;
               if (persistent)
                 validateBrowserContextOptions(persistent, browserOptions);
               copyTestHooks(options2, browserOptions);
-              const browser2 = await progress2.race(this.connectToTransport(transport, browserOptions, browserLogsCollector));
+              const browser2 = await progress2.race(this.connectToTransport(transport2, browserOptions, browserLogsCollector));
               browser2._userDataDirForTest = userDataDir;
               if (persistent && !options2.ignoreAllDefaultArgs)
                 await browser2._defaultContext.loadDefaultContext(progress2);
@@ -140721,7 +140721,7 @@ ${Buffer.concat(chunks)}` : errorPrefix;
             } = options2;
             const env = options2.env ? envArrayToObject(options2.env) : process.env;
             const prepared = await progress2.race(this._prepareToLaunch(options2, isPersistent, userDataDir));
-            let transport = void 0;
+            let transport2 = void 0;
             let browserProcess = void 0;
             const exitPromise = new ManualPromise();
             const { launchedProcess, gracefullyClose, kill } = await progress2.race(launchProcess({
@@ -140740,8 +140740,8 @@ ${Buffer.concat(chunks)}` : errorPrefix;
               attemptToGracefullyClose: async () => {
                 if (options2.__testHookGracefullyClose)
                   await options2.__testHookGracefullyClose();
-                if (transport) {
-                  this.attemptToGracefullyCloseBrowser(transport);
+                if (transport2) {
+                  this.attemptToGracefullyCloseBrowser(transport2);
                 } else {
                   throw new Error("Force-killing the browser because no transport is available to gracefully close it.");
                 }
@@ -140785,12 +140785,12 @@ Browser logs:
 ${updatedLog}`);
               }
               if (!this.supportsPipeTransport(options2)) {
-                transport = await WebSocketTransport.connect(progress2, wsEndpoint);
+                transport2 = await WebSocketTransport.connect(progress2, wsEndpoint);
               } else {
                 const stdio = launchedProcess.stdio;
-                transport = new PipeTransport2(stdio[3], stdio[4]);
+                transport2 = new PipeTransport2(stdio[3], stdio[4]);
               }
-              return { browserProcess, artifactsDir: prepared.artifactsDir, userDataDir: prepared.userDataDir, transport, wsEndpoint };
+              return { browserProcess, artifactsDir: prepared.artifactsDir, userDataDir: prepared.userDataDir, transport: transport2, wsEndpoint };
             } catch (error62) {
               await progress2.race(closeOrKill(DEFAULT_PLAYWRIGHT_TIMEOUT).catch(() => {
               }));
@@ -140874,13 +140874,13 @@ ${updatedLog}`);
         kBrowserCloseMessageId2 = Number.MAX_SAFE_INTEGER - 1;
         kShutdownSessionNewMessageId = kBrowserCloseMessageId2 - 1;
         BidiConnection = class {
-          constructor(transport, onDisconnect, protocolLogger, browserLogsCollector) {
+          constructor(transport2, onDisconnect, protocolLogger, browserLogsCollector) {
             this._lastId = 0;
             this._closed = false;
             this._browsingContextToSession = /* @__PURE__ */ new Map();
             this._realmToBrowsingContext = /* @__PURE__ */ new Map();
             this._realmToOwnerRealm = /* @__PURE__ */ new Map();
-            this._transport = transport;
+            this._transport = transport2;
             this._onDisconnect = onDisconnect;
             this._protocolLogger = protocolLogger;
             this._browserLogsCollector = browserLogsCollector;
@@ -143294,20 +143294,20 @@ var bidiInsertText_default = BidiInsertTextInstaller;
         init_bidiProtocol();
         init_bidiInsertTextSource();
         BidiBrowser = class _BidiBrowser extends Browser {
-          constructor(parent, transport, options2) {
+          constructor(parent, transport2, options2) {
             super(parent, options2);
             this._contexts = /* @__PURE__ */ new Map();
             this._bidiPages = /* @__PURE__ */ new Map();
             this._cacheBehavior = "default";
-            this._connection = new BidiConnection(transport, this._onDisconnect.bind(this), options2.protocolLogger, options2.browserLogsCollector);
+            this._connection = new BidiConnection(transport2, this._onDisconnect.bind(this), options2.protocolLogger, options2.browserLogsCollector);
             this._browserSession = this._connection.browserSession;
             this._eventListeners = [
               eventsHelper.addEventListener(this._browserSession, "browsingContext.contextCreated", this._onBrowsingContextCreated.bind(this)),
               eventsHelper.addEventListener(this._browserSession, "script.realmDestroyed", this._onScriptRealmDestroyed.bind(this))
             ];
           }
-          static async connect(parent, transport, options2) {
-            const browser2 = new _BidiBrowser(parent, transport, options2);
+          static async connect(parent, transport2, options2) {
+            const browser2 = new _BidiBrowser(parent, transport2, options2);
             if (options2.__testHookOnConnectToBrowser)
               await options2.__testHookOnConnectToBrowser();
             browser2._bidiSessionInfo = await browser2._browserSession.send("session.new", {
@@ -144029,7 +144029,7 @@ ${remoteDebuggingHint(channel)}`);
             const closeAndWait = async () => await chromeTransport.closeAndWait();
             return this._connectOverCDPImpl(progress2, chromeTransport, closeAndWait, options2, onClose);
           }
-          async _connectOverCDPImpl(progress2, transport, closeAndWait, options2, onClose) {
+          async _connectOverCDPImpl(progress2, transport2, closeAndWait, options2, onClose) {
             let artifactsDir;
             const tempDirectories = [];
             if (options2.artifactsDir) {
@@ -144070,7 +144070,7 @@ ${remoteDebuggingHint(channel)}`);
                 isWebView: options2.isWebView
               };
               validateBrowserContextOptions(persistent, browserOptions);
-              const browser2 = await progress2.race(CRBrowser.connect(this.attribution.playwright, transport, browserOptions));
+              const browser2 = await progress2.race(CRBrowser.connect(this.attribution.playwright, transport2, browserOptions));
               if (!options2.isLocal)
                 browser2._isBrowserCollocatedWithServer = false;
               browser2.on(Browser.Events.Disconnected, doCleanup);
@@ -144083,11 +144083,11 @@ ${remoteDebuggingHint(channel)}`);
           }
           async connectToWorker(progress2, endpoint) {
             const wsEndpoint = await urlToWSEndpoint(progress2, endpoint, {});
-            const transport = await WebSocketTransport.connect(progress2, wsEndpoint);
+            const transport2 = await WebSocketTransport.connect(progress2, wsEndpoint);
             try {
-              const connection = new CRConnection(this, transport, helper.debugProtocolLogger(), new RecentLogsCollector());
+              const connection = new CRConnection(this, transport2, helper.debugProtocolLogger(), new RecentLogsCollector());
               const session = connection.rootSession;
-              const worker = new Worker(this, "", () => transport.closeAndWait());
+              const worker = new Worker(this, "", () => transport2.closeAndWait());
               session.on("Runtime.executionContextCreated", (event) => {
                 const isDefault = event.context.auxData?.isDefault;
                 if (isDefault === false) {
@@ -144109,7 +144109,7 @@ ${remoteDebuggingHint(channel)}`);
               session._sendMayFail("Runtime.runIfWaitingForDebugger");
               return worker;
             } catch (error62) {
-              await progress2.race(transport.closeAndWait().catch(() => {
+              await progress2.race(transport2.closeAndWait().catch(() => {
               }));
               throw error62;
             }
@@ -144118,9 +144118,9 @@ ${remoteDebuggingHint(channel)}`);
             const directory = registry.findExecutable("chromium").directory;
             return directory ? new CRDevTools(import_path25.default.join(directory, "devtools-preferences.json")) : void 0;
           }
-          async connectToTransport(transport, options2, browserLogsCollector) {
+          async connectToTransport(transport2, options2, browserLogsCollector) {
             try {
-              return await CRBrowser.connect(this.attribution.playwright, transport, options2, this._devtools);
+              return await CRBrowser.connect(this.attribution.playwright, transport2, options2, this._devtools);
             } catch (e) {
               const error62 = profileInUseError(browserLogsCollector.recentLogs());
               if (error62)
@@ -144146,9 +144146,9 @@ ${remoteDebuggingHint(channel)}`);
           amendEnvironment(env) {
             return env;
           }
-          attemptToGracefullyCloseBrowser(transport) {
+          attemptToGracefullyCloseBrowser(transport2) {
             const message = { method: "Browser.close", id: kBrowserCloseMessageId, params: {} };
-            transport.send(message);
+            transport2.send(message);
           }
           async launchWithSeleniumHub(progress2, hubUrl, options2) {
             if (!hubUrl.endsWith("/"))
@@ -144402,10 +144402,10 @@ ${remoteDebuggingHint(channel)}`);
           constructor(parent) {
             super(parent, "chromium");
           }
-          async connectToTransport(transport, options2, browserLogsCollector) {
+          async connectToTransport(transport2, options2, browserLogsCollector) {
             const bidiOverCdp = (init_bidiOverCdp(), __toCommonJS(bidiOverCdp_exports));
-            const bidiTransport = await bidiOverCdp.connectBidiOverCdp(transport);
-            transport[kBidiOverCdpWrapper] = bidiTransport;
+            const bidiTransport = await bidiOverCdp.connectBidiOverCdp(transport2);
+            transport2[kBidiOverCdpWrapper] = bidiTransport;
             try {
               return BidiBrowser.connect(this.attribution.playwright, bidiTransport, options2);
             } catch (e) {
@@ -144433,11 +144433,11 @@ ${remoteDebuggingHint(channel)}`);
           amendEnvironment(env) {
             return env;
           }
-          attemptToGracefullyCloseBrowser(transport) {
-            const bidiTransport = transport[kBidiOverCdpWrapper];
+          attemptToGracefullyCloseBrowser(transport2) {
+            const bidiTransport = transport2[kBidiOverCdpWrapper];
             if (bidiTransport)
-              transport = bidiTransport;
-            transport.send({ method: "browser.close", params: {}, id: kBrowserCloseMessageId2 });
+              transport2 = bidiTransport;
+            transport2.send({ method: "browser.close", params: {}, id: kBrowserCloseMessageId2 });
           }
           supportsPipeTransport() {
             return false;
@@ -144765,8 +144765,8 @@ ${remoteDebuggingHint(channel)}`);
           executablePath() {
             return "";
           }
-          async connectToTransport(transport, options2) {
-            return BidiBrowser.connect(this.attribution.playwright, transport, options2);
+          async connectToTransport(transport2, options2) {
+            return BidiBrowser.connect(this.attribution.playwright, transport2, options2);
           }
           doRewriteStartupLog(logs) {
             if (logs.includes(`as root in a regular user's session is not supported.`))
@@ -144790,21 +144790,21 @@ Workaround: Set the HOME=/root environment variable${process.env.GITHUB_ACTION ?
             }
             return env;
           }
-          attemptToGracefullyCloseBrowser(transport) {
-            this._attemptToGracefullyCloseBrowser(transport).catch(() => {
+          attemptToGracefullyCloseBrowser(transport2) {
+            this._attemptToGracefullyCloseBrowser(transport2).catch(() => {
             });
           }
-          async _attemptToGracefullyCloseBrowser(transport) {
-            if (!transport.onmessage) {
-              transport.send({ method: "session.new", params: { capabilities: {} }, id: kShutdownSessionNewMessageId });
+          async _attemptToGracefullyCloseBrowser(transport2) {
+            if (!transport2.onmessage) {
+              transport2.send({ method: "session.new", params: { capabilities: {} }, id: kShutdownSessionNewMessageId });
               await new Promise((resolve3) => {
-                transport.onmessage = (message) => {
+                transport2.onmessage = (message) => {
                   if (message.id === kShutdownSessionNewMessageId)
                     resolve3(true);
                 };
               });
             }
-            transport.send({ method: "browser.close", params: {}, id: kBrowserCloseMessageId2 });
+            transport2.send({ method: "browser.close", params: {}, id: kBrowserCloseMessageId2 });
           }
           supportsPipeTransport() {
             return false;
@@ -145316,10 +145316,10 @@ Workaround: Set the HOME=/root environment variable${process.env.GITHUB_ACTION ?
         };
         kBrowserCloseMessageId3 = -9999;
         FFConnection = class extends import_events10.EventEmitter {
-          constructor(transport, protocolLogger, browserLogsCollector) {
+          constructor(transport2, protocolLogger, browserLogsCollector) {
             super();
             this.setMaxListeners(0);
-            this._transport = transport;
+            this._transport = transport2;
             this._protocolLogger = protocolLogger;
             this._browserLogsCollector = browserLogsCollector;
             this._lastId = 0;
@@ -146497,8 +146497,8 @@ Workaround: Set the HOME=/root environment variable${process.env.GITHUB_ACTION ?
             this.session.on("Browser.downloadCreated", this._onDownloadCreated.bind(this));
             this.session.on("Browser.downloadFinished", this._onDownloadFinished.bind(this));
           }
-          static async connect(parent, transport, options2) {
-            const connection = new FFConnection(transport, options2.protocolLogger, options2.browserLogsCollector);
+          static async connect(parent, transport2, options2) {
+            const connection = new FFConnection(transport2, options2.protocolLogger, options2.browserLogsCollector);
             const browser2 = new _FFBrowser(parent, connection, options2);
             if (options2.__testHookOnConnectToBrowser)
               await options2.__testHookOnConnectToBrowser();
@@ -146836,8 +146836,8 @@ Workaround: Set the HOME=/root environment variable${process.env.GITHUB_ACTION ?
               return this._bidiFirefox.launchPersistentContext(progress2, userDataDir, options2);
             return super.launchPersistentContext(progress2, userDataDir, options2);
           }
-          connectToTransport(transport, options2) {
-            return FFBrowser.connect(this.attribution.playwright, transport, options2);
+          connectToTransport(transport2, options2) {
+            return FFBrowser.connect(this.attribution.playwright, transport2, options2);
           }
           doRewriteStartupLog(logs) {
             if (logs.includes(`as root in a regular user's session is not supported.`))
@@ -146855,9 +146855,9 @@ Workaround: Set the HOME=/root environment variable${process.env.GITHUB_ACTION ?
             }
             return env;
           }
-          attemptToGracefullyCloseBrowser(transport) {
+          attemptToGracefullyCloseBrowser(transport2) {
             const message = { method: "Browser.close", params: {}, id: kBrowserCloseMessageId3 };
-            transport.send(message);
+            transport2.send(message);
           }
           async defaultArgs(options2, isPersistent, userDataDir) {
             const { args = [], headless } = options2;
@@ -146909,10 +146909,10 @@ Workaround: Set the HOME=/root environment variable${process.env.GITHUB_ACTION ?
         kBrowserCloseMessageId4 = -9999;
         kPageProxyMessageReceived = /* @__PURE__ */ Symbol("kPageProxyMessageReceived");
         WKConnection = class {
-          constructor(transport, onDisconnect, protocolLogger, browserLogsCollector) {
+          constructor(transport2, onDisconnect, protocolLogger, browserLogsCollector) {
             this._lastId = 0;
             this._closed = false;
-            this._transport = transport;
+            this._transport = transport2;
             this._onDisconnect = onDisconnect;
             this._protocolLogger = protocolLogger;
             this._browserLogsCollector = browserLogsCollector;
@@ -148784,11 +148784,11 @@ Workaround: Set the HOME=/root environment variable${process.env.GITHUB_ACTION ?
         BROWSER_VERSION = "27.2";
         DEFAULT_USER_AGENT = `Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/${BROWSER_VERSION} Safari/605.1.15`;
         WKBrowser = class _WKBrowser extends Browser {
-          constructor(parent, transport, options2) {
+          constructor(parent, transport2, options2) {
             super(parent, options2);
             this._contexts = /* @__PURE__ */ new Map();
             this._wkPages = /* @__PURE__ */ new Map();
-            this._connection = new WKConnection(transport, this._onDisconnect.bind(this), options2.protocolLogger, options2.browserLogsCollector);
+            this._connection = new WKConnection(transport2, this._onDisconnect.bind(this), options2.protocolLogger, options2.browserLogsCollector);
             this._browserSession = this._connection.browserSession;
             this._browserSession.on("Playwright.pageProxyCreated", this._onPageProxyCreated.bind(this));
             this._browserSession.on("Playwright.pageProxyDestroyed", this._onPageProxyDestroyed.bind(this));
@@ -148799,8 +148799,8 @@ Workaround: Set the HOME=/root environment variable${process.env.GITHUB_ACTION ?
             this._browserSession.on("Playwright.downloadFinished", this._onDownloadFinished.bind(this));
             this._browserSession.on(kPageProxyMessageReceived, this._onPageProxyMessageReceived.bind(this));
           }
-          static async connect(parent, transport, options2) {
-            const browser2 = new _WKBrowser(parent, transport, options2);
+          static async connect(parent, transport2, options2) {
+            const browser2 = new _WKBrowser(parent, transport2, options2);
             if (options2.__testHookOnConnectToBrowser)
               await options2.__testHookOnConnectToBrowser();
             const promises2 = [
@@ -149170,10 +149170,10 @@ Workaround: Set the HOME=/root environment variable${process.env.GITHUB_ACTION ?
         init_helper();
         init_protocolError();
         WVConnection = class {
-          constructor(transport, onDisconnect, protocolLogger, browserLogsCollector) {
+          constructor(transport2, onDisconnect, protocolLogger, browserLogsCollector) {
             this._lastId = 0;
             this._closed = false;
-            this._transport = transport;
+            this._transport = transport2;
             this._onDisconnect = onDisconnect;
             this._protocolLogger = protocolLogger;
             this._browserLogsCollector = browserLogsCollector;
@@ -151410,15 +151410,15 @@ function installDialogBridge(window, endpoint) {
         headersMap = { "User-Agent": getUserAgent() };
       else if (!Object.keys(headersMap).some((key) => key.toLowerCase() === "user-agent"))
         headersMap["User-Agent"] = getUserAgent();
-      const transport = params2.transport;
-      const proxyBase = transport ? "" : deriveProxyBase(params2.endpointURL);
+      const transport2 = params2.transport;
+      const proxyBase = transport2 ? "" : deriveProxyBase(params2.endpointURL);
       const artifactsDir = params2.artifactsDir ?? import_path30.default.join(import_os16.default.tmpdir(), "playwright-artifacts-");
       const doCleanup = async () => {
         await removeFolders([artifactsDir]);
       };
       const browser2 = await progress2.race((async () => {
         const syncServer = await SyncServer.start();
-        const created = new WVBrowser(parent, proxyBase, headersMap, syncServer, transport, {
+        const created = new WVBrowser(parent, proxyBase, headersMap, syncServer, transport2, {
           slowMo: params2.slowMo,
           name: "webkit",
           browserType: "webkit",
@@ -151558,11 +151558,11 @@ function installDialogBridge(window, endpoint) {
                 this._detachTab(pageId4);
             }
           }
-          async _attachTab(pageId4, transport) {
-            const connection = new WVConnection(transport, () => this._detachTab(pageId4), this.options.protocolLogger, this.options.browserLogsCollector);
+          async _attachTab(pageId4, transport2) {
+            const connection = new WVConnection(transport2, () => this._detachTab(pageId4), this.options.protocolLogger, this.options.browserLogsCollector);
             const page2 = new WVPage(this._context, connection.outerSession, this._syncServer);
-            this._tabs.set(pageId4, { pageId: pageId4, transport, connection, page: page2 });
-            transport.open?.();
+            this._tabs.set(pageId4, { pageId: pageId4, transport: transport2, connection, page: page2 });
+            transport2.open?.();
             await page2.waitForInitialized();
           }
           _detachTab(pageId4) {
@@ -151755,8 +151755,8 @@ function installDialogBridge(window, endpoint) {
           constructor(parent) {
             super(parent, "webkit");
           }
-          connectToTransport(transport, options2) {
-            return WKBrowser.connect(this.attribution.playwright, transport, options2);
+          connectToTransport(transport2, options2) {
+            return WKBrowser.connect(this.attribution.playwright, transport2, options2);
           }
           async connectOverCDP(progress2, params2) {
             return connectOverRDP(progress2, this, params2);
@@ -151794,8 +151794,8 @@ function installDialogBridge(window, endpoint) {
               logs = "\n" + wrapInASCIIBox(kNoXServerRunningError, 1);
             return logs;
           }
-          attemptToGracefullyCloseBrowser(transport) {
-            transport.send({ method: "Playwright.close", params: {}, id: kBrowserCloseMessageId4 });
+          attemptToGracefullyCloseBrowser(transport2) {
+            transport2.send({ method: "Playwright.close", params: {}, id: kBrowserCloseMessageId4 });
           }
           async defaultArgs(options2, isPersistent, userDataDir) {
             const { args = [], headless } = options2;
@@ -153203,17 +153203,17 @@ if (self.ServiceWorkerContainer) ServiceWorkerContainer.prototype.register = asy
             this._server = import_net5.default.createServer((socket) => {
               const id = String(++this._connectionId);
               debugLogger.log("server", `[${id}] pipe client connected`);
-              const transport = new SocketServerTransport(socket);
+              const transport2 = new SocketServerTransport(socket);
               const connection = new PlaywrightConnection(
                 new Semaphore(1),
-                transport,
+                transport2,
                 false,
                 this._browser.attribution.playwright,
                 () => this._initPreLaunchedBrowserMode(id),
                 id
               );
               this._connections.add(connection);
-              transport.on("close", () => this._connections.delete(connection));
+              transport2.on("close", () => this._connections.delete(connection));
             });
             decorateServer(this._server);
             await new Promise((resolve3, reject) => {
@@ -156931,7 +156931,7 @@ function inject(globalThis) {
         init_debug();
         init_validator();
         SocksInterceptor = class {
-          constructor(transport, pattern, redirectPortForTest) {
+          constructor(transport2, pattern, redirectPortForTest) {
             this._ids = /* @__PURE__ */ new Set();
             this._handler = new SocksProxyHandler(pattern, redirectPortForTest);
             let lastId = -1;
@@ -156945,7 +156945,7 @@ function inject(globalThis) {
                     this._ids.add(id);
                     const validator = findValidator("SocksSupport", prop, "Params");
                     params2 = validator(params2, "", { tChannelImpl: tChannelForSocks, binary: "toBase64", isUnderTest });
-                    transport.send({ id, guid: this._socksSupportObjectGuid, method: prop, params: params2, metadata: { stack: [], apiName: "", internal: true, timeout: 0 } });
+                    transport2.send({ id, guid: this._socksSupportObjectGuid, method: prop, params: params2, metadata: { stack: [], apiName: "", internal: true, timeout: 0 } });
                   } catch (e) {
                   }
                 };
@@ -157075,17 +157075,17 @@ This does not look like a Playwright server, try connecting via ws://.`);
               ...params2.headers
             };
             const wsEndpoint = await urlToWSEndpoint2(progress2, params2.endpoint);
-            const transport = await WebSocketTransport.connect(progress2, wsEndpoint, { headers: wsHeaders, followRedirects: true, debugLogHeader: "x-playwright-debug-log" });
-            const socksInterceptor = new SocksInterceptor(transport, params2.exposeNetwork, params2.socksProxyRedirectPortForTest);
+            const transport2 = await WebSocketTransport.connect(progress2, wsEndpoint, { headers: wsHeaders, followRedirects: true, debugLogHeader: "x-playwright-debug-log" });
+            const socksInterceptor = new SocksInterceptor(transport2, params2.exposeNetwork, params2.socksProxyRedirectPortForTest);
             const pipe2 = new JsonPipeDispatcher(this);
-            transport.onmessage = (json2) => {
+            transport2.onmessage = (json2) => {
               if (socksInterceptor.interceptMessage(json2))
                 return;
               const cb = () => {
                 try {
                   pipe2.dispatch(json2);
                 } catch (e) {
-                  transport.close();
+                  transport2.close();
                 }
               };
               if (params2.slowMo)
@@ -157094,28 +157094,28 @@ This does not look like a Playwright server, try connecting via ws://.`);
                 cb();
             };
             pipe2.on("message", (message) => {
-              transport.send(message);
+              transport2.send(message);
             });
-            transport.onclose = (reason) => {
+            transport2.onclose = (reason) => {
               socksInterceptor?.cleanup();
               pipe2.wasClosed(reason);
             };
-            pipe2.on("close", () => transport.close());
-            return { pipe: pipe2, headers: transport.headers };
+            pipe2.on("close", () => transport2.close());
+            return { pipe: pipe2, headers: transport2.headers };
           }
           async _connectOverPipe(params2) {
             const socket = await new Promise((resolve3, reject) => {
               const conn = import_net7.default.connect(params2.endpoint, () => resolve3(conn));
               conn.on("error", reject);
             });
-            const transport = new PipeTransport2(socket, socket);
+            const transport2 = new PipeTransport2(socket, socket);
             const pipe2 = new JsonPipeDispatcher(this);
-            transport.onmessage = (json2) => {
+            transport2.onmessage = (json2) => {
               const cb = () => {
                 try {
                   pipe2.dispatch(json2);
                 } catch (e) {
-                  transport.close();
+                  transport2.close();
                 }
               };
               if (params2.slowMo)
@@ -157124,9 +157124,9 @@ This does not look like a Playwright server, try connecting via ws://.`);
                 cb();
             };
             pipe2.on("message", (message) => {
-              transport.send(message);
+              transport2.send(message);
             });
-            transport.onclose = (reason) => {
+            transport2.onclose = (reason) => {
               pipe2.wasClosed(reason);
             };
             pipe2.on("close", () => socket.end());
@@ -157302,9 +157302,9 @@ This does not look like a Playwright server, try connecting via ws://.`);
           return server3.serveFile(request22, response2, absolutePath);
         });
       }
-      const transport = options2.transport || (options2.isServer ? new StdinServer() : void 0);
-      if (transport)
-        server3.createWebSocket(() => transport);
+      const transport2 = options2.transport || (options2.isServer ? new StdinServer() : void 0);
+      if (transport2)
+        server3.createWebSocket(() => transport2);
       const { host, port } = options2;
       await server3.start({ preferredPort: port, host });
       return server3;
@@ -157607,25 +157607,25 @@ This does not look like a Playwright server, try connecting via ws://.`);
         init_browser();
         init_debugControllerDispatcher();
         PlaywrightConnection = class {
-          constructor(semaphore, transport, controller, playwright22, initialize, id) {
+          constructor(semaphore, transport2, controller, playwright22, initialize, id) {
             this._cleanups = [];
-            this._transport = transport;
+            this._transport = transport2;
             this._semaphore = semaphore;
             this._id = id;
             const lock2 = this._semaphore.acquire();
             this._dispatcherConnection = new DispatcherConnection();
             this._dispatcherConnection.onmessage = async (message) => {
               await lock2;
-              if (!transport.isClosed()) {
+              if (!transport2.isClosed()) {
                 const messageString = JSON.stringify(message);
                 if (debugLogger.isEnabled("server:channel"))
                   debugLogger.log("server:channel", `[${this._id}] ${monotonicTime() * 1e3} SEND \u25BA ${messageString}`);
                 if (debugLogger.isEnabled("server:metadata"))
                   this.logServerMetadata(message, messageString, "SEND");
-                transport.send(messageString);
+                transport2.send(messageString);
               }
             };
-            transport.on("message", async (message) => {
+            transport2.on("message", async (message) => {
               await lock2;
               const messageString = Buffer.from(message).toString();
               let jsonMessage;
@@ -157642,8 +157642,8 @@ This does not look like a Playwright server, try connecting via ws://.`);
                 this.logServerMetadata(jsonMessage, messageString, "RECV");
               this._dispatcherConnection.dispatch(jsonMessage);
             });
-            transport.on("close", () => this._onDisconnect());
-            transport.on("error", (error62) => this._onDisconnect(error62));
+            transport2.on("close", () => this._onDisconnect());
+            transport2.on("error", (error62) => this._onDisconnect(error62));
             if (controller) {
               debugLogger.log("server", `[${this._id}] engaged reuse controller mode`);
               this._root = new DebugControllerDispatcher(this._dispatcherConnection, playwright22.debugController);
@@ -163810,23 +163810,23 @@ ${value2}`;
     }
     async function connectToEndpoint(parentConnection, params2, timeout) {
       const localUtils = parentConnection.localUtils();
-      const transport = localUtils ? new JsonPipeTransport(localUtils) : new WebSocketTransport2();
-      const connectHeaders = await transport.connect(params2, timeout);
+      const transport2 = localUtils ? new JsonPipeTransport(localUtils) : new WebSocketTransport2();
+      const connectHeaders = await transport2.connect(params2, timeout);
       const connection = new Connection(localUtils, parentConnection._instrumentation, connectHeaders);
       connection.markAsRemote();
-      connection.on("close", () => transport.close());
+      connection.on("close", () => transport2.close());
       let closeError;
       const onTransportClosed = (reason) => {
         connection.close(reason || closeError);
       };
-      transport.onClose((reason) => onTransportClosed(reason));
-      connection.onmessage = (message) => transport.send(message).catch(() => onTransportClosed());
-      transport.onMessage((message) => {
+      transport2.onClose((reason) => onTransportClosed(reason));
+      connection.onmessage = (message) => transport2.send(message).catch(() => onTransportClosed());
+      transport2.onMessage((message) => {
         try {
           connection.dispatch(message);
         } catch (e) {
           closeError = String(e);
-          transport.close().catch(() => {
+          transport2.close().catch(() => {
           });
         }
       });
@@ -164324,7 +164324,7 @@ ${value2}`;
           }
           async connectOverCDP(overloaded, options2) {
             let endpointURL;
-            let transport;
+            let transport2;
             let params2;
             if (typeof overloaded === "string") {
               endpointURL = overloaded;
@@ -164334,7 +164334,7 @@ ${value2}`;
                 throw new Error("Connecting over CDP is only supported in Chromium and WebKit.");
               if (this._connection.isRemote())
                 throw new Error("Passing a ConnectionTransport to connectOverCDP is not supported when connecting remotely.");
-              transport = overloaded;
+              transport2 = overloaded;
               params2 = options2 ?? {};
             } else {
               endpointURL = "endpointURL" in overloaded ? overloaded.endpointURL : overloaded.wsEndpoint;
@@ -164345,7 +164345,7 @@ ${value2}`;
               throw new Error("Connecting over CDP is only supported in Chromium and WebKit.");
             const result2 = await this._channel.connectOverCDP({
               endpointURL,
-              transport,
+              transport: transport2,
               headers: params2.headers ? headersObjectToArray(params2.headers) : void 0,
               slowMo: params2.slowMo,
               isLocal: params2.isLocal,
@@ -171660,16 +171660,16 @@ ${itemTexts.map((t) => `  - listitem: ${escapeWithQuotes(t, '"')}`).join("\n")}`
         const playwright22 = createPlaywright({ sdkLanguage, isClientCollocatedWithServer: true });
         return new PlaywrightDispatcher(rootScope, playwright22);
       });
-      const transport = new PipeTransport(process.stdout, process.stdin);
-      transport.onmessage = (message) => dispatcherConnection.dispatch(JSON.parse(message));
+      const transport2 = new PipeTransport(process.stdout, process.stdin);
+      transport2.onmessage = (message) => dispatcherConnection.dispatch(JSON.parse(message));
       const isJavaScriptLanguageBinding = !process.env.PW_LANG_NAME || process.env.PW_LANG_NAME === "javascript";
       const replacer = !isJavaScriptLanguageBinding && String.prototype.toWellFormed ? (key, value2) => {
         if (typeof value2 === "string")
           return value2.toWellFormed();
         return value2;
       } : void 0;
-      dispatcherConnection.onmessage = (message) => transport.send(JSON.stringify(message, replacer));
-      transport.onclose = () => {
+      dispatcherConnection.onmessage = (message) => transport2.send(JSON.stringify(message, replacer));
+      transport2.onclose = () => {
         dispatcherConnection.onmessage = () => {
         };
         gracefullyProcessExitDoNotHang(0);
@@ -173542,20 +173542,20 @@ to start the browser session.`);
           res.statusCode = 400;
           return res.end("Missing sessionId");
         }
-        const transport = sessions.get(sessionId);
-        if (!transport) {
+        const transport2 = sessions.get(sessionId);
+        if (!transport2) {
           res.statusCode = 404;
           return res.end("Session not found");
         }
-        return await transport.handlePostMessage(req, res);
+        return await transport2.handlePostMessage(req, res);
       } else if (req.method === "GET") {
-        const transport = new SSEServerTransport("/sse", res);
-        sessions.set(transport.sessionId, transport);
+        const transport2 = new SSEServerTransport("/sse", res);
+        sessions.set(transport2.sessionId, transport2);
         testDebug2(`create SSE session`);
-        await connect(serverBackendFactory, transport, Promise.resolve(), false);
+        await connect(serverBackendFactory, transport2, Promise.resolve(), false);
         res.on("close", () => {
           testDebug2(`delete SSE session`);
-          sessions.delete(transport.sessionId);
+          sessions.delete(transport2.sessionId);
         });
         return;
       }
@@ -173579,22 +173579,22 @@ to start the browser session.`);
         return sessionInfo.transport.handleRequest(req, res);
       }
       if (req.method === "POST") {
-        const transport = new StreamableHTTPServerTransport({
+        const transport2 = new StreamableHTTPServerTransport({
           sessionIdGenerator: () => import_crypto30.default.randomUUID(),
           onsessioninitialized: async (sessionId2) => {
             testDebug2(`create http session`);
-            const sessionInfo = { transport, transportInitialized: new ManualPromise() };
+            const sessionInfo = { transport: transport2, transportInitialized: new ManualPromise() };
             sessions.set(sessionId2, sessionInfo);
             await connect(serverBackendFactory, sessionInfo.transport, sessionInfo.transportInitialized, true);
           }
         });
-        transport.onclose = () => {
-          if (!transport.sessionId)
+        transport2.onclose = () => {
+          if (!transport2.sessionId)
             return;
-          sessions.delete(transport.sessionId);
+          sessions.delete(transport2.sessionId);
           testDebug2(`delete http session`);
         };
-        await transport.handleRequest(req, res);
+        await transport2.handleRequest(req, res);
         return;
       }
       res.statusCode = 400;
@@ -173644,9 +173644,9 @@ to start the browser session.`);
         zod = require_utilsBundle().z;
       }
     });
-    async function connect(factory, transport, transportInitialized, runHeartbeat) {
+    async function connect(factory, transport2, transportInitialized, runHeartbeat) {
       const server3 = createServer(factory.name, factory.version, factory, transportInitialized, runHeartbeat);
-      await server3.connect(transport);
+      await server3.connect(transport2);
     }
     function createServer(name, version32, factory, transportInitialized, runHeartbeat) {
       const server3 = new Server({ name, version: version32 }, {
@@ -173714,8 +173714,8 @@ to start the browser session.`);
     }
     async function start(serverBackendFactory, options2 = {}) {
       if (options2.port === void 0) {
-        const transport = new StdioServerTransport();
-        await connect(serverBackendFactory, transport, Promise.resolve(), false);
+        const transport2 = new StdioServerTransport();
+        await connect(serverBackendFactory, transport2, Promise.resolve(), false);
         return;
       }
       const url3 = await startMcpHttpServer(options2, serverBackendFactory, options2.allowedHosts);
@@ -175761,10 +175761,10 @@ ${e}`);
             this._driverProcess.stderr.on("data", (data) => process.stderr.write(data));
             setCoreDir(packageRoot);
             const connection = new Connection();
-            const transport = new PipeTransport(this._driverProcess.stdin, this._driverProcess.stdout);
-            connection.onmessage = (message) => transport.send(JSON.stringify(message));
-            transport.onmessage = (message) => connection.dispatch(JSON.parse(message));
-            transport.onclose = () => this._closePromise.resolve();
+            const transport2 = new PipeTransport(this._driverProcess.stdin, this._driverProcess.stdout);
+            connection.onmessage = (message) => transport2.send(JSON.stringify(message));
+            transport2.onmessage = (message) => connection.dispatch(JSON.parse(message));
+            transport2.onclose = () => this._closePromise.resolve();
             this._playwright = connection.initializePlaywright();
           }
           async stop() {
@@ -204518,11 +204518,11 @@ var Protocol = class {
    *
    * The Protocol object assumes ownership of the Transport, replacing any callbacks that have already been set, and expects that it is the only user of the Transport instance going forward.
    */
-  async connect(transport) {
+  async connect(transport2) {
     if (this._transport) {
       throw new Error("Already connected to a transport. Call close() before connecting to a new transport, or use a separate Protocol instance per connection.");
     }
-    this._transport = transport;
+    this._transport = transport2;
     const _onclose = this.transport?.onclose;
     this._transport.onclose = () => {
       _onclose?.();
@@ -206160,8 +206160,8 @@ var McpServer = class {
    *
    * The `server` object assumes ownership of the Transport, replacing any callbacks that have already been set, and expects that it is the only user of the Transport instance going forward.
    */
-  async connect(transport) {
-    return await this.server.connect(transport);
+  async connect(transport2) {
+    return await this.server.connect(transport2);
   }
   /**
    * Closes the connection.
@@ -207031,9 +207031,9 @@ var StdioServerTransport2 = class {
 
 // src/server.ts
 var import_yaml3 = __toESM2(require_dist2(), 1);
-import { existsSync as existsSync4, readFileSync as readFileSync3 } from "node:fs";
-import { dirname, join as join5, resolve as resolve2 } from "node:path";
-import { parseArgs, parseEnv } from "node:util";
+import { existsSync as existsSync5, readFileSync as readFileSync4 } from "node:fs";
+import { dirname, join as join6, resolve as resolve2 } from "node:path";
+import { parseArgs, parseEnv as parseEnv2 } from "node:util";
 
 // src/schema.ts
 var envName = external_exports.string().regex(/^[A-Za-z_][A-Za-z0-9_]*$/, "must be an environment variable name, not a value");
@@ -207068,12 +207068,12 @@ var FindingInput = external_exports.strictObject({
 
 // src/session.ts
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, writeFileSync as writeFileSync2 } from "node:fs";
-import { join as join2 } from "node:path";
+import { existsSync as existsSync2, mkdirSync, readdirSync, readFileSync as readFileSync2, renameSync, writeFileSync as writeFileSync2 } from "node:fs";
+import { join as join3 } from "node:path";
 
 // src/browser.ts
 import { writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { join as join2 } from "node:path";
 
 // node_modules/playwright-core/index.mjs
 var import_index2 = __toESM2(require_playwright_core(), 1);
@@ -207122,6 +207122,50 @@ var package_default = {
   },
   types: "types/types.d.ts"
 };
+
+// src/accounts.ts
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+import { parseEnv } from "node:util";
+function accountValues(root, config2) {
+  const file2 = join(root, ".jeyna", ".env");
+  const dotenv3 = existsSync(file2) ? parseEnv(readFileSync(file2, "utf8")) : {};
+  const get = (n) => process.env[n] || dotenv3[n] || void 0;
+  return config2.accounts.map((a) => ({ handle: a.handle, user: get(a.user_env), pass: get(a.pass_env) }));
+}
+function substitute(value2, account, caseId) {
+  if (!/\{\{account\.(user|pass)\}\}/.test(value2)) return value2;
+  if (!account) throw new Error(`Case ${caseId} has no account (its scenario is \`Account: none\`), so {{account.*}} cannot be filled.`);
+  if (!account.user || !account.pass) throw new Error(`account ${account.handle} not configured`);
+  return value2.replaceAll("{{account.user}}", account.user).replaceAll("{{account.pass}}", account.pass);
+}
+var escape2 = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+function redactor(accounts) {
+  const pairs = accounts.flatMap((a) => [
+    [a.pass, "{{account.pass}}"],
+    [a.user, "{{account.user}}"]
+  ]);
+  const forms = /* @__PURE__ */ new Map();
+  for (const [v, ph] of pairs) {
+    if (!v) continue;
+    for (const f of [v, encodeURIComponent(v), new URLSearchParams({ v }).toString().slice(2)]) forms.set(f.toLowerCase(), ph);
+  }
+  if (!forms.size) return (t) => t;
+  const re2 = new RegExp([...forms.keys()].sort((x, y) => y.length - x.length).map(escape2).join("|"), "gi");
+  return (t) => t.replace(re2, (m) => forms.get(m.toLowerCase()));
+}
+function redactDeep(msg, redact) {
+  const walk = (v) => {
+    if (typeof v === "string") return redact(v);
+    if (Array.isArray(v)) return v.map(walk);
+    if (v && typeof v === "object") {
+      if (v.type === "image") return v;
+      return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, walk(x)]));
+    }
+    return v;
+  };
+  return walk(msg);
+}
 
 // src/browser.ts
 var log2 = (...a) => console.error((/* @__PURE__ */ new Date()).toISOString(), ...a);
@@ -207182,6 +207226,23 @@ function page(caseId, config2) {
   }
   return p;
 }
+var ACT_TIMEOUT = 5e3;
+var CONTROL = /^\s*- (button|link|textbox|combobox|checkbox|radio|menuitem|tab|option|searchbox|switch|slider|spinbutton) "((?:[^"\\]|\\.)*)"/gm;
+var words = (s) => s.toLowerCase().match(/[a-z0-9]+/g) ?? [];
+function nearest(selector, aria, max = 5) {
+  const wanted = new Set(words(selector));
+  const found = [...aria.matchAll(CONTROL)].map(([, role, name], i) => ({
+    sel: `role=${role}[name="${name}"]`,
+    score: words(name).filter((w) => wanted.has(w)).length + (wanted.has(role) ? 0.5 : 0),
+    i
+  }));
+  return [...new Set(found.sort((a, b) => b.score - a.score || a.i - b.i).map((c) => c.sel))].slice(0, max);
+}
+async function settled(p) {
+  await p.waitForLoadState("load").catch(() => {
+  });
+  return ok({ url: p.url(), title: await p.title() });
+}
 var SNAPSHOT_MAX = 9e4;
 function registerBrowserTools(server3, getContext2) {
   const caseId = external_exports.string().describe("Case id from session_start, e.g. t1-390x844");
@@ -207198,6 +207259,72 @@ function registerBrowserTools(server3, getContext2) {
         const p = await page(a.case, config2);
         await p.goto(a.url ?? new URL(a.path, config2.app.url).href, { waitUntil: "load" });
         return ok({ url: p.url(), title: await p.title() });
+      } catch (e) {
+        return fail(e);
+      }
+    }
+  );
+  const selector = external_exports.string().describe('Playwright selector, e.g. role=button[name="Sign in"], #email, text=Forgot password?');
+  server3.registerTool(
+    "click",
+    {
+      description: "Click the element a Playwright selector matches. On a miss, the error lists the nearest candidates from the page's accessibility tree. Returns the url and title after the click.",
+      inputSchema: { case: caseId, selector }
+    },
+    async (a) => {
+      try {
+        const p = await page(a.case, getContext2().config);
+        try {
+          await p.locator(a.selector).click({ timeout: ACT_TIMEOUT });
+        } catch (e) {
+          const near = nearest(a.selector, await p.locator("body").ariaSnapshot().catch(() => ""));
+          throw new Error(
+            `Could not click ${a.selector}: ${e.message.split("\n")[0]}
+` + (near.length ? `Nearest candidates:
+${near.map((n) => `- ${n}`).join("\n")}` : "The page has no clickable controls.")
+          );
+        }
+        return await settled(p);
+      } catch (e) {
+        return fail(e);
+      }
+    }
+  );
+  server3.registerTool(
+    "fill",
+    {
+      description: "Type a value into an input, or choose an option (by value or label) in a <select>. Write account credentials as {{account.user}} and {{account.pass}}: the server fills in your case's account and you never see the values.",
+      inputSchema: { case: caseId, selector, value: external_exports.string() }
+    },
+    async (a) => {
+      try {
+        const { root, config: config2 } = getContext2();
+        const p = await page(a.case, config2);
+        const handle = current.session.testers.find((t) => t.cases.includes(a.case))?.account;
+        const value2 = substitute(a.value, accountValues(root, config2).find((x) => x.handle === handle), a.case);
+        const el = p.locator(a.selector);
+        const tag = await el.evaluate((e) => e.tagName, void 0, { timeout: ACT_TIMEOUT });
+        if (tag === "SELECT") await el.selectOption(value2, { timeout: ACT_TIMEOUT });
+        else await el.fill(value2, { timeout: ACT_TIMEOUT });
+        return ok({ filled: a.selector });
+      } catch (e) {
+        return fail(e);
+      }
+    }
+  );
+  server3.registerTool(
+    "press",
+    {
+      description: "Press a key or combination (Enter, Tab, Escape, Shift+Tab...) on the focused element. Returns the url and title after.",
+      inputSchema: { case: caseId, key: external_exports.string() }
+    },
+    async (a) => {
+      try {
+        const p = await page(a.case, getContext2().config);
+        const focused = p.locator("*:focus");
+        if (await focused.count()) await focused.press(a.key, { timeout: ACT_TIMEOUT });
+        else await p.keyboard.press(a.key);
+        return await settled(p);
       } catch (e) {
         return fail(e);
       }
@@ -207240,7 +207367,7 @@ function registerBrowserTools(server3, getContext2) {
         const seq = (shots.get(a.case) ?? 0) + 1;
         shots.set(a.case, seq);
         const name = `${a.case}-${seq}${a.label ? `-${a.label}` : ""}.png`;
-        writeFileSync(join(current.runDir, "evidence", name), png, { flag: "wx" });
+        writeFileSync(join2(current.runDir, "evidence", name), png, { flag: "wx" });
         return {
           content: [
             { type: "text", text: name },
@@ -207292,8 +207419,8 @@ function planTesters(scenarios, pool, viewports) {
 var current;
 var endRun = () => current = void 0;
 function save(runDir, session) {
-  writeFileSync2(join2(runDir, "session.json.tmp"), JSON.stringify(session, null, 2) + "\n");
-  renameSync(join2(runDir, "session.json.tmp"), join2(runDir, "session.json"));
+  writeFileSync2(join3(runDir, "session.json.tmp"), JSON.stringify(session, null, 2) + "\n");
+  renameSync(join3(runDir, "session.json.tmp"), join3(runDir, "session.json"));
 }
 function buildId(root, config2) {
   if (config2.app.build) return config2.app.build;
@@ -207305,10 +207432,10 @@ function buildId(root, config2) {
   }
 }
 function runningRuns(dir) {
-  if (!existsSync(dir)) return [];
-  return readdirSync(dir).map((d) => join2(dir, d)).filter((d) => {
+  if (!existsSync2(dir)) return [];
+  return readdirSync(dir).map((d) => join3(dir, d)).filter((d) => {
     try {
-      return JSON.parse(readFileSync(join2(d, "session.json"), "utf8")).status === "running";
+      return JSON.parse(readFileSync2(join3(d, "session.json"), "utf8")).status === "running";
     } catch {
       return false;
     }
@@ -207336,23 +207463,23 @@ function registerSessionTools(server3, getContext2) {
         const names = scenarios.map((s) => s.name);
         const dupes = names.filter((n, i) => names.indexOf(n) !== i);
         if (dupes.length) throw new Error(`Scenario names must be unique: ${dupes.join(", ")}.`);
-        const dir = join2(root, ".jeyna", "playtests");
+        const dir = join3(root, ".jeyna", "playtests");
         const stale = runningRuns(dir);
         if (stale.length && !force) {
           throw new Error(`A run is still running: ${stale.join(", ")}. Call session_start with force: true to abort it.`);
         }
         const testers = planTesters(scenarios, config2.accounts.map((a) => a.handle), viewports ?? config2.viewports);
         for (const d of stale) {
-          const s = d === current?.runDir ? current.session : JSON.parse(readFileSync(join2(d, "session.json"), "utf8"));
+          const s = d === current?.runDir ? current.session : JSON.parse(readFileSync2(join3(d, "session.json"), "utf8"));
           save(d, { ...s, status: "aborted", finished: (/* @__PURE__ */ new Date()).toISOString() });
         }
         current = void 0;
         await closeContexts();
         const base = `${(/* @__PURE__ */ new Date()).toLocaleDateString("sv")}-${slug}`;
         let id = base;
-        for (let n = 2; existsSync(join2(dir, id)); n++) id = `${base}-${n}`;
-        const runDir = join2(dir, id);
-        mkdirSync(join2(runDir, "evidence"), { recursive: true });
+        for (let n = 2; existsSync2(join3(dir, id)); n++) id = `${base}-${n}`;
+        const runDir = join3(dir, id);
+        mkdirSync(join3(runDir, "evidence"), { recursive: true });
         const session = {
           schema: 1,
           id,
@@ -207419,8 +207546,8 @@ function registerSessionTools(server3, getContext2) {
 
 // src/findings.ts
 var import_yaml = __toESM2(require_dist2(), 1);
-import { existsSync as existsSync2, mkdirSync as mkdirSync2, readdirSync as readdirSync2, writeFileSync as writeFileSync3 } from "node:fs";
-import { basename, join as join3 } from "node:path";
+import { existsSync as existsSync3, mkdirSync as mkdirSync2, readdirSync as readdirSync2, writeFileSync as writeFileSync3 } from "node:fs";
+import { basename, join as join4 } from "node:path";
 function findingMarkdown(front, f) {
   return [
     `---
@@ -207456,14 +207583,14 @@ function registerFindingTools(server3) {
         const run = current;
         const c = run.session.cases.find((c2) => c2.id === caseId);
         if (!c) throw new Error(`Unknown case "${caseId}". Cases in this run: ${run.session.cases.map((c2) => c2.id).join(", ")}.`);
-        const evidenceDir = join3(run.runDir, "evidence");
+        const evidenceDir = join4(run.runDir, "evidence");
         const have = () => readdirSync2(evidenceDir).filter((f) => f.startsWith(`${caseId}-`));
         if (finding.kind === "bug" && !finding.evidence.length) {
           throw new Error(
             `A bug needs evidence. Call screenshot {case: "${caseId}"} on the page that shows it, then call record_finding again with its file name in evidence. Screenshots of this case so far: ${have().join(", ") || "none"}.`
           );
         }
-        const missing = finding.evidence.filter((e) => basename(e) !== e || !existsSync2(join3(evidenceDir, e)));
+        const missing = finding.evidence.filter((e) => basename(e) !== e || !existsSync3(join4(evidenceDir, e)));
         if (missing.length) {
           throw new Error(`No such evidence: ${missing.join(", ")}. Screenshots of this case: ${have().join(", ") || "none"}.`);
         }
@@ -207487,8 +207614,8 @@ function registerFindingTools(server3) {
           created: (/* @__PURE__ */ new Date()).toISOString(),
           evidence: finding.evidence
         };
-        mkdirSync2(join3(run.runDir, "findings"), { recursive: true });
-        const path = join3(run.runDir, "findings", `${id}.md`);
+        mkdirSync2(join4(run.runDir, "findings"), { recursive: true });
+        const path = join4(run.runDir, "findings", `${id}.md`);
         writeFileSync3(path, findingMarkdown(front, finding), { flag: "wx" });
         run.findings.push({ id, case: caseId });
         return ok({ id, path });
@@ -207501,8 +207628,8 @@ function registerFindingTools(server3) {
 
 // src/finish.ts
 var import_yaml2 = __toESM2(require_dist2(), 1);
-import { existsSync as existsSync3, readdirSync as readdirSync3, readFileSync as readFileSync2, writeFileSync as writeFileSync4 } from "node:fs";
-import { join as join4, relative, resolve } from "node:path";
+import { existsSync as existsSync4, readdirSync as readdirSync3, readFileSync as readFileSync3, writeFileSync as writeFileSync4 } from "node:fs";
+import { join as join5, relative, resolve } from "node:path";
 var SEVERITIES = FindingInput.shape.severity.options;
 var KINDS = FindingInput.shape.kind.options;
 var STATUSES = ["open", "duplicate", "wontfix", "fixed"];
@@ -207528,11 +207655,11 @@ var FindingFront = external_exports.strictObject({
 });
 var splitFront = (md) => /^---\n([\s\S]*?)\n?---\n([\s\S]*)$/.exec(md);
 function readFindings(runDir, session) {
-  const dir = join4(runDir, "findings");
-  if (!existsSync3(dir)) return [];
+  const dir = join5(runDir, "findings");
+  if (!existsSync4(dir)) return [];
   return readdirSync3(dir).filter((f) => f.endsWith(".md")).sort().map((file2) => {
     const f = { path: `findings/${file2}`, id: file2.slice(0, -3), errors: [] };
-    const m = splitFront(readFileSync2(join4(dir, file2), "utf8"));
+    const m = splitFront(readFileSync3(join5(dir, file2), "utf8"));
     if (!m) return { ...f, errors: ["no YAML frontmatter between --- lines"] };
     let raw;
     try {
@@ -207550,15 +207677,15 @@ function readFindings(runDir, session) {
     if (!session.cases.some((c) => c.id === front.case)) f.errors.push(`case ${front.case} is not a case of this run`);
     if (!f.title) f.errors.push("missing the # title line");
     for (const s of SECTIONS) if (!new RegExp(`^## ${s}$`, "m").test(m[2])) f.errors.push(`missing the ## ${s} section`);
-    for (const e of front.evidence) if (!existsSync3(join4(runDir, "evidence", e))) f.errors.push(`evidence ${e} does not exist in evidence/`);
+    for (const e of front.evidence) if (!existsSync4(join5(runDir, "evidence", e))) f.errors.push(`evidence ${e} does not exist in evidence/`);
     if (front.kind === "bug" && !front.evidence.length) f.errors.push("a bug needs evidence");
     if (front.status === "duplicate" && !front.of) f.errors.push("status duplicate needs of: PT-\u2026");
     return f;
   });
 }
 function readSession(runDir) {
-  if (!existsSync3(join4(runDir, "session.json"))) throw new Error(`${runDir} is not a run folder: it has no session.json.`);
-  return JSON.parse(readFileSync2(join4(runDir, "session.json"), "utf8"));
+  if (!existsSync4(join5(runDir, "session.json"))) throw new Error(`${runDir} is not a run folder: it has no session.json.`);
+  return JSON.parse(readFileSync3(join5(runDir, "session.json"), "utf8"));
 }
 function validateRun(runDir) {
   let session;
@@ -207579,7 +207706,7 @@ function validateRun(runDir) {
     if (!v) errors2.push(`session.json: case ${c.id} has no verdict`);
     for (const id of v?.findings ?? []) if (!ids.has(id)) errors2.push(`session.json: verdict of ${c.id} lists ${id}, which has no file in findings/`);
   }
-  if (session.status === "done" && !existsSync3(join4(runDir, "report.md"))) errors2.push("report.md: missing, but the run is done");
+  if (session.status === "done" && !existsSync4(join5(runDir, "report.md"))) errors2.push("report.md: missing, but the run is done");
   return errors2;
 }
 var cell = (s) => s.replace(/\|/g, "\\|").replace(/\s*\n\s*/g, " ");
@@ -207650,12 +207777,12 @@ ${table(["Scenario", ...viewports], matrix)}`,
       )
     ) : "No findings.")
   ].join("\n\n");
-  writeFileSync4(join4(runDir, "report.md"), md + "\n");
+  writeFileSync4(join5(runDir, "report.md"), md + "\n");
   return counts;
 }
 function runs(root) {
-  const dir = join4(root, ".jeyna", "playtests");
-  if (!existsSync3(dir)) return [];
+  const dir = join5(root, ".jeyna", "playtests");
+  if (!existsSync4(dir)) return [];
   const started = (d) => {
     try {
       return readSession(d).started;
@@ -207663,14 +207790,14 @@ function runs(root) {
       return "";
     }
   };
-  return readdirSync3(dir).map((d) => join4(dir, d)).filter((d) => started(d)).sort((a, b) => started(b).localeCompare(started(a)));
+  return readdirSync3(dir).map((d) => join5(dir, d)).filter((d) => started(d)).sort((a, b) => started(b).localeCompare(started(a)));
 }
 function validateCli(arg2, root) {
   try {
     const dir = arg2 ? resolve(arg2) : runs(root())[0];
-    if (!dir) throw new Error(`No run folders in ${join4(root(), ".jeyna", "playtests")}.`);
+    if (!dir) throw new Error(`No run folders in ${join5(root(), ".jeyna", "playtests")}.`);
     const errors2 = validateRun(dir);
-    for (const e of errors2) console.log(relative(process.cwd(), join4(dir, e.slice(0, e.indexOf(": ")))) + e.slice(e.indexOf(": ")));
+    for (const e of errors2) console.log(relative(process.cwd(), join5(dir, e.slice(0, e.indexOf(": ")))) + e.slice(e.indexOf(": ")));
     console.error(errors2.length ? `${errors2.length} errors in ${dir}` : `ok: ${dir}`);
     return errors2.length ? 1 : 0;
   } catch (e) {
@@ -207691,7 +207818,7 @@ function registerFinishTools(server3, getContext2) {
         const root = getContext2().root;
         const dir = run ? resolve(root, ".jeyna", "playtests", run) : current?.runDir ?? runs(root)[0];
         if (!dir) throw new Error("No run to validate: no run is running and .jeyna/playtests/ has none.");
-        if (!existsSync3(dir)) throw new Error(`No run folder ${dir}.`);
+        if (!existsSync4(dir)) throw new Error(`No run folder ${dir}.`);
         return ok({ run: dir, errors: validateRun(dir) });
       } catch (e) {
         return fail(e);
@@ -207720,7 +207847,7 @@ ${errors2.join("\n")}`);
         save(runDir, session);
         endRun();
         await closeContexts();
-        return ok({ reportPath: join4(runDir, "report.md"), counts });
+        return ok({ reportPath: join5(runDir, "report.md"), counts });
       } catch (e) {
         return fail(e);
       }
@@ -207742,12 +207869,12 @@ ${errors2.join("\n")}`);
         if (status === "duplicate" && !of) throw new Error(`A duplicate needs of: the id of the finding ${id} repeats.`);
         if (status !== "duplicate" && of) throw new Error("of is only for status duplicate.");
         const dirs = [...current ? [current.runDir] : [], ...runs(getContext2().root)];
-        const runDir = dirs.find((d) => existsSync3(join4(d, "findings", `${id}.md`)));
+        const runDir = dirs.find((d) => existsSync4(join5(d, "findings", `${id}.md`)));
         if (!runDir) throw new Error(`No finding ${id} in any run under .jeyna/playtests/.`);
         if (of === id) throw new Error("A finding cannot be a duplicate of itself.");
-        if (of && !existsSync3(join4(runDir, "findings", `${of}.md`))) throw new Error(`No finding ${of} in ${runDir}; of must name a finding of the same run.`);
-        const path = join4(runDir, "findings", `${id}.md`);
-        const m = splitFront(readFileSync2(path, "utf8"));
+        if (of && !existsSync4(join5(runDir, "findings", `${of}.md`))) throw new Error(`No finding ${of} in ${runDir}; of must name a finding of the same run.`);
+        const path = join5(runDir, "findings", `${id}.md`);
+        const m = splitFront(readFileSync3(path, "utf8"));
         const front = m && (0, import_yaml2.parse)(m[1]);
         if (!m || !front || typeof front !== "object") throw new Error(`${path} has no readable frontmatter; fix it by hand.`);
         const next = {};
@@ -207776,7 +207903,7 @@ function projectRoot() {
   const root = given(values.project) ?? given(process.env.CLAUDE_PROJECT_DIR);
   if (root) return resolve2(root);
   for (let dir = process.cwd(); ; dir = dirname(dir)) {
-    if (existsSync4(join5(dir, ".jeyna"))) return dir;
+    if (existsSync5(join6(dir, ".jeyna"))) return dir;
     if (dirname(dir) === dir) break;
   }
   throw new Error(
@@ -207785,11 +207912,11 @@ function projectRoot() {
 }
 function getContext() {
   const root = projectRoot();
-  const file2 = join5(root, ".jeyna", "jeyna.config.yaml");
-  if (!existsSync4(file2)) throw new Error(`No ${file2}. Run /jeyna:init in ${root} to create it.`);
+  const file2 = join6(root, ".jeyna", "jeyna.config.yaml");
+  if (!existsSync5(file2)) throw new Error(`No ${file2}. Run /jeyna:init in ${root} to create it.`);
   let raw;
   try {
-    raw = (0, import_yaml3.parse)(readFileSync3(file2, "utf8"));
+    raw = (0, import_yaml3.parse)(readFileSync4(file2, "utf8"));
   } catch (e) {
     throw new Error(`.jeyna/jeyna.config.yaml is not valid YAML: ${e.message}`);
   }
@@ -207801,8 +207928,8 @@ ${external_exports.prettifyError(parsed.error)}`);
   return { root, config: parsed.data, secrets: secretSources(root, parsed.data) };
 }
 function secretSources(root, config2) {
-  const file2 = join5(root, ".jeyna", ".env");
-  const dotenv3 = existsSync4(file2) ? parseEnv(readFileSync3(file2, "utf8")) : {};
+  const file2 = join6(root, ".jeyna", ".env");
+  const dotenv3 = existsSync5(file2) ? parseEnv2(readFileSync4(file2, "utf8")) : {};
   const names = config2.accounts.flatMap((a) => [a.user_env, a.pass_env]);
   return Object.fromEntries(names.map((n) => [n, process.env[n] ? "env" : dotenv3[n] ? ".env" : "missing"]));
 }
@@ -207840,7 +207967,18 @@ registerBrowserTools(server2, getContext);
 registerFindingTools(server2);
 registerFinishTools(server2, getContext);
 if (positionals[0] === "validate") process.exit(validateCli(positionals[1], projectRoot));
-await server2.connect(new StdioServerTransport2());
+var transport = new StdioServerTransport2();
+var send = transport.send.bind(transport);
+transport.send = (msg) => {
+  let redact = (t) => t;
+  try {
+    const { root, config: config2 } = getContext();
+    redact = redactor(accountValues(root, config2));
+  } catch {
+  }
+  return send(redactDeep(msg, redact));
+};
+await server2.connect(transport);
 log3("jeyna-mcp ready", process.argv.slice(2).join(" "));
 /*! Bundled license information:
 
