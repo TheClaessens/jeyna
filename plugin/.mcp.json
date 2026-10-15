@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "mcp": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/server/jeyna-mcp.mjs", "--project", "${CLAUDE_PROJECT_DIR}"]
+    }
+  }
+}
