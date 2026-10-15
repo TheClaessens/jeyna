@@ -556,3 +556,37 @@ Claude Code 2.1.299, node 20.12.2, macOS arm64. No headless Claude Code session 
 - New: `plugin/skills/init/SKILL.md`, `plugin/templates/{jeyna.config.yaml,CONVENTIONS.md,env}`, `plugin/hooks/{hooks.json,guard-write.sh}`, `src/hooks.test.ts`.
 - `src/server.ts`: `get_context` returns `secrets`.
 - analysis: §5.4 `get_context` row.
+
+---
+
+## D22 · 2026-10-15 · Probes P4 and P5, P1 browser launch (slice 1, issue #3)
+
+Claude Code 2.1.299, node 20.12.2, macOS arm64, Google Chrome 155.0.8059.41, playwright-core 1.64.1. No headless Claude Code session was run (the owner ruled out `claude -p` for cost). Everything below was verified locally by driving the committed bundle over MCP stdio from a folder with no `node_modules` (`src/run.test.ts`, plus a manual client run with stderr visible).
+
+**P1 · browser launch from the committed bundle: verified**
+- The bundle, copied away from `node_modules`, ran `session_start`, `goto`, `snapshot` and `screenshot` against the sample app. Its stderr logged `launched channel chrome, version 155.0.8059.41`.
+- No Chrome process outlived the server: it closes the browser on stdin close, SIGTERM and SIGINT.
+- The D13 fallback (install into `${CLAUDE_PLUGIN_DATA}`) is not needed.
+
+**P4 · installed Chrome: verified locally**
+- `goto` launches the installed Chrome (`channel: "chrome"`, temporary profile, headless).
+- With the channel forced to fail (`JEYNA_BROWSER_CHANNEL=chrome-does-not-exist`) and no Playwright Chromium (`PLAYWRIGHT_BROWSERS_PATH` pointing at an empty folder), `goto` returns a tool error that gives the Chrome launch error and names `npx playwright install chromium`, and the server keeps running.
+- The message also gives the pinned form `npx playwright@1.64.1 install chromium`, because an unpinned `npx playwright` installs the latest Playwright's browser revision, which the bundled 1.64.1 may not find. Whether the pinned command fetches everything headless mode needs is unverified.
+- Not observed: the fallback launching an installed Playwright Chromium. This machine has revisions 1234 and 1243, and 1.64.1 wants 1248.
+
+**P5 · images reach a tester: pending live verification**
+- Verified locally: `screenshot {case: "t1-390x844", look: true}` returns the file name and a 390x844 PNG as MCP image content. Without `look`, it returns the file name only. The PNG, inspected by eye, shows the heading, both fields and "Forgot password?", with no Sign in button: it is entirely off screen to the right. At 1440x900 the button is visible.
+- The aria snapshot at 390x844 lists `button "Sign in"` like any other button, so the snapshot alone cannot show bug 2. This is the premise of P5, confirmed.
+- Not verified: that a spawned `jeyna:jeyna-tester` receives the image and reports the button off screen. That needs a live session: spawn `jeyna:jeyna-tester` on the 390x844 case of a run started in `sample-app/`, and record what it says here.
+- Observed for later: Playwright's aria snapshot with `boxes: true` reports each element's position, which would show the button at x beyond 390 without an image. It is not used, so P5 tests images.
+
+**Also decided in building**
+- `session_start` takes an optional `slug` (default `exploratory`) for the run folder and `flow: exploratory:<slug>`, because explicit-scenario runs have no flow name to take it from (D7). `flow`, `only` and `scout` arrive with flows (ticket 10).
+- Ids: testers are `t1`, `t2`, … in scenario order, and cases are `<tester>-<viewport>`, for example `t1-390x844`.
+- Batch planning (D10): testers that need an account are dealt the pool round-robin, in batches of pool size. `Account: none` testers take no account and run in batch 1. `Account: consumes` testers are dealt last. More consuming scenarios than accounts, or account-needing scenarios with an empty pool, are refused.
+- A stale `running` run is found on disk, so it is also found after a server restart. `force` marks it `aborted` and closes all browser contexts.
+- The `jeyna-tester` allowlist is the three tester tools that exist so far: `goto`, `snapshot`, `screenshot`. `scenario_verdict` joins it in ticket 4.
+
+**Changed**
+- New: `src/session.ts`, `src/browser.ts`, `src/session.test.ts`, `src/run.test.ts`, `plugin/agents/jeyna-tester.md`, `sample-app/server.mjs`, `sample-app/.env.example`, `sample-app/SEEDED-BUGS.md`.
+- `src/server.ts` registers the new tools. `src/schema.ts` adds `Scenario` and `Case`. The bundle is rebuilt.

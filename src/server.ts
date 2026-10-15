@@ -6,6 +6,8 @@ import { parseArgs, parseEnv } from "node:util";
 import { parse } from "yaml";
 import { z } from "zod";
 import { Config } from "./schema.js";
+import { registerSessionTools } from "./session.js";
+import { registerBrowserTools } from "./browser.js";
 
 // stdout is the JSON-RPC channel: log to stderr only.
 const log = (...a: unknown[]) => console.error(new Date().toISOString(), ...a);
@@ -72,6 +74,9 @@ server.registerTool(
     }
   },
 );
+
+registerSessionTools(server, getContext);
+registerBrowserTools(server, getContext);
 
 await server.connect(new StdioServerTransport());
 log("jeyna-mcp ready", process.argv.slice(2).join(" "));
