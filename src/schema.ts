@@ -19,3 +19,13 @@ export const Config = z.strictObject({
 });
 
 export type Config = z.infer<typeof Config>;
+
+export const Scenario = z.strictObject({
+  name: z.string().min(1),
+  description: z.string().min(1),
+  pass: z.string().min(1),
+  account: z.enum(["none", "consumes"]).optional(),
+});
+export type Scenario = z.infer<typeof Scenario>;
+
+export type Case = { id: string; scenario: string; viewport: string };
