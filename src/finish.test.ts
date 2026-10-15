@@ -92,9 +92,13 @@ test("session_finish writes report.md with counts, a verdict in every matrix cel
   expect(out.reportPath).toBe(join(runDir, "report.md"));
   expect(out.counts).toEqual({ cases: 4, pass: 2, fail: 1, blocked: 1, skipped: 0, findings: 3, critical: 1, major: 1, minor: 1, note: 0, duplicate: 0 });
   expect(sessionOf(runDir)).toMatchObject({ status: "done", summary: "Sign in is broken on mobile.", finished: expect.any(String) });
+  const { started, finished, testers } = sessionOf(runDir);
+  expect(out.elapsedSeconds).toBe(Math.round((Date.parse(finished) - Date.parse(started)) / 1000));
+  expect(out.testers).toBe(testers.length);
 
   const md = readFileSync(out.reportPath, "utf8");
   expect(md).toMatch(/^## Summary\n\nSign in is broken on mobile\.$/m);
+  expect(md).toContain(`- **Elapsed:** ${out.elapsedSeconds} s\n- **Testers:** ${out.testers}\n`);
   expect(md).toContain("| Scenario | 1440x900 | 390x844 |");
   expect(md).toContain(`| Sign in | pass [${ids.ux}](findings/${ids.ux}.md) | fail [${ids.bug}](findings/${ids.bug}.md) [${ids.a11y}](findings/${ids.a11y}.md) |`);
   expect(md).toContain("| Landing | pass | blocked (home \\| page down) |");

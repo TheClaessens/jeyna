@@ -699,3 +699,54 @@ Claude Code 2.1.299. No headless Claude Code session was run (the owner ruled ou
 
 **Changed**
 - New: `src/finish.ts`, `src/finish.test.ts`. `src/session.ts` exports `Session`, `save` and `endRun` and adds `summary?`; `src/server.ts` registers the tools and the `validate` subcommand. The bundle is rebuilt.
+
+---
+
+## D28 · 2026-10-15 · `/jeyna:playtest` guided run end to end; P5 and P8 assumed passed (slice 3, issue #9)
+
+Claude Code 2.1.299. No headless Claude Code session was run (the owner ruled out `claude -p` for cost). Verified locally by driving the committed bundle over MCP stdio against the sample app, in the skill's order of tool calls (`src/flow.test.ts`), and with `claude plugin validate` for `./plugin` and `.`.
+
+**Built**
+- Flow files (`.jeyna/flows/<name>.md`, §5.2, D6, D10): YAML frontmatter `name` (equal to the file name), `entry`, optional `viewports` and `accounts`; under `## Scenarios`, `### <name>`, a description paragraph, a `Pass:` line and an optional `Account: none | consumes` line. A malformed flow is reported with what is wrong; `get_context` lists every flow with its scenario names, or its error, and returns the `CONVENTIONS.md` text.
+- `get_flow {name}` returns frontmatter, body and parsed scenarios; an unknown name is refused with the flows that exist.
+- `session_start {flow | scenarios, only?, viewports?, force?}`: exactly one of `flow` (guided) or `scenarios` (exploratory). Unknown scenario names and viewports are refused with the valid ones (D5). A flow's own `viewports` and `accounts` restrict the run. A guided run's folder and finding slug are the flow name, `mode: guided`.
+- `session_finish` also returns `elapsedSeconds` (wall time from `session_start` to `session_finish`) and `testers` (the run's tester count), and `report.md` gains `Elapsed` and `Testers` lines (N5, D14).
+- `plugin/skills/playtest/SKILL.md` (`/jeyna:playtest`, `disable-model-invocation: true`, `argument-hint: "[what to test]"`):
+  1. `get_context`; no config or no `.jeyna/` → tell the developer to run `/jeyna:init` and stop;
+  2. match the request to a flow by flow and scenario names; several → ask; a flow with a parse error → show it; none → say so, list the flows and stop (the exploratory hook is a marked placeholder for issue #10: scout, confirmed scenarios, `session_start {scenarios}`, `save_flow`);
+  3. `get_flow`, then `session_start {flow, only?, viewports?}`; a still-running run is aborted with `force` only after the developer agrees; the plan is stated in one line;
+  4. testers batch by batch, every tester of a batch spawned in one message (parallel), `subagent_type: jeyna:jeyna-tester`, `model` and `effort` from `config.tester` on every spawn (D15), a fixed prompt template that opens with the marker line `jeyna-tester-cases: <ids>`, then app url, entry, cases with viewports, account handle (never a value), scenario, `Pass:`, preconditions, what matters most, conventions;
+  5. `validate`; a case without a verdict gets one re-spawned tester for its missing cases, then a `blocked` verdict with a note from the main agent;
+  6. list the run's `findings/` and `Read` each; mark duplicates with `update_status` (keep the lowest number);
+  7. `session_finish {summary}`; report summary, counts, top findings, report path, elapsed time and tester count (D12, D14).
+- `sample-app/flows/todos.md`: a hand-written flow with three scenarios (`Account: none` sign-in page, add a todo with a priority, complete and delete a todo). Copy it to `.jeyna/flows/` after `/jeyna:init`.
+- The scripted guided run in `src/flow.test.ts` makes the skill's calls in the skill's order (`get_context`, `get_flow`, `session_start`, testers per batch in parallel each with one `look: true` screenshot per case, `validate`, reading `findings/`, `update_status`, `session_finish`), builds each tester prompt from the template in `SKILL.md`, feeds it to `check-exit.sh` mid-run (blocks naming only that tester's unverdicted cases, allows once all are in), finds bugs 2, 3 and 4, and the folder passes the shell `validate`.
+- `plugin/agents/jeyna-tester.md` describes the prompt the skill sends; its allowlist stays the eight tester tools of D26 (no run-control tool). `plugin/templates/CONVENTIONS.md` gains a Layout section: one looked-at screenshot per viewport, layout problems are findings.
+
+**P5 and P8: never confirmed live; built on the pass branch, pending live verification**
+P5 (a spawned tester perceives a `look: true` image, D22) and P8 (Claude Code sends two same-message testers' calls concurrently, D24) were verified only on the server side. Both are assumed to pass:
+- every tester takes one `screenshot {look: true}` per case once the first page has settled (F4.7), and CONVENTIONS says layout problems are findings;
+- testers of the same batch are spawned in one message, in parallel.
+
+If P5 fails (the tester cannot see the image), make these edits:
+- `plugin/agents/jeyna-tester.md`: delete step 3 (the `look: true` screenshot) and add: "You read pages only through `snapshot`. Take screenshots only as evidence; you cannot see them."
+- `plugin/skills/playtest/SKILL.md` step 4: replace the sentence about one `look: true` screenshot per case with "Testers are snapshot-only: they read pages through `snapshot` and take screenshots only as evidence (D28, P5 failed)."
+- `plugin/templates/CONVENTIONS.md`: replace the Layout section with "Testers are snapshot-only. Layout (cut-off, overlapping or off-screen content) is out of scope in v0; do not record layout findings." Existing projects' `.jeyna/CONVENTIONS.md` need the same edit by hand.
+- `src/flow.test.ts`: the scripted tester takes no `look: true` screenshot; bug 2 is then not expected to be found.
+
+If P8 fails (same-message testers' calls never overlap):
+- `plugin/skills/playtest/SKILL.md` step 4: replace "spawn every tester of that batch in one message (…), so they run in parallel" with "spawn the testers of that batch one at a time, each after the previous one has returned"; batches keep their order (accounts still never overlap).
+- `src/flow.test.ts`: play the testers of a batch in sequence instead of `Promise.all`.
+- No server change (D24).
+
+**Pending live verification**
+- A live `/jeyna:playtest todos` run in `sample-app/` (after `/jeyna:init` and copying `sample-app/flows/todos.md` to `.jeyna/flows/`): the skill matches the flow, states the plan, spawns the testers with the configured model and effort, the testers follow the prompt, the main agent marks the duplicate and finishes, and the run folder passes `node plugin/server/jeyna-mcp.mjs validate`. Record the elapsed time and tester count here.
+- In the same run: P5 (a 390x844 tester reports the off-screen Sign in button from its `look: true` image) and P8 (overlapping `start`/`end` spans in the server's stderr for testers of one batch). On a failure apply the edits above.
+- Whether the Agent tool accepts `effort` per spawn as D15 assumes (doc-sourced, v2.1.292+).
+- The no-`.jeyna/` message: `/jeyna:playtest` in a project without `.jeyna/` tells the developer to run `/jeyna:init` (the server's error text is verified locally).
+
+**Changed**
+- New: `src/flows.ts`, `src/flow.test.ts`, `sample-app/flows/todos.md`, `plugin/skills/playtest/SKILL.md`.
+- `src/server.ts`: `get_context` returns `conventions` and `flows`; registers `get_flow`. `src/session.ts`: `session_start` takes `flow`, `only`, `viewports`. `src/finish.ts`: `elapsedSeconds`, `testers`, report lines. `src/finish.test.ts`, `src/server.test.ts`.
+- `plugin/agents/jeyna-tester.md` (prompt description), `plugin/templates/CONVENTIONS.md` (Layout).
+- analysis: §5.4 `session_finish` row. The bundle is rebuilt.

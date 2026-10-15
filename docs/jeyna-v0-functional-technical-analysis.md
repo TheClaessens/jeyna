@@ -240,7 +240,7 @@ Run family:
 | `record_finding` | `{case, finding: FindingInput}` | `{id, path}`; refused if kind is `bug` with no evidence, or an evidence file does not exist |
 | `update_status` | `{id, status, of?, note?}` | ok; `of` required when status is `duplicate` |
 | `validate` | `{run?}` | `{errors: string[]}` |
-| `session_finish` | `{summary}` | `{reportPath, counts}`, or a tool error listing validation errors (run stays `running`) |
+| `session_finish` | `{summary}` | `{reportPath, counts, elapsedSeconds, testers}` (elapsed since `session_start`, N5), or a tool error listing validation errors (run stays `running`) |
 
 Browser family (all `{case, …}`; `case: "scout"` is reserved for the pre-session look, F2.3):
 

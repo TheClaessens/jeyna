@@ -4,6 +4,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, writeFile
 import { join } from "node:path";
 import { z } from "zod";
 import { closeContexts } from "./browser.js";
+import { readFlow } from "./flows.js";
 import { type Case, type Config, Scenario } from "./schema.js";
 
 export type Tester = { id: string; scenario: string; account?: string; batch: number; cases: Case[] };
@@ -102,19 +103,41 @@ export function registerSessionTools(server: McpServer, getContext: () => { root
     "session_start",
     {
       description:
-        "Start a playtest run from an explicit scenario list. Plans one tester per scenario, one case per viewport, one account per tester, and the batch to spawn each tester in (no account is held by two testers in one batch). Refused while another run is running unless force is true.",
+        "Start a playtest run, guided from a flow in .jeyna/flows/ or exploratory from an explicit scenario list. only and viewports narrow the run; unknown names are refused with the valid ones. Plans one tester per scenario, one case per viewport, one account per tester, and the batch to spawn each tester in (no account is held by two testers in one batch). Refused while another run is running unless force is true.",
       inputSchema: {
-        scenarios: z.array(Scenario).min(1),
-        slug: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "lowercase words joined by '-'").default("exploratory"),
+        flow: z.string().optional().describe("Flow name from get_context (guided run)"),
+        scenarios: z.array(Scenario).min(1).optional().describe("Explicit scenario list (exploratory run)"),
+        only: z.array(z.string()).min(1).optional().describe("Scenario names to run; default all"),
+        slug: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "lowercase words joined by '-'").optional().describe("Run folder slug of an exploratory run; default exploratory"),
         viewports: z.array(z.string()).min(1).optional(),
         force: z.boolean().default(false),
       },
     },
-    async ({ scenarios, slug, viewports, force }) => {
+    async ({ flow: flowName, scenarios: given, only, slug, viewports, force }) => {
       try {
         const { root, config } = getContext();
-        const unknown = (viewports ?? []).filter((v) => !config.viewports.includes(v));
-        if (unknown.length) throw new Error(`Unknown viewports: ${unknown.join(", ")}. Configured: ${config.viewports.join(", ")}.`);
+        if (!flowName === !given) throw new Error("session_start needs flow (guided) or scenarios (exploratory), not both.");
+        const flow = flowName ? readFlow(root, flowName) : undefined;
+        if (flow && slug) throw new Error("slug is for exploratory runs; a guided run is named after its flow.");
+        let scenarios = flow?.scenarios ?? given!;
+        if (only) {
+          const unknownScenarios = only.filter((n) => !scenarios.some((s) => s.name === n));
+          if (unknownScenarios.length) {
+            const of = flow ? `Scenarios of flow ${flowName}` : "Scenarios given";
+            throw new Error(`Unknown scenarios: ${unknownScenarios.join(", ")}. ${of}: ${scenarios.map((s) => s.name).join(", ")}.`);
+          }
+          scenarios = scenarios.filter((s) => only.includes(s.name));
+        }
+        const valid = flow?.frontmatter.viewports ?? config.viewports;
+        const unknown = (viewports ?? []).filter((v) => !valid.includes(v));
+        if (unknown.length) {
+          const where = flow?.frontmatter.viewports ? `Flow ${flowName} runs at` : "Configured";
+          throw new Error(`Unknown viewports: ${unknown.join(", ")}. ${where}: ${valid.join(", ")}.`);
+        }
+        const handles = config.accounts.map((a) => a.handle);
+        const strangers = (flow?.frontmatter.accounts ?? []).filter((h) => !handles.includes(h));
+        if (strangers.length) throw new Error(`Flow ${flowName} names accounts not in jeyna.config.yaml: ${strangers.join(", ")}. Configured: ${handles.join(", ") || "none"}.`);
+        const pool = flow?.frontmatter.accounts ?? handles;
         const names = scenarios.map((s) => s.name);
         const dupes = names.filter((n, i) => names.indexOf(n) !== i);
         if (dupes.length) throw new Error(`Scenario names must be unique: ${dupes.join(", ")}.`);
@@ -124,7 +147,7 @@ export function registerSessionTools(server: McpServer, getContext: () => { root
         if (stale.length && !force) {
           throw new Error(`A run is still running: ${stale.join(", ")}. Call session_start with force: true to abort it.`);
         }
-        const testers = planTesters(scenarios, config.accounts.map((a) => a.handle), viewports ?? config.viewports);
+        const testers = planTesters(scenarios, pool, viewports ?? valid);
 
         for (const d of stale) {
           const s = d === current?.runDir ? current.session : (JSON.parse(readFileSync(join(d, "session.json"), "utf8")) as Session);
@@ -133,7 +156,7 @@ export function registerSessionTools(server: McpServer, getContext: () => { root
         current = undefined;
         await closeContexts();
 
-        const base = `${new Date().toLocaleDateString("sv")}-${slug}`;
+        const base = `${new Date().toLocaleDateString("sv")}-${flowName ?? slug ?? "exploratory"}`;
         let id = base;
         for (let n = 2; existsSync(join(dir, id)); n++) id = `${base}-${n}`;
         const runDir = join(dir, id);
@@ -141,12 +164,12 @@ export function registerSessionTools(server: McpServer, getContext: () => { root
         const session: Session = {
           schema: 1,
           id,
-          flow: `exploratory:${slug}`,
+          flow: flowName ?? `exploratory:${slug ?? "exploratory"}`,
           app: config.app.name,
           build: buildId(root, config),
           status: "running",
           started: new Date().toISOString(),
-          mode: "exploratory",
+          mode: flow ? "guided" : "exploratory",
           scenarios,
           testers: testers.map((t) => ({ ...t, model: config.tester.model, cases: t.cases.map((c) => c.id) })),
           cases: testers.flatMap((t) => t.cases),

@@ -11,6 +11,7 @@ import { registerBrowserTools } from "./browser.js";
 import { accountValues, redactDeep, redactor } from "./accounts.js";
 import { registerFindingTools } from "./findings.js";
 import { registerFinishTools, validateCli } from "./finish.js";
+import { listFlows, registerFlowTools } from "./flows.js";
 
 // stdout is the JSON-RPC channel: log to stderr only.
 const log = (...a: unknown[]) => console.error(new Date().toISOString(), ...a);
@@ -81,13 +82,21 @@ server.registerTool = ((name: string, config: unknown, handler: (...a: unknown[]
 server.registerTool(
   "get_context",
   {
-    description: "Jeyna project root and validated .jeyna/jeyna.config.yaml (account env variable names only, never values).",
+    description:
+      "Jeyna project root, validated .jeyna/jeyna.config.yaml (account env variable names only, never values), where each account variable is set, the CONVENTIONS.md text, and the flows in .jeyna/flows/ with their scenario names.",
     inputSchema: {},
     annotations: { readOnlyHint: true },
   },
   async () => {
     try {
-      return { content: [{ type: "text", text: JSON.stringify(getContext()) }] };
+      const ctx = getContext();
+      const conventions = join(ctx.root, ".jeyna", "CONVENTIONS.md");
+      const text = JSON.stringify({
+        ...ctx,
+        conventions: existsSync(conventions) ? readFileSync(conventions, "utf8") : null,
+        flows: listFlows(ctx.root),
+      });
+      return { content: [{ type: "text", text }] };
     } catch (e) {
       return { isError: true, content: [{ type: "text", text: (e as Error).message }] };
     }
@@ -98,6 +107,7 @@ registerSessionTools(server, getContext);
 registerBrowserTools(server, getContext);
 registerFindingTools(server);
 registerFinishTools(server, getContext);
+registerFlowTools(server, getContext);
 
 // `node jeyna-mcp.mjs validate [runDir]` lints a run folder from a shell instead of serving MCP (F8.2).
 if (positionals[0] === "validate") process.exit(validateCli(positionals[1], projectRoot));
