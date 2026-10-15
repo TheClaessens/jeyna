@@ -492,3 +492,36 @@ Dated entries from grill sessions. Each entry: the decision, the reason, and wha
 - New `docs/first-slice.md`.
 - concept: build order step 0.
 - analysis: §6 AC4.
+
+---
+
+## D20 · 2026-10-15 · Probes P1 and P2 (slice 1, issue #1)
+
+Claude Code 2.1.299, node 20.12.2, macOS arm64. No headless Claude Code session was run: the login had expired and the owner ruled out `claude -p` runs for cost. Everything below was verified locally.
+
+**P1 · `playwright-core` bundles: verified locally, browser launch from the committed bundle still to re-check in #3**
+- `npm run build` (`build.mjs`, esbuild single-file ESM) writes `plugin/server/jeyna-mcp.mjs` plus `plugin/server/pw/{package,browsers}.json`.
+- `src/server.test.ts` copies `plugin/server/` into a temp folder with no `node_modules` above it and drives the bundle over MCP stdio with the SDK client. All eight tests pass.
+- The issue #1 bundle contains no browser code yet (that arrives with `goto` in #3), so this run does not launch a browser. The same esbuild settings were verified in a probe experiment the same day: the bundle launched Google Chrome (`channel: "chrome"`) from a folder with no `node_modules` and returned an aria snapshot and PNG. Three fixes are needed and live in `build.mjs`:
+  - mark `chromium-bidi` external;
+  - a banner that defines `require`, `__filename` and `__dirname`;
+  - ship `pw/package.json` and `pw/browsers.json`, because playwright-core reads them at import time.
+- No D13 fallback (install into `${CLAUDE_PLUGIN_DATA}`) is needed so far.
+
+**P2 · Project root: pending live verification**
+- The server resolves the root in this order (D7, D13):
+  1. `--project`;
+  2. `CLAUDE_PROJECT_DIR` from its environment;
+  3. the nearest folder with `.jeyna/` above its working directory;
+  4. otherwise an explicit error.
+- An unexpanded literal `${CLAUDE_PROJECT_DIR}` counts as absent.
+- Each step is covered by a test against the bundle.
+- Not yet observed: which of these Claude Code actually supplies to a plugin MCP server. That needs `get_context` from a real session started in `sample-app/`.
+
+**Also verified**
+- `claude plugin validate ./plugin` and `claude plugin validate .` (marketplace) pass.
+- `claude --plugin-dir ./plugin plugin details jeyna` lists one MCP server, `mcp`. So the tool's full name should be `mcp__plugin_jeyna_mcp__get_context` (D1), but no live session has confirmed it.
+- An invalid config (bad URL, bad viewport, misspelt key, account value in place of an env variable name, broken YAML) returns an `isError` result naming each field, and the server keeps running.
+
+**Changed**
+- New: `package.json`, `tsconfig.json`, `build.mjs`, `src/server.ts`, `src/schema.ts`, `src/server.test.ts`, `.claude-plugin/marketplace.json`, `plugin/.claude-plugin/plugin.json`, `plugin/.mcp.json`, `plugin/server/` (committed bundle).

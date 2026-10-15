@@ -1,0 +1,8 @@
+{
+  "name": "jeyna",
+  "description": "Jeyna: agentic playtesting for Claude Code",
+  "owner": { "name": "Thomas Claessens" },
+  "plugins": [
+    { "name": "jeyna", "source": "./plugin", "description": "Playtest a web app with Claude Code subagents" }
+  ]
+}
