@@ -6,6 +6,7 @@ import pw from "playwright-core/package.json" with { type: "json" };
 import { z } from "zod";
 import type { Config } from "./schema.js";
 import { current, fail, ok } from "./session.js";
+import { accountValues, substitute } from "./accounts.js";
 
 const log = (...a: unknown[]) => console.error(new Date().toISOString(), ...a);
 
@@ -69,7 +70,28 @@ function page(caseId: string, config: Config): Promise<Page> {
   return p;
 }
 
-const SNAPSHOT_MAX = 90_000; // just under Claude Code's default 25k-token MCP output cap (D14)
+const ACT_TIMEOUT = 5_000; // a miss should come back fast, with candidates, not after Playwright's 30 s
+
+const CONTROL = /^\s*- (button|link|textbox|combobox|checkbox|radio|menuitem|tab|option|searchbox|switch|slider|spinbutton) "((?:[^"\\]|\\.)*)"/gm;
+const words = (s: string) => s.toLowerCase().match(/[a-z0-9]+/g) ?? [];
+
+// The controls a selector most likely meant: aria-tree controls ranked by words shared with it (F5.2).
+export function nearest(selector: string, aria: string, max = 5): string[] {
+  const wanted = new Set(words(selector));
+  const found = [...aria.matchAll(CONTROL)].map(([, role, name], i) => ({
+    sel: `role=${role}[name="${name}"]`,
+    score: words(name).filter((w) => wanted.has(w)).length + (wanted.has(role) ? 0.5 : 0),
+    i,
+  }));
+  return [...new Set(found.sort((a, b) => b.score - a.score || a.i - b.i).map((c) => c.sel))].slice(0, max);
+}
+
+async function settled(p: Page) {
+  await p.waitForLoadState("load").catch(() => {});
+  return ok({ url: p.url(), title: await p.title() });
+}
+
+const SNAPSHOT_MAX =90_000; // just under Claude Code's default 25k-token MCP output cap (D14)
 
 export function registerBrowserTools(server: McpServer, getContext: () => { root: string; config: Config }) {
   const caseId = z.string().describe("Case id from session_start, e.g. t1-390x844");
@@ -87,6 +109,79 @@ export function registerBrowserTools(server: McpServer, getContext: () => { root
         const p = await page(a.case, config);
         await p.goto(a.url ?? new URL(a.path!, config.app.url).href, { waitUntil: "load" });
         return ok({ url: p.url(), title: await p.title() });
+      } catch (e) {
+        return fail(e);
+      }
+    },
+  );
+
+  const selector = z.string().describe('Playwright selector, e.g. role=button[name="Sign in"], #email, text=Forgot password?');
+
+  server.registerTool(
+    "click",
+    {
+      description:
+        "Click the element a Playwright selector matches. On a miss, the error lists the nearest candidates from the page's accessibility tree. Returns the url and title after the click.",
+      inputSchema: { case: caseId, selector },
+    },
+    async (a) => {
+      try {
+        const p = await page(a.case, getContext().config);
+        try {
+          await p.locator(a.selector).click({ timeout: ACT_TIMEOUT });
+        } catch (e) {
+          const near = nearest(a.selector, await p.locator("body").ariaSnapshot().catch(() => ""));
+          throw new Error(
+            `Could not click ${a.selector}: ${(e as Error).message.split("\n")[0]}\n` +
+              (near.length ? `Nearest candidates:\n${near.map((n) => `- ${n}`).join("\n")}` : "The page has no clickable controls."),
+          );
+        }
+        return await settled(p);
+      } catch (e) {
+        return fail(e);
+      }
+    },
+  );
+
+  server.registerTool(
+    "fill",
+    {
+      description:
+        "Type a value into an input, or choose an option (by value or label) in a <select>. Write account credentials as {{account.user}} and {{account.pass}}: the server fills in your case's account and you never see the values.",
+      inputSchema: { case: caseId, selector, value: z.string() },
+    },
+    async (a) => {
+      try {
+        const { root, config } = getContext();
+        const p = await page(a.case, config);
+        const handle = current!.session.testers.find((t) => t.cases.includes(a.case))?.account;
+        const value = substitute(a.value, accountValues(root, config).find((x) => x.handle === handle), a.case);
+        const el = p.locator(a.selector);
+        const tag = await el.evaluate((e) => e.tagName, undefined, { timeout: ACT_TIMEOUT });
+        if (tag === "SELECT") await el.selectOption(value, { timeout: ACT_TIMEOUT });
+        else await el.fill(value, { timeout: ACT_TIMEOUT });
+        return ok({ filled: a.selector });
+      } catch (e) {
+        return fail(e);
+      }
+    },
+  );
+
+  server.registerTool(
+    "press",
+    {
+      description:
+        "Press a key or combination (Enter, Tab, Escape, Shift+Tab...) on the focused element. Returns the url and title after.",
+      inputSchema: { case: caseId, key: z.string() },
+    },
+    async (a) => {
+      try {
+        const p = await page(a.case, getContext().config);
+        // Through a locator, so a navigation the key starts (Enter in a form) is waited for, as with click.
+        const focused = p.locator("*:focus");
+        if (await focused.count()) await focused.press(a.key, { timeout: ACT_TIMEOUT });
+        else await p.keyboard.press(a.key);
+        return await settled(p);
       } catch (e) {
         return fail(e);
       }

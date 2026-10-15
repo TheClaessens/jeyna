@@ -8,6 +8,7 @@ import { z } from "zod";
 import { Config } from "./schema.js";
 import { registerSessionTools } from "./session.js";
 import { registerBrowserTools } from "./browser.js";
+import { accountValues, redactDeep, redactor } from "./accounts.js";
 
 // stdout is the JSON-RPC channel: log to stderr only.
 const log = (...a: unknown[]) => console.error(new Date().toISOString(), ...a);
@@ -78,5 +79,17 @@ server.registerTool(
 registerSessionTools(server, getContext);
 registerBrowserTools(server, getContext);
 
-await server.connect(new StdioServerTransport());
+// Every message leaves through here, so account values are replaced by their placeholders once,
+// for every tool and every error (D9). Values are re-read per message: .jeyna/.env may change mid-run.
+const transport = new StdioServerTransport();
+const send = transport.send.bind(transport);
+transport.send = (msg) => {
+  let redact = (t: string) => t;
+  try {
+    const { root, config } = getContext();
+    redact = redactor(accountValues(root, config));
+  } catch {} // no valid config: no account values to know of
+  return send(redactDeep(msg, redact));
+};
+await server.connect(transport);
 log("jeyna-mcp ready", process.argv.slice(2).join(" "));
