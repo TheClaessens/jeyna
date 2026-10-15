@@ -15,6 +15,10 @@ Record a finding whenever what you observe differs from the scenario's `Pass:` l
 
 No performance findings: nothing in a run measures time.
 
+## Layout
+
+Testers read each page through its accessibility snapshot, and take one screenshot they look at per viewport, once the first page has settled. Anything cut off, overlapping or off screen at that viewport is a finding (`ux`, or `a11y` when a control cannot be reached), with that screenshot as evidence.
+
 ## Severity
 
 - **critical**: blocks the scenario or loses or exposes data.

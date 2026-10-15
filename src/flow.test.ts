@@ -1,13 +1,13 @@
 // Flows: parsing, get_flow, get_context's flow list and guided session_start, driven over MCP stdio against the committed bundle.
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-import { spawn, spawnSync, type ChildProcess } from "node:child_process";
+import { execFileSync, spawn, spawnSync, type ChildProcess } from "node:child_process";
 import { cpSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, afterEach, beforeAll, expect, test } from "vitest";
 
-const PORT = 4932;
+const PORT = 4933;
 let bundle: string;
 let app: ChildProcess;
 const clients: Client[] = [];
@@ -171,12 +171,59 @@ const ENV = {
   JEYNA_USER_B_PASS: "correct-horse-b",
 };
 
-type Tester = { id: string; scenario: string; batch: number; cases: { id: string; viewport: string }[] };
+type Tester = { id: string; scenario: string; account?: string; batch: number; cases: { id: string; viewport: string }[] };
+
+// The tester prompt template of skills/playtest/SKILL.md step 4, filled in the way the skill says.
+const TEMPLATE = /`prompt`: exactly this template[^\n]*\n\n```\n([\s\S]*?)\n```/.exec(readFileSync("plugin/skills/playtest/SKILL.md", "utf8"))![1];
+const section = (body: string, heading: string) => [...body.matchAll(/^## (.+)\n([\s\S]*?)(?=^## |(?![\s\S]))/gm)].find((m) => m[1] === heading)?.[2].trim();
+function testerPrompt(t: Tester, ctx: { config: { app: { url: string } }; conventions: string | null }, flow: { frontmatter: { entry: string }; body: string; scenarios: { name: string; description: string; pass: string }[] }) {
+  const s = flow.scenarios.find((x) => x.name === t.scenario)!;
+  return [
+    `jeyna-tester-cases: ${t.cases.map((c) => c.id).join(", ")}`,
+    `App: ${ctx.config.app.url}`,
+    `Entry: ${flow.frontmatter.entry}`,
+    "Cases, in order:",
+    ...t.cases.map((c) => `- ${c.id} at ${c.viewport}`),
+    t.account ? `Account: ${t.account}. Sign in with {{account.user}} and {{account.pass}}.` : "Account: none. Do not sign in.",
+    "",
+    `Scenario: ${s.name}`,
+    s.description,
+    `Pass: ${s.pass}`,
+    "",
+    "Preconditions:",
+    section(flow.body, "Preconditions") ?? "None given.",
+    "",
+    "What matters most here:",
+    section(flow.body, "What matters most here") ?? "Nothing given.",
+    "",
+    "Conventions:",
+    ctx.conventions ?? "",
+  ].join("\n");
+}
+
+// The tester SubagentStop check (plugin/hooks/check-exit.sh) fed a transcript that opens with this prompt.
+function exitCheck(root: string, prompt: string) {
+  const transcript = join(root, `agent-${Math.random().toString(36).slice(2)}.jsonl`);
+  writeFileSync(transcript, JSON.stringify({ type: "user", isSidechain: true, message: { role: "user", content: prompt } }) + "\n");
+  const out = execFileSync("sh", ["plugin/hooks/check-exit.sh"], {
+    input: JSON.stringify({ hook_event_name: "SubagentStop", stop_hook_active: false, agent_type: "jeyna:jeyna-tester", agent_transcript_path: transcript, cwd: root }),
+    env: { ...process.env, CLAUDE_PROJECT_DIR: root },
+    encoding: "utf8",
+  });
+  return out ? JSON.parse(out) : undefined;
+}
+
+test("the skill's tester prompt template has the marker line first and the fields the tester agent expects", () => {
+  const labels = TEMPLATE.split("\n").map((l) => /^([A-Za-z ,]+):/.exec(l)?.[1]).filter(Boolean);
+  expect(TEMPLATE.split("\n")[0]).toMatch(/^jeyna-tester-cases: </);
+  expect(labels).toEqual(["App", "Entry", "Cases, in order", "Account", "Scenario", "Pass", "Preconditions", "What matters most here", "Conventions"]);
+});
 
 // The tool calls /jeyna:playtest todos makes, in the skill's order, with scripted testers in place of
 // spawned ones. The live skill run is pending (decisions.md).
 test("a guided run on the sample app, driven the way the skill drives it, produces a folder that passes the shell validate", async () => {
   const root = project();
+  writeFileSync(join(root, ".jeyna", "CONVENTIONS.md"), readFileSync("plugin/templates/CONVENTIONS.md", "utf8"));
   const { call, text, json } = await connect(root, ENV);
   const must = async (name: string, args: Record<string, unknown>) => {
     const r = await call(name, args);
@@ -184,7 +231,7 @@ test("a guided run on the sample app, driven the way the skill drives it, produc
     return r;
   };
 
-  // Skill steps 1–3: context, the flow the prompt names, the run.
+  // Skill steps 1–3: context, the flow the request names, the run.
   const ctx = await json("get_context");
   expect(ctx.flows).toEqual([{ name: "todos", scenarios: expect.any(Array) }]);
   const flow = await json("get_flow", { name: "todos" });
@@ -198,6 +245,7 @@ test("a guided run on the sample app, driven the way the skill drives it, produc
 
   // A tester (agents/jeyna-tester.md): per case, goto the entry, snapshot, one look: true screenshot (F4.7), play, record, verdict.
   const play = async (t: Tester) => {
+    const prompt = testerPrompt(t, ctx, flow);
     for (const { id: c, viewport } of t.cases) {
       await must("goto", { case: c, path: flow.frontmatter.entry });
       const snap = text(await must("snapshot", { case: c }));
@@ -233,18 +281,33 @@ test("a guided run on the sample app, driven the way the skill drives it, produc
           await must("scenario_verdict", { case: c, result: "pass" });
         }
       }
+      // Mid-run, the exit check finds this tester's later cases unverdicted from the marker line alone.
+      const rest = t.cases.slice(t.cases.findIndex((x) => x.id === c) + 1).map((x) => x.id);
+      const stop = exitCheck(root, prompt);
+      if (rest.length) expect(stop.reason).toContain(rest.join(", "));
+      else expect(stop).toBeUndefined();
     }
   };
+  expect(testers.map((t) => testerPrompt(t, ctx, flow).split("\n")[0])).toEqual(
+    testers.map((t) => `jeyna-tester-cases: ${t.cases.map((c) => c.id).join(", ")}`),
+  );
+  expect(testerPrompt(testers[0], ctx, flow)).toContain("Account: none. Do not sign in.");
+
   // Skill step 4: batch by batch, the testers of a batch in parallel (P8).
   for (const batch of [...new Set(testers.map((t) => t.batch))].sort()) await Promise.all(testers.filter((t) => t.batch === batch).map(play));
 
-  // Skill step 6: validate, read the findings, mark the cross-scenario duplicate, finish.
+  // Skill steps 5–7: validate, read the findings, mark the cross-scenario duplicate, finish.
   expect((await json("validate")).errors).toEqual([]);
-  expect(readdirSync(join(run.runDir, "findings"))).toHaveLength(5);
-  await must("update_status", { id: ids.labelAgain, status: "duplicate", of: ids.label });
+  const files = readdirSync(join(run.runDir, "findings"));
+  expect(files).toHaveLength(5);
+  const read = Object.fromEntries(files.map((f) => [f.slice(0, -3), readFileSync(join(run.runDir, "findings", f), "utf8")]));
+  expect(read[ids.labelAgain]).toMatch(/^# Password field has no label$/m);
+  const [kept, dupe] = [ids.label, ids.labelAgain].sort(); // the skill keeps the lowest number
+  await must("update_status", { id: dupe, status: "duplicate", of: kept });
   const done = JSON.parse(text(await must("session_finish", { summary: "Priority is dropped on save; the sign-in page has an unlabelled field and an off-screen button on phones." })));
   expect(done.counts).toMatchObject({ cases: 6, pass: 2, fail: 4, findings: 4, duplicate: 1 });
   expect(done.elapsedSeconds).toEqual(expect.any(Number));
+  expect(done.testers).toBe(testers.length);
 
   // Skill step 7 promises a folder the shell validate accepts.
   const env = { ...process.env };

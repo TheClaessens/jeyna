@@ -20895,10 +20895,10 @@ var require_utilsBundle = __commonJS2({
           ratio = Math.min(Math.max(ratio, 0), 1);
           var percent = Math.floor(ratio * 100);
           var incomplete, complete, completeLength;
-          var elapsed = /* @__PURE__ */ new Date() - this.start;
-          var eta = percent == 100 ? 0 : elapsed * (this.total / this.curr - 1);
-          var rate = this.curr / (elapsed / 1e3);
-          var str = this.fmt.replace(":current", this.curr).replace(":total", this.total).replace(":elapsed", isNaN(elapsed) ? "0.0" : (elapsed / 1e3).toFixed(1)).replace(":eta", isNaN(eta) || !isFinite(eta) ? "0.0" : (eta / 1e3).toFixed(1)).replace(":percent", percent.toFixed(0) + "%").replace(":rate", Math.round(rate));
+          var elapsed2 = /* @__PURE__ */ new Date() - this.start;
+          var eta = percent == 100 ? 0 : elapsed2 * (this.total / this.curr - 1);
+          var rate = this.curr / (elapsed2 / 1e3);
+          var str = this.fmt.replace(":current", this.curr).replace(":total", this.total).replace(":elapsed", isNaN(elapsed2) ? "0.0" : (elapsed2 / 1e3).toFixed(1)).replace(":eta", isNaN(eta) || !isFinite(eta) ? "0.0" : (eta / 1e3).toFixed(1)).replace(":percent", percent.toFixed(0) + "%").replace(":rate", Math.round(rate));
           var availableSpace = Math.max(0, this.stream.columns - str.replace(":bar", "").length);
           if (availableSpace && process.platform === "win32") {
             availableSpace = availableSpace - 1;
@@ -42566,14 +42566,14 @@ ${end.comment}` : end.comment;
           }
           async keypress(input2, key = input2 ? keypress(input2, {}) : {}) {
             const now = Date.now();
-            const elapsed = now - this.lastKeypress;
+            const elapsed2 = now - this.lastKeypress;
             this.lastKeypress = now;
             const isEnterKey = key.name === "return" || key.name === "enter";
             let prev = this.state.prevKeypress;
             let append;
             this.state.prevKeypress = key;
             if (this.keypressTimeout != null && isEnterKey) {
-              if (elapsed < this.keypressTimeout) {
+              if (elapsed2 < this.keypressTimeout) {
                 return this.submit();
               }
               this.state.multilineBuffer = this.state.multilineBuffer || "";
@@ -207804,6 +207804,7 @@ function validateRun(runDir) {
 }
 var cell = (s) => s.replace(/\|/g, "\\|").replace(/\s*\n\s*/g, " ");
 var link = (id) => `[${id}](findings/${id}.md)`;
+var elapsed = (s) => Math.round((Date.parse(s.finished) - Date.parse(s.started)) / 1e3);
 function report(runDir, session) {
   const findings = readFindings(runDir, session).filter((f) => f.front);
   findings.sort(
@@ -207837,7 +207838,9 @@ function report(runDir, session) {
       `- **Flow:** ${session.flow}`,
       `- **Build:** ${session.build}`,
       `- **Started:** ${session.started}`,
-      `- **Finished:** ${session.finished}`
+      `- **Finished:** ${session.finished}`,
+      `- **Elapsed:** ${elapsed(session)} s`,
+      `- **Testers:** ${session.testers.length}`
     ].join("\n"),
     `## Summary
 
@@ -207921,7 +207924,7 @@ function registerFinishTools(server3, getContext2) {
   server3.registerTool(
     "session_finish",
     {
-      description: "End the running run: runs the validate checks and refuses with the error list while any remain (the run stays running); otherwise writes report.md, sets status done and closes the browser contexts. Returns {reportPath, counts}.",
+      description: "End the running run: runs the validate checks and refuses with the error list while any remain (the run stays running); otherwise writes report.md, sets status done and closes the browser contexts. Returns {reportPath, counts, elapsedSeconds, testers}: elapsed is the wall time since session_start.",
       inputSchema: { summary: external_exports.string().min(1).describe("A short summary of the run for the top of report.md") }
     },
     async ({ summary }) => {
@@ -207940,7 +207943,7 @@ ${errors2.join("\n")}`);
         save(runDir, session);
         endRun();
         await closeContexts();
-        return ok({ reportPath: join6(runDir, "report.md"), counts });
+        return ok({ reportPath: join6(runDir, "report.md"), counts, elapsedSeconds: elapsed(session), testers: session.testers.length });
       } catch (e) {
         return fail(e);
       }

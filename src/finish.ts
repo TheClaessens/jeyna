@@ -104,6 +104,9 @@ export function validateRun(runDir: string): string[] {
 const cell = (s: string) => s.replace(/\|/g, "\\|").replace(/\s*\n\s*/g, " ");
 const link = (id: string) => `[${id}](findings/${id}.md)`;
 
+// Wall time from session_start to session_finish, in whole seconds (N5, D14).
+const elapsed = (s: Session) => Math.round((Date.parse(s.finished!) - Date.parse(s.started)) / 1000);
+
 // report.md (F7.3): summary counts, scenario matrix, findings sorted by severity then kind. Plain markdown, no HTML.
 function report(runDir: string, session: Session) {
   const findings = readFindings(runDir, session).filter((f) => f.front) as (Finding & { front: FindingFront })[];
@@ -144,6 +147,8 @@ function report(runDir: string, session: Session) {
       `- **Build:** ${session.build}`,
       `- **Started:** ${session.started}`,
       `- **Finished:** ${session.finished}`,
+      `- **Elapsed:** ${elapsed(session)} s`,
+      `- **Testers:** ${session.testers.length}`,
     ].join("\n"),
     `## Summary\n\n${session.summary}`,
     table(
@@ -235,7 +240,7 @@ export function registerFinishTools(server: McpServer, getContext: () => { root:
     "session_finish",
     {
       description:
-        "End the running run: runs the validate checks and refuses with the error list while any remain (the run stays running); otherwise writes report.md, sets status done and closes the browser contexts. Returns {reportPath, counts}.",
+        "End the running run: runs the validate checks and refuses with the error list while any remain (the run stays running); otherwise writes report.md, sets status done and closes the browser contexts. Returns {reportPath, counts, elapsedSeconds, testers}: elapsed is the wall time since session_start.",
       inputSchema: { summary: z.string().min(1).describe("A short summary of the run for the top of report.md") },
     },
     async ({ summary }) => {
@@ -253,7 +258,7 @@ export function registerFinishTools(server: McpServer, getContext: () => { root:
         save(runDir, session);
         endRun();
         await closeContexts();
-        return ok({ reportPath: join(runDir, "report.md"), counts });
+        return ok({ reportPath: join(runDir, "report.md"), counts, elapsedSeconds: elapsed(session), testers: session.testers.length });
       } catch (e) {
         return fail(e);
       }
