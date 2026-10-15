@@ -40,7 +40,7 @@ export function planTesters(scenarios: Scenario[], pool: string[], viewports: st
   return testers;
 }
 
-type Session = {
+export type Session = {
   schema: 1;
   id: string;
   flow: string;
@@ -54,16 +54,18 @@ type Session = {
   testers: (Omit<Tester, "cases"> & { model: string; cases: string[] })[];
   cases: Case[];
   verdicts: Verdict[];
+  summary?: string;
 };
 
-type Verdict = { case: string; result: "pass" | "fail" | "blocked" | "skipped"; note?: string; findings: string[] };
+export type Verdict = { case: string; result: "pass" | "fail" | "blocked" | "skipped"; note?: string; findings: string[] };
 
 // The in-memory session is the only source of truth during a run (D11).
 // findings: id and case of each finding recorded in this run; its length is the id counter (D11).
 export let current: { runDir: string; session: Session; findings: { id: string; case: string }[] } | undefined;
+export const endRun = () => (current = undefined);
 
 // Synchronous temp + rename: writes cannot interleave and readers never see half a file (D11).
-function save(runDir: string, session: Session) {
+export function save(runDir: string, session: Session) {
   writeFileSync(join(runDir, "session.json.tmp"), JSON.stringify(session, null, 2) + "\n");
   renameSync(join(runDir, "session.json.tmp"), join(runDir, "session.json"));
 }
