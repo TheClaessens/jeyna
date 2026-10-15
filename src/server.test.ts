@@ -1,7 +1,7 @@
 // Drives the committed bundle over MCP stdio, copied to a folder with no node_modules (P1).
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-import { cpSync, mkdirSync, mkdtempSync, realpathSync, writeFileSync } from "node:fs";
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeAll, expect, test } from "vitest";
@@ -65,6 +65,7 @@ test("get_context returns the --project root and the validated config", async ()
       tester: { model: "sonnet", effort: "medium" },
       accounts: [{ handle: "user_a", user_env: "JEYNA_USER_A_USER", pass_env: "JEYNA_USER_A_PASS" }],
     },
+    secrets: { JEYNA_USER_A_USER: "missing", JEYNA_USER_A_PASS: "missing" },
   });
 });
 
@@ -113,6 +114,33 @@ test("broken YAML is reported, not a crash", async () => {
   const r = await getContext({ args: ["--project", project("app: [unclosed\n")] });
   expect(r.isError).toBe(true);
   expect(r.text).toMatch(/not valid YAML/);
+});
+
+test("get_context reports where each account variable was found, never its value (P3, D18)", async () => {
+  const root = project(VALID);
+  writeFileSync(join(root, ".jeyna", ".env"), "JEYNA_USER_A_USER=\nJEYNA_USER_A_PASS=from-dotenv-secret\n");
+  const r = await getContext({
+    args: ["--project", root],
+    env: { JEYNA_USER_A_USER: "from-shell-secret", JEYNA_USER_A_PASS: "" },
+  });
+  expect(r.isError).toBe(false);
+  expect(JSON.parse(r.text).secrets).toEqual({ JEYNA_USER_A_USER: "env", JEYNA_USER_A_PASS: ".env" });
+  expect(r.text).not.toMatch(/from-shell|from-dotenv/);
+});
+
+test("an account variable in neither the environment nor .jeyna/.env is reported missing", async () => {
+  const r = await getContext({ args: ["--project", project(VALID)] });
+  expect(JSON.parse(r.text).secrets).toEqual({ JEYNA_USER_A_USER: "missing", JEYNA_USER_A_PASS: "missing" });
+});
+
+test("the /jeyna:init config template, filled in, is a config get_context accepts (AC8)", async () => {
+  const filled = readFileSync("plugin/templates/jeyna.config.yaml", "utf8")
+    .replaceAll("__APP_NAME__", "todo-sample")
+    .replaceAll("__APP_URL__", "http://localhost:4173")
+    .replace(/^accounts: \[\]$/m, "accounts:\n  - { handle: user_a, user_env: JEYNA_USER_A_USER, pass_env: JEYNA_USER_A_PASS }");
+  const r = await getContext({ args: ["--project", project(filled)] });
+  expect(r.isError, r.text).toBe(false);
+  expect(JSON.parse(r.text).config.accounts).toHaveLength(1);
 });
 
 test("an account value in place of an env variable name is refused", async () => {

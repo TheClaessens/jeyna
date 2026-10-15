@@ -43934,7 +43934,7 @@ var StdioServerTransport = class {
 var import_yaml = __toESM(require_dist2(), 1);
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
-import { parseArgs } from "node:util";
+import { parseArgs, parseEnv } from "node:util";
 
 // src/schema.ts
 var envName = external_exports.string().regex(/^[A-Za-z_][A-Za-z0-9_]*$/, "must be an environment variable name, not a value");
@@ -43981,7 +43981,13 @@ function getContext() {
     throw new Error(`.jeyna/jeyna.config.yaml is invalid. Fix these fields:
 ${external_exports.prettifyError(parsed.error)}`);
   }
-  return { root, config: parsed.data };
+  return { root, config: parsed.data, secrets: secretSources(root, parsed.data) };
+}
+function secretSources(root, config2) {
+  const file2 = join(root, ".jeyna", ".env");
+  const dotenv = existsSync(file2) ? parseEnv(readFileSync(file2, "utf8")) : {};
+  const names = config2.accounts.flatMap((a) => [a.user_env, a.pass_env]);
+  return Object.fromEntries(names.map((n) => [n, process.env[n] ? "env" : dotenv[n] ? ".env" : "missing"]));
 }
 var server = new McpServer({ name: "jeyna", version: "0.0.1" });
 server.registerTool(
