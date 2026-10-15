@@ -3848,7 +3848,7 @@ var require_fast_uri = __commonJS2({
         normalizeString(uri, options2);
       } else if (typeof uri === "object") {
         uri = /** @type {T} */
-        parse5(serialize2(uri, options2), options2);
+        parse6(serialize2(uri, options2), options2);
       }
       return uri;
     }
@@ -3888,8 +3888,8 @@ var require_fast_uri = __commonJS2({
     function resolveComponent(base, relative2, options2, skipNormalization) {
       const target = {};
       if (!skipNormalization) {
-        base = parse5(serialize2(base, options2), options2);
-        relative2 = parse5(serialize2(relative2, options2), options2);
+        base = parse6(serialize2(base, options2), options2);
+        relative2 = parse6(serialize2(relative2, options2), options2);
       }
       options2 = options2 || {};
       if (!options2.tolerant && relative2.scheme) {
@@ -4188,7 +4188,7 @@ var require_fast_uri = __commonJS2({
       }
       return { parsed, malformedAuthorityOrPort, malformedPercentEncoding, malformedSchemeSpecific, malformedHost, malformedScheme };
     }
-    function parse5(uri, opts) {
+    function parse6(uri, opts) {
       return parseWithStatus(uri, opts).parsed;
     }
     function normalizeString(uri, opts) {
@@ -4225,7 +4225,7 @@ var require_fast_uri = __commonJS2({
       resolveComponent,
       equal,
       serialize: serialize2,
-      parse: parse5
+      parse: parse6
     };
     module3.exports = fastUri;
     module3.exports.default = fastUri;
@@ -14440,7 +14440,7 @@ var require_public_api = __commonJS2({
       }
       return doc;
     }
-    function parse5(src, reviver, options2) {
+    function parse6(src, reviver, options2) {
       let _reviver = void 0;
       if (typeof reviver === "function") {
         _reviver = reviver;
@@ -14481,7 +14481,7 @@ var require_public_api = __commonJS2({
         return value2.toString(options2);
       return new Document.Document(value2, _replacer, options2).toString(options2);
     }
-    exports2.parse = parse5;
+    exports2.parse = parse6;
     exports2.parseAllDocuments = parseAllDocuments;
     exports2.parseDocument = parseDocument;
     exports2.stringify = stringify3;
@@ -65726,7 +65726,7 @@ ${end.comment}` : end.comment;
     minimatch.escape = escape22;
     minimatch.unescape = unescape2;
     var import_node_process7 = __toESM3(__require("node:process"), 1);
-    var import_node_path7 = __toESM3(__require("node:path"), 1);
+    var import_node_path8 = __toESM3(__require("node:path"), 1);
     var import_node_url = __require("node:url");
     var import_node_child_process7 = __toESM3(__require("node:child_process"), 1);
     var import_promises2 = __toESM3(__require("node:fs/promises"), 1);
@@ -65737,11 +65737,11 @@ ${end.comment}` : end.comment;
     var import_node_os = __toESM3(__require("node:os"), 1);
     var import_node_fs32 = __toESM3(__require("node:fs"), 1);
     var import_node_fs22 = __toESM3(__require("node:fs"), 1);
-    var import_node_fs7 = __toESM3(__require("node:fs"), 1);
+    var import_node_fs8 = __toESM3(__require("node:fs"), 1);
     var isDockerCached;
     function hasDockerEnv() {
       try {
-        import_node_fs7.default.statSync("/.dockerenv");
+        import_node_fs8.default.statSync("/.dockerenv");
         return true;
       } catch {
         return false;
@@ -65749,7 +65749,7 @@ ${end.comment}` : end.comment;
     }
     function hasDockerCGroup() {
       try {
-        return import_node_fs7.default.readFileSync("/proc/self/cgroup", "utf8").includes("docker");
+        return import_node_fs8.default.readFileSync("/proc/self/cgroup", "utf8").includes("docker");
       } catch {
         return false;
       }
@@ -66027,8 +66027,8 @@ tell application "System Events" to get value of property list item "CFBundleNam
     var is_in_ssh_default = isInSsh;
     var import_meta = {};
     var fallbackAttemptSymbol = /* @__PURE__ */ Symbol("fallbackAttempt");
-    var __dirname2 = import_meta.url ? import_node_path7.default.dirname((0, import_node_url.fileURLToPath)(import_meta.url)) : "";
-    var localXdgOpenPath = import_node_path7.default.join(__dirname2, "xdg-open");
+    var __dirname2 = import_meta.url ? import_node_path8.default.dirname((0, import_node_url.fileURLToPath)(import_meta.url)) : "";
+    var localXdgOpenPath = import_node_path8.default.join(__dirname2, "xdg-open");
     var { platform, arch } = import_node_process7.default;
     var tryEachApp = async (apps2, opener) => {
       if (apps2.length === 0) {
@@ -69823,7 +69823,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
     var import_websocket = __toESM3(require_websocket(), 1);
     var import_websocket_server = __toESM3(require_websocket_server(), 1);
     var wrapper_default = import_websocket.default;
-    var import_yaml4 = __toESM3(require_dist3());
+    var import_yaml5 = __toESM3(require_dist3());
     var import_json5 = __toESM3(require_lib());
     var import_source_map_support = __toESM3(require_source_map_support());
     var import_enquirer = __toESM3(require_enquirer());
@@ -72894,7 +72894,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
       isValidJWT: () => isValidJWT3,
       locales: () => locales_exports2,
       meta: () => meta3,
-      parse: () => parse5,
+      parse: () => parse6,
       parseAsync: () => parseAsync3,
       prettifyError: () => prettifyError2,
       process: () => process11,
@@ -73831,7 +73831,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
       }
       return result2.value;
     };
-    var parse5 = /* @__PURE__ */ _parse3($ZodRealError2);
+    var parse6 = /* @__PURE__ */ _parse3($ZodRealError2);
     var _parseAsync3 = (_Err) => async (schema, value2, _ctx, params2) => {
       const ctx = _ctx ? { ..._ctx, async: true } : { async: true };
       let result2 = schema._zod.run({ value: value2, issues: [] }, ctx);
@@ -76613,10 +76613,10 @@ Expecting one of '${allowedValues.join("', '")}'`);
           throw new Error("implement() must be called with a function");
         }
         return function(...args) {
-          const parsedArgs = inst._def.input ? parse5(inst._def.input, args) : args;
+          const parsedArgs = inst._def.input ? parse6(inst._def.input, args) : args;
           const result2 = Reflect.apply(func, this, parsedArgs);
           if (inst._def.output) {
-            return parse5(inst._def.output, result2);
+            return parse6(inst._def.output, result2);
           }
           return result2;
         };
@@ -99425,7 +99425,7 @@ data:
     var wsServer3 = import_websocket_server.default;
     var wsReceiver = import_receiver.default;
     var wsSender = import_sender.default;
-    var yaml3 = import_yaml4.default;
+    var yaml3 = import_yaml5.default;
     var json5 = import_json5.default;
     var sourceMapSupport = import_source_map_support.default;
     var enquirer = import_enquirer.default;
@@ -183129,18 +183129,18 @@ var validateAsync = async (schema, value2, _ctx) => {
   return result2.issues.length === 0;
 };
 var _encode = (_Err) => {
-  const parse5 = _parse(_Err);
+  const parse6 = _parse(_Err);
   const fn = (schema, value2, _ctx, _params) => {
     const ctx = _ctx ? { ..._ctx, direction: "backward" } : { direction: "backward" };
-    return parse5(schema, value2, ctx, finalizeParams(fn, _params));
+    return parse6(schema, value2, ctx, finalizeParams(fn, _params));
   };
   return fn;
 };
 var encode = /* @__PURE__ */ _encode($ZodRealError);
 var _decode = (_Err) => {
-  const parse5 = _parse(_Err);
+  const parse6 = _parse(_Err);
   const fn = (schema, value2, _ctx, _params) => {
-    return parse5(schema, value2, _ctx, finalizeParams(fn, _params));
+    return parse6(schema, value2, _ctx, finalizeParams(fn, _params));
   };
   return fn;
 };
@@ -184635,7 +184635,7 @@ function capSize(inst, size) {
   if (!caps.length)
     return;
   const cap = Math.min(...caps.map((c) => c[0]));
-  const parse5 = inst._zod.parse;
+  const parse6 = inst._zod.parse;
   inst._zod.parse = (payload, ctx) => {
     const n = size(payload.value);
     if (n > cap && !ctx?.skipChecks && ctx?.direction !== "backward") {
@@ -184649,7 +184649,7 @@ function capSize(inst, size) {
         }
       }
     }
-    return parse5(payload, ctx);
+    return parse6(payload, ctx);
   };
 }
 var arraySize = (input2) => Array.isArray(input2) ? input2.length : -1;
@@ -207030,9 +207030,9 @@ var StdioServerTransport2 = class {
 };
 
 // src/server.ts
-var import_yaml3 = __toESM2(require_dist2(), 1);
-import { existsSync as existsSync5, readFileSync as readFileSync4 } from "node:fs";
-import { dirname, join as join6, resolve as resolve2 } from "node:path";
+var import_yaml4 = __toESM2(require_dist2(), 1);
+import { existsSync as existsSync6, readFileSync as readFileSync5 } from "node:fs";
+import { dirname, join as join7, resolve as resolve2 } from "node:path";
 import { parseArgs, parseEnv as parseEnv2 } from "node:util";
 
 // src/schema.ts
@@ -207068,8 +207068,8 @@ var FindingInput = external_exports.strictObject({
 
 // src/session.ts
 import { execFileSync } from "node:child_process";
-import { existsSync as existsSync2, mkdirSync, readdirSync, readFileSync as readFileSync2, renameSync, writeFileSync as writeFileSync2 } from "node:fs";
-import { join as join3 } from "node:path";
+import { existsSync as existsSync3, mkdirSync, readdirSync as readdirSync2, readFileSync as readFileSync3, renameSync, writeFileSync as writeFileSync2 } from "node:fs";
+import { join as join4 } from "node:path";
 
 // src/browser.ts
 import { writeFileSync } from "node:fs";
@@ -207389,6 +207389,77 @@ process.stdin.on("close", shutdown);
 process.on("SIGTERM", shutdown);
 process.on("SIGINT", shutdown);
 
+// src/flows.ts
+var import_yaml = __toESM2(require_dist2(), 1);
+import { existsSync as existsSync2, readdirSync, readFileSync as readFileSync2 } from "node:fs";
+import { join as join3 } from "node:path";
+var FlowFront = external_exports.strictObject({
+  name: external_exports.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "lowercase words joined by '-', the same as the file name"),
+  entry: external_exports.string().min(1),
+  viewports: external_exports.array(external_exports.string().regex(/^\d+x\d+$/, "must look like 1440x900")).min(1).optional(),
+  accounts: external_exports.array(external_exports.string().min(1)).min(1).optional()
+});
+var flowsDir = (root) => join3(root, ".jeyna", "flows");
+var flowNames = (root) => existsSync2(flowsDir(root)) ? readdirSync(flowsDir(root)).filter((f) => f.endsWith(".md")).map((f) => f.slice(0, -3)).sort() : [];
+function parseFlow(md, file2) {
+  const m = /^---\n([\s\S]*?)\n?---\n([\s\S]*)$/.exec(md);
+  if (!m) throw new Error(`${file2}: no YAML frontmatter between --- lines.`);
+  const front = FlowFront.safeParse((0, import_yaml.parse)(m[1]) ?? {});
+  if (!front.success) throw new Error(`${file2}: frontmatter is invalid:
+${external_exports.prettifyError(front.error)}`);
+  if (`${front.data.name}.md` !== file2) throw new Error(`${file2}: frontmatter name ${front.data.name} does not match the file name.`);
+  const body = m[2];
+  const section = /^## Scenarios[ \t]*\n([\s\S]*?)(?=^## |(?![\s\S]))/m.exec(body)?.[1];
+  if (!section) throw new Error(`${file2}: no ## Scenarios section.`);
+  const scenarios = section.split(/^### /m).slice(1).map((block) => {
+    const [name, ...lines] = block.trim().split("\n").map((l) => l.trim());
+    const at = (key) => lines.find((l) => l.startsWith(`${key}:`))?.slice(key.length + 1).trim();
+    const description = lines.filter((l) => l && !/^(Pass|Account):/.test(l)).join(" ");
+    const pass = at("Pass");
+    const account = at("Account");
+    if (!description) throw new Error(`${file2}: scenario "${name}" has no description paragraph.`);
+    if (!pass) throw new Error(`${file2}: scenario "${name}" has no Pass: line.`);
+    if (account !== void 0 && account !== "none" && account !== "consumes") {
+      throw new Error(`${file2}: scenario "${name}" has Account: ${account}; use none or consumes.`);
+    }
+    return { name, description, pass, ...account && { account } };
+  });
+  if (!scenarios.length) throw new Error(`${file2}: ## Scenarios has no ### scenario.`);
+  const names = scenarios.map((s) => s.name);
+  const dupes = names.filter((n, i) => names.indexOf(n) !== i);
+  if (dupes.length) throw new Error(`${file2}: scenario names must be unique: ${dupes.join(", ")}.`);
+  return { frontmatter: front.data, body, scenarios };
+}
+function readFlow(root, name) {
+  const names = flowNames(root);
+  if (!names.includes(name)) throw new Error(`No flow "${name}". Flows in .jeyna/flows/: ${names.join(", ") || "none"}.`);
+  return parseFlow(readFileSync2(join3(flowsDir(root), `${name}.md`), "utf8"), `${name}.md`);
+}
+var listFlows = (root) => flowNames(root).map((name) => {
+  try {
+    return { name, scenarios: readFlow(root, name).scenarios.map((s) => s.name) };
+  } catch (e) {
+    return { name, error: e.message };
+  }
+});
+function registerFlowTools(server3, getContext2) {
+  server3.registerTool(
+    "get_flow",
+    {
+      description: "A flow file from .jeyna/flows/: frontmatter (name, entry, viewports?, accounts?), the markdown body, and its parsed scenarios.",
+      inputSchema: { name: external_exports.string().describe("Flow name, as get_context lists it") },
+      annotations: { readOnlyHint: true }
+    },
+    async ({ name }) => {
+      try {
+        return ok(readFlow(getContext2().root, name));
+      } catch (e) {
+        return fail(e);
+      }
+    }
+  );
+}
+
 // src/session.ts
 function planTesters(scenarios, pool, viewports) {
   const testers = scenarios.map((s, i) => ({
@@ -207419,8 +207490,8 @@ function planTesters(scenarios, pool, viewports) {
 var current;
 var endRun = () => current = void 0;
 function save(runDir, session) {
-  writeFileSync2(join3(runDir, "session.json.tmp"), JSON.stringify(session, null, 2) + "\n");
-  renameSync(join3(runDir, "session.json.tmp"), join3(runDir, "session.json"));
+  writeFileSync2(join4(runDir, "session.json.tmp"), JSON.stringify(session, null, 2) + "\n");
+  renameSync(join4(runDir, "session.json.tmp"), join4(runDir, "session.json"));
 }
 function buildId(root, config2) {
   if (config2.app.build) return config2.app.build;
@@ -207432,10 +207503,10 @@ function buildId(root, config2) {
   }
 }
 function runningRuns(dir) {
-  if (!existsSync2(dir)) return [];
-  return readdirSync(dir).map((d) => join3(dir, d)).filter((d) => {
+  if (!existsSync3(dir)) return [];
+  return readdirSync2(dir).map((d) => join4(dir, d)).filter((d) => {
     try {
-      return JSON.parse(readFileSync2(join3(d, "session.json"), "utf8")).status === "running";
+      return JSON.parse(readFileSync3(join4(d, "session.json"), "utf8")).status === "running";
     } catch {
       return false;
     }
@@ -207447,48 +207518,70 @@ function registerSessionTools(server3, getContext2) {
   server3.registerTool(
     "session_start",
     {
-      description: "Start a playtest run from an explicit scenario list. Plans one tester per scenario, one case per viewport, one account per tester, and the batch to spawn each tester in (no account is held by two testers in one batch). Refused while another run is running unless force is true.",
+      description: "Start a playtest run, guided from a flow in .jeyna/flows/ or exploratory from an explicit scenario list. only and viewports narrow the run; unknown names are refused with the valid ones. Plans one tester per scenario, one case per viewport, one account per tester, and the batch to spawn each tester in (no account is held by two testers in one batch). Refused while another run is running unless force is true.",
       inputSchema: {
-        scenarios: external_exports.array(Scenario).min(1),
-        slug: external_exports.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "lowercase words joined by '-'").default("exploratory"),
+        flow: external_exports.string().optional().describe("Flow name from get_context (guided run)"),
+        scenarios: external_exports.array(Scenario).min(1).optional().describe("Explicit scenario list (exploratory run)"),
+        only: external_exports.array(external_exports.string()).min(1).optional().describe("Scenario names to run; default all"),
+        slug: external_exports.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "lowercase words joined by '-'").optional().describe("Run folder slug of an exploratory run; default exploratory"),
         viewports: external_exports.array(external_exports.string()).min(1).optional(),
         force: external_exports.boolean().default(false)
       }
     },
-    async ({ scenarios, slug, viewports, force }) => {
+    async ({ flow: flowName, scenarios: given2, only, slug, viewports, force }) => {
       try {
         const { root, config: config2 } = getContext2();
-        const unknown2 = (viewports ?? []).filter((v) => !config2.viewports.includes(v));
-        if (unknown2.length) throw new Error(`Unknown viewports: ${unknown2.join(", ")}. Configured: ${config2.viewports.join(", ")}.`);
+        if (!flowName === !given2) throw new Error("session_start needs flow (guided) or scenarios (exploratory), not both.");
+        const flow = flowName ? readFlow(root, flowName) : void 0;
+        if (flow && slug) throw new Error("slug is for exploratory runs; a guided run is named after its flow.");
+        let scenarios = flow?.scenarios ?? given2;
+        if (only) {
+          const unknownScenarios = only.filter((n) => !scenarios.some((s) => s.name === n));
+          if (unknownScenarios.length) {
+            const of = flow ? `Scenarios of flow ${flowName}` : "Scenarios given";
+            throw new Error(`Unknown scenarios: ${unknownScenarios.join(", ")}. ${of}: ${scenarios.map((s) => s.name).join(", ")}.`);
+          }
+          scenarios = scenarios.filter((s) => only.includes(s.name));
+        }
+        const valid = flow?.frontmatter.viewports ?? config2.viewports;
+        const unknown2 = (viewports ?? []).filter((v) => !valid.includes(v));
+        if (unknown2.length) {
+          const where = flow?.frontmatter.viewports ? `Flow ${flowName} runs at` : "Configured";
+          throw new Error(`Unknown viewports: ${unknown2.join(", ")}. ${where}: ${valid.join(", ")}.`);
+        }
+        const handles = config2.accounts.map((a) => a.handle);
+        const strangers = (flow?.frontmatter.accounts ?? []).filter((h) => !handles.includes(h));
+        if (strangers.length) throw new Error(`Flow ${flowName} names accounts not in jeyna.config.yaml: ${strangers.join(", ")}. Configured: ${handles.join(", ") || "none"}.`);
+        const pool = flow?.frontmatter.accounts ?? handles;
         const names = scenarios.map((s) => s.name);
         const dupes = names.filter((n, i) => names.indexOf(n) !== i);
         if (dupes.length) throw new Error(`Scenario names must be unique: ${dupes.join(", ")}.`);
-        const dir = join3(root, ".jeyna", "playtests");
+        const dir = join4(root, ".jeyna", "playtests");
         const stale = runningRuns(dir);
         if (stale.length && !force) {
           throw new Error(`A run is still running: ${stale.join(", ")}. Call session_start with force: true to abort it.`);
         }
-        const testers = planTesters(scenarios, config2.accounts.map((a) => a.handle), viewports ?? config2.viewports);
+        const testers = planTesters(scenarios, pool, viewports ?? valid);
         for (const d of stale) {
-          const s = d === current?.runDir ? current.session : JSON.parse(readFileSync2(join3(d, "session.json"), "utf8"));
+          const s = d === current?.runDir ? current.session : JSON.parse(readFileSync3(join4(d, "session.json"), "utf8"));
           save(d, { ...s, status: "aborted", finished: (/* @__PURE__ */ new Date()).toISOString() });
         }
         current = void 0;
         await closeContexts();
-        const base = `${(/* @__PURE__ */ new Date()).toLocaleDateString("sv")}-${slug}`;
+        const base = `${(/* @__PURE__ */ new Date()).toLocaleDateString("sv")}-${flowName ?? slug ?? "exploratory"}`;
         let id = base;
-        for (let n = 2; existsSync2(join3(dir, id)); n++) id = `${base}-${n}`;
-        const runDir = join3(dir, id);
-        mkdirSync(join3(runDir, "evidence"), { recursive: true });
+        for (let n = 2; existsSync3(join4(dir, id)); n++) id = `${base}-${n}`;
+        const runDir = join4(dir, id);
+        mkdirSync(join4(runDir, "evidence"), { recursive: true });
         const session = {
           schema: 1,
           id,
-          flow: `exploratory:${slug}`,
+          flow: flowName ?? `exploratory:${slug ?? "exploratory"}`,
           app: config2.app.name,
           build: buildId(root, config2),
           status: "running",
           started: (/* @__PURE__ */ new Date()).toISOString(),
-          mode: "exploratory",
+          mode: flow ? "guided" : "exploratory",
           scenarios,
           testers: testers.map((t) => ({ ...t, model: config2.tester.model, cases: t.cases.map((c) => c.id) })),
           cases: testers.flatMap((t) => t.cases),
@@ -207545,13 +207638,13 @@ function registerSessionTools(server3, getContext2) {
 }
 
 // src/findings.ts
-var import_yaml = __toESM2(require_dist2(), 1);
-import { existsSync as existsSync3, mkdirSync as mkdirSync2, readdirSync as readdirSync2, writeFileSync as writeFileSync3 } from "node:fs";
-import { basename, join as join4 } from "node:path";
+var import_yaml2 = __toESM2(require_dist2(), 1);
+import { existsSync as existsSync4, mkdirSync as mkdirSync2, readdirSync as readdirSync3, writeFileSync as writeFileSync3 } from "node:fs";
+import { basename, join as join5 } from "node:path";
 function findingMarkdown(front, f) {
   return [
     `---
-${(0, import_yaml.stringify)(front)}---`,
+${(0, import_yaml2.stringify)(front)}---`,
     `# ${f.title}`,
     `## Steps
 
@@ -207583,14 +207676,14 @@ function registerFindingTools(server3) {
         const run = current;
         const c = run.session.cases.find((c2) => c2.id === caseId);
         if (!c) throw new Error(`Unknown case "${caseId}". Cases in this run: ${run.session.cases.map((c2) => c2.id).join(", ")}.`);
-        const evidenceDir = join4(run.runDir, "evidence");
-        const have = () => readdirSync2(evidenceDir).filter((f) => f.startsWith(`${caseId}-`));
+        const evidenceDir = join5(run.runDir, "evidence");
+        const have = () => readdirSync3(evidenceDir).filter((f) => f.startsWith(`${caseId}-`));
         if (finding.kind === "bug" && !finding.evidence.length) {
           throw new Error(
             `A bug needs evidence. Call screenshot {case: "${caseId}"} on the page that shows it, then call record_finding again with its file name in evidence. Screenshots of this case so far: ${have().join(", ") || "none"}.`
           );
         }
-        const missing = finding.evidence.filter((e) => basename(e) !== e || !existsSync3(join4(evidenceDir, e)));
+        const missing = finding.evidence.filter((e) => basename(e) !== e || !existsSync4(join5(evidenceDir, e)));
         if (missing.length) {
           throw new Error(`No such evidence: ${missing.join(", ")}. Screenshots of this case: ${have().join(", ") || "none"}.`);
         }
@@ -207614,8 +207707,8 @@ function registerFindingTools(server3) {
           created: (/* @__PURE__ */ new Date()).toISOString(),
           evidence: finding.evidence
         };
-        mkdirSync2(join4(run.runDir, "findings"), { recursive: true });
-        const path = join4(run.runDir, "findings", `${id}.md`);
+        mkdirSync2(join5(run.runDir, "findings"), { recursive: true });
+        const path = join5(run.runDir, "findings", `${id}.md`);
         writeFileSync3(path, findingMarkdown(front, finding), { flag: "wx" });
         run.findings.push({ id, case: caseId });
         return ok({ id, path });
@@ -207627,9 +207720,9 @@ function registerFindingTools(server3) {
 }
 
 // src/finish.ts
-var import_yaml2 = __toESM2(require_dist2(), 1);
-import { existsSync as existsSync4, readdirSync as readdirSync3, readFileSync as readFileSync3, writeFileSync as writeFileSync4 } from "node:fs";
-import { join as join5, relative, resolve } from "node:path";
+var import_yaml3 = __toESM2(require_dist2(), 1);
+import { existsSync as existsSync5, readdirSync as readdirSync4, readFileSync as readFileSync4, writeFileSync as writeFileSync4 } from "node:fs";
+import { join as join6, relative, resolve } from "node:path";
 var SEVERITIES = FindingInput.shape.severity.options;
 var KINDS = FindingInput.shape.kind.options;
 var STATUSES = ["open", "duplicate", "wontfix", "fixed"];
@@ -207655,15 +207748,15 @@ var FindingFront = external_exports.strictObject({
 });
 var splitFront = (md) => /^---\n([\s\S]*?)\n?---\n([\s\S]*)$/.exec(md);
 function readFindings(runDir, session) {
-  const dir = join5(runDir, "findings");
-  if (!existsSync4(dir)) return [];
-  return readdirSync3(dir).filter((f) => f.endsWith(".md")).sort().map((file2) => {
+  const dir = join6(runDir, "findings");
+  if (!existsSync5(dir)) return [];
+  return readdirSync4(dir).filter((f) => f.endsWith(".md")).sort().map((file2) => {
     const f = { path: `findings/${file2}`, id: file2.slice(0, -3), errors: [] };
-    const m = splitFront(readFileSync3(join5(dir, file2), "utf8"));
+    const m = splitFront(readFileSync4(join6(dir, file2), "utf8"));
     if (!m) return { ...f, errors: ["no YAML frontmatter between --- lines"] };
     let raw;
     try {
-      raw = (0, import_yaml2.parse)(m[1]);
+      raw = (0, import_yaml3.parse)(m[1]);
     } catch (e) {
       return { ...f, errors: [`frontmatter is not valid YAML: ${e.message.split("\n")[0]}`] };
     }
@@ -207677,15 +207770,15 @@ function readFindings(runDir, session) {
     if (!session.cases.some((c) => c.id === front.case)) f.errors.push(`case ${front.case} is not a case of this run`);
     if (!f.title) f.errors.push("missing the # title line");
     for (const s of SECTIONS) if (!new RegExp(`^## ${s}$`, "m").test(m[2])) f.errors.push(`missing the ## ${s} section`);
-    for (const e of front.evidence) if (!existsSync4(join5(runDir, "evidence", e))) f.errors.push(`evidence ${e} does not exist in evidence/`);
+    for (const e of front.evidence) if (!existsSync5(join6(runDir, "evidence", e))) f.errors.push(`evidence ${e} does not exist in evidence/`);
     if (front.kind === "bug" && !front.evidence.length) f.errors.push("a bug needs evidence");
     if (front.status === "duplicate" && !front.of) f.errors.push("status duplicate needs of: PT-\u2026");
     return f;
   });
 }
 function readSession(runDir) {
-  if (!existsSync4(join5(runDir, "session.json"))) throw new Error(`${runDir} is not a run folder: it has no session.json.`);
-  return JSON.parse(readFileSync3(join5(runDir, "session.json"), "utf8"));
+  if (!existsSync5(join6(runDir, "session.json"))) throw new Error(`${runDir} is not a run folder: it has no session.json.`);
+  return JSON.parse(readFileSync4(join6(runDir, "session.json"), "utf8"));
 }
 function validateRun(runDir) {
   let session;
@@ -207706,7 +207799,7 @@ function validateRun(runDir) {
     if (!v) errors2.push(`session.json: case ${c.id} has no verdict`);
     for (const id of v?.findings ?? []) if (!ids.has(id)) errors2.push(`session.json: verdict of ${c.id} lists ${id}, which has no file in findings/`);
   }
-  if (session.status === "done" && !existsSync4(join5(runDir, "report.md"))) errors2.push("report.md: missing, but the run is done");
+  if (session.status === "done" && !existsSync5(join6(runDir, "report.md"))) errors2.push("report.md: missing, but the run is done");
   return errors2;
 }
 var cell = (s) => s.replace(/\|/g, "\\|").replace(/\s*\n\s*/g, " ");
@@ -207777,12 +207870,12 @@ ${table(["Scenario", ...viewports], matrix)}`,
       )
     ) : "No findings.")
   ].join("\n\n");
-  writeFileSync4(join5(runDir, "report.md"), md + "\n");
+  writeFileSync4(join6(runDir, "report.md"), md + "\n");
   return counts;
 }
 function runs(root) {
-  const dir = join5(root, ".jeyna", "playtests");
-  if (!existsSync4(dir)) return [];
+  const dir = join6(root, ".jeyna", "playtests");
+  if (!existsSync5(dir)) return [];
   const started = (d) => {
     try {
       return readSession(d).started;
@@ -207790,14 +207883,14 @@ function runs(root) {
       return "";
     }
   };
-  return readdirSync3(dir).map((d) => join5(dir, d)).filter((d) => started(d)).sort((a, b) => started(b).localeCompare(started(a)));
+  return readdirSync4(dir).map((d) => join6(dir, d)).filter((d) => started(d)).sort((a, b) => started(b).localeCompare(started(a)));
 }
 function validateCli(arg2, root) {
   try {
     const dir = arg2 ? resolve(arg2) : runs(root())[0];
-    if (!dir) throw new Error(`No run folders in ${join5(root(), ".jeyna", "playtests")}.`);
+    if (!dir) throw new Error(`No run folders in ${join6(root(), ".jeyna", "playtests")}.`);
     const errors2 = validateRun(dir);
-    for (const e of errors2) console.log(relative(process.cwd(), join5(dir, e.slice(0, e.indexOf(": ")))) + e.slice(e.indexOf(": ")));
+    for (const e of errors2) console.log(relative(process.cwd(), join6(dir, e.slice(0, e.indexOf(": ")))) + e.slice(e.indexOf(": ")));
     console.error(errors2.length ? `${errors2.length} errors in ${dir}` : `ok: ${dir}`);
     return errors2.length ? 1 : 0;
   } catch (e) {
@@ -207818,7 +207911,7 @@ function registerFinishTools(server3, getContext2) {
         const root = getContext2().root;
         const dir = run ? resolve(root, ".jeyna", "playtests", run) : current?.runDir ?? runs(root)[0];
         if (!dir) throw new Error("No run to validate: no run is running and .jeyna/playtests/ has none.");
-        if (!existsSync4(dir)) throw new Error(`No run folder ${dir}.`);
+        if (!existsSync5(dir)) throw new Error(`No run folder ${dir}.`);
         return ok({ run: dir, errors: validateRun(dir) });
       } catch (e) {
         return fail(e);
@@ -207847,7 +207940,7 @@ ${errors2.join("\n")}`);
         save(runDir, session);
         endRun();
         await closeContexts();
-        return ok({ reportPath: join5(runDir, "report.md"), counts });
+        return ok({ reportPath: join6(runDir, "report.md"), counts });
       } catch (e) {
         return fail(e);
       }
@@ -207869,13 +207962,13 @@ ${errors2.join("\n")}`);
         if (status === "duplicate" && !of) throw new Error(`A duplicate needs of: the id of the finding ${id} repeats.`);
         if (status !== "duplicate" && of) throw new Error("of is only for status duplicate.");
         const dirs = [...current ? [current.runDir] : [], ...runs(getContext2().root)];
-        const runDir = dirs.find((d) => existsSync4(join5(d, "findings", `${id}.md`)));
+        const runDir = dirs.find((d) => existsSync5(join6(d, "findings", `${id}.md`)));
         if (!runDir) throw new Error(`No finding ${id} in any run under .jeyna/playtests/.`);
         if (of === id) throw new Error("A finding cannot be a duplicate of itself.");
-        if (of && !existsSync4(join5(runDir, "findings", `${of}.md`))) throw new Error(`No finding ${of} in ${runDir}; of must name a finding of the same run.`);
-        const path = join5(runDir, "findings", `${id}.md`);
-        const m = splitFront(readFileSync3(path, "utf8"));
-        const front = m && (0, import_yaml2.parse)(m[1]);
+        if (of && !existsSync5(join6(runDir, "findings", `${of}.md`))) throw new Error(`No finding ${of} in ${runDir}; of must name a finding of the same run.`);
+        const path = join6(runDir, "findings", `${id}.md`);
+        const m = splitFront(readFileSync4(path, "utf8"));
+        const front = m && (0, import_yaml3.parse)(m[1]);
         if (!m || !front || typeof front !== "object") throw new Error(`${path} has no readable frontmatter; fix it by hand.`);
         const next = {};
         for (const [k, v] of Object.entries(front)) {
@@ -207884,7 +207977,7 @@ ${errors2.join("\n")}`);
           if (k === "status") Object.assign(next, of && { of }, note && { note });
         }
         writeFileSync4(path, `---
-${(0, import_yaml2.stringify)(next)}---
+${(0, import_yaml3.stringify)(next)}---
 ${m[2]}`);
         return ok({ id, status, ...of && { of }, path });
       } catch (e) {
@@ -207903,7 +207996,7 @@ function projectRoot() {
   const root = given(values.project) ?? given(process.env.CLAUDE_PROJECT_DIR);
   if (root) return resolve2(root);
   for (let dir = process.cwd(); ; dir = dirname(dir)) {
-    if (existsSync5(join6(dir, ".jeyna"))) return dir;
+    if (existsSync6(join7(dir, ".jeyna"))) return dir;
     if (dirname(dir) === dir) break;
   }
   throw new Error(
@@ -207912,11 +208005,11 @@ function projectRoot() {
 }
 function getContext() {
   const root = projectRoot();
-  const file2 = join6(root, ".jeyna", "jeyna.config.yaml");
-  if (!existsSync5(file2)) throw new Error(`No ${file2}. Run /jeyna:init in ${root} to create it.`);
+  const file2 = join7(root, ".jeyna", "jeyna.config.yaml");
+  if (!existsSync6(file2)) throw new Error(`No ${file2}. Run /jeyna:init in ${root} to create it.`);
   let raw;
   try {
-    raw = (0, import_yaml3.parse)(readFileSync4(file2, "utf8"));
+    raw = (0, import_yaml4.parse)(readFileSync5(file2, "utf8"));
   } catch (e) {
     throw new Error(`.jeyna/jeyna.config.yaml is not valid YAML: ${e.message}`);
   }
@@ -207928,8 +208021,8 @@ ${external_exports.prettifyError(parsed.error)}`);
   return { root, config: parsed.data, secrets: secretSources(root, parsed.data) };
 }
 function secretSources(root, config2) {
-  const file2 = join6(root, ".jeyna", ".env");
-  const dotenv3 = existsSync5(file2) ? parseEnv2(readFileSync4(file2, "utf8")) : {};
+  const file2 = join7(root, ".jeyna", ".env");
+  const dotenv3 = existsSync6(file2) ? parseEnv2(readFileSync5(file2, "utf8")) : {};
   const names = config2.accounts.flatMap((a) => [a.user_env, a.pass_env]);
   return Object.fromEntries(names.map((n) => [n, process.env[n] ? "env" : dotenv3[n] ? ".env" : "missing"]));
 }
@@ -207950,13 +208043,20 @@ server2.registerTool = ((name, config2, handler) => register(name, config2, (asy
 server2.registerTool(
   "get_context",
   {
-    description: "Jeyna project root and validated .jeyna/jeyna.config.yaml (account env variable names only, never values).",
+    description: "Jeyna project root, validated .jeyna/jeyna.config.yaml (account env variable names only, never values), where each account variable is set, the CONVENTIONS.md text, and the flows in .jeyna/flows/ with their scenario names.",
     inputSchema: {},
     annotations: { readOnlyHint: true }
   },
   async () => {
     try {
-      return { content: [{ type: "text", text: JSON.stringify(getContext()) }] };
+      const ctx = getContext();
+      const conventions = join7(ctx.root, ".jeyna", "CONVENTIONS.md");
+      const text2 = JSON.stringify({
+        ...ctx,
+        conventions: existsSync6(conventions) ? readFileSync5(conventions, "utf8") : null,
+        flows: listFlows(ctx.root)
+      });
+      return { content: [{ type: "text", text: text2 }] };
     } catch (e) {
       return { isError: true, content: [{ type: "text", text: e.message }] };
     }
@@ -207966,6 +208066,7 @@ registerSessionTools(server2, getContext);
 registerBrowserTools(server2, getContext);
 registerFindingTools(server2);
 registerFinishTools(server2, getContext);
+registerFlowTools(server2, getContext);
 if (positionals[0] === "validate") process.exit(validateCli(positionals[1], projectRoot));
 var transport = new StdioServerTransport2();
 var send = transport.send.bind(transport);
