@@ -59,6 +59,22 @@ function secretSources(root: string, config: Config): Record<string, "env" | ".e
 
 const server = new McpServer({ name: "jeyna", version: "0.0.1" });
 
+// Every tool call logs start and end to stderr, so concurrent calls show as overlapping spans (P8).
+let calls = 0;
+const register = server.registerTool.bind(server);
+server.registerTool = ((name: string, config: unknown, handler: (...a: unknown[]) => unknown) =>
+  register(name, config as never, (async (...a: unknown[]) => {
+    const id = ++calls;
+    const t0 = Date.now();
+    const what = `call ${id} ${name} ${(a[0] as { case?: string } | undefined)?.case ?? "-"}`;
+    log(`${what} start`);
+    try {
+      return await handler(...a);
+    } finally {
+      log(`${what} end ${Date.now() - t0}ms`);
+    }
+  }) as never)) as typeof server.registerTool;
+
 server.registerTool(
   "get_context",
   {

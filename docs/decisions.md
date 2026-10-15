@@ -614,3 +614,16 @@ Claude Code 2.1.299, node 20.12.2, macOS arm64. No headless Claude Code session 
 
 **Changed**
 - New: `plugin/hooks/check-exit.sh`. `src/session.ts` adds `scenario_verdict`. `plugin/hooks/hooks.json`, `plugin/agents/jeyna-tester.md`, `src/run.test.ts`, `src/hooks.test.ts`. The bundle is rebuilt.
+
+## D24 · 2026-10-15 · Probe P8, parallel calls (slice 1, issue #5)
+
+Claude Code 2.1.299, node 20.12.2, macOS arm64, Google Chrome 155.0.8059.41. No headless Claude Code session was run (the owner ruled out `claude -p` for cost). Verified locally by driving the committed bundle over one MCP stdio connection from a folder with no `node_modules` (`src/run.test.ts`, plus a manual client run with stderr visible).
+
+**P8 · server handles concurrent calls: verified locally; Claude Code issuing them concurrently pending live verification**
+- Every tool call now logs `<iso> call <n> <tool> <case|-> start` and `… end <ms>ms` to stderr.
+- Two cases (`t1-1440x900`, `t2-390x844`) each ran `goto` → `snapshot` → `screenshot` → `scenario_verdict`, the two sequences interleaved over one connection, not awaited one after the other. Observed: both `goto` calls started 12 ms apart and ended 1 ms apart (about 630 ms each, sharing the one Chrome launch); `snapshot` and `screenshot` pairs overlapped the same way. Wall time for both cases was 691 ms, about one case's worth. Both verdicts are in `session.json` (no lost update, D11).
+- So the server does not serialise: the stdio transport dispatches each request as it arrives and node interleaves the handlers between awaits. Each case keeps its own browser context (D4). The D10/D11 fallback (serialise browser calls) is not needed on the server side.
+- Not verified: that Claude Code, with two `jeyna:jeyna-tester`s spawned in one message, sends their calls to the one jeyna-mcp process concurrently rather than one at a time. To probe: in `sample-app/`, start a run with two scenarios, spawn both testers in one message, and read the server's stderr (the MCP log, `claude --debug`) for overlapping `start`/`end` spans. If they never overlap, record the serialised throughput (sum of tester times) here; no server change follows.
+
+**Changed**
+- `src/server.ts`: per-call start/end logging around every registered tool. `src/run.test.ts`: the P8 test. The bundle is rebuilt.

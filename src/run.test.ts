@@ -194,3 +194,35 @@ test("parallel verdicts are all kept", async () => {
   await Promise.all(["t1-1440x900", "t1-390x844"].map((c) => call("scenario_verdict", { case: c, result: "pass" })));
   expect(sessionOf(runDir).verdicts.map((v: { case: string }) => v.case).sort()).toEqual(["t1-1440x900", "t1-390x844"]);
 });
+
+// P8: two cases driven concurrently over one connection, as two testers in one batch would be.
+test("two cases run interleaved: per-call stderr logs overlap and both verdicts land in session.json (P8)", async () => {
+  const root = project();
+  const transport = new StdioClientTransport({ command: "node", args: [bundle, "--project", root], stderr: "pipe" });
+  let stderr = "";
+  transport.stderr!.on("data", (d) => (stderr += d));
+  const client = new Client({ name: "test", version: "0" });
+  clients.push(client);
+  await client.connect(transport);
+  const call = async (name: string, args: Record<string, unknown>) => (await client.callTool({ name, arguments: args })) as Result;
+  const started = await call("session_start", { scenarios: [SIGN_IN, { ...SIGN_IN, name: "Landing", account: "none" }] });
+  const run = JSON.parse((started.content[0] as { text: string }).text);
+  const steps = [["goto", { path: "/login" }], ["snapshot", {}], ["screenshot", {}], ["scenario_verdict", { result: "pass" }]] as const;
+  const tester = async (c: string) => {
+    for (const [tool, args] of steps) expect((await call(tool, { case: c, ...args })).isError).toBeFalsy();
+  };
+  await Promise.all([tester("t1-1440x900"), tester("t2-390x844")]);
+
+  // Lines: "<iso> call <n> <tool> <case> start" and "<iso> call <n> <tool> <case> end <ms>ms".
+  const spans = new Map<string, { c: string; start: number; end: number }>();
+  for (const m of stderr.matchAll(/^(\S+) call (\d+) \S+ (\S+) (start|end)/gm)) {
+    const t = Date.parse(m[1]);
+    if (m[4] === "start") spans.set(m[2], { c: m[3], start: t, end: NaN });
+    else spans.get(m[2])!.end = t;
+  }
+  const of = (c: string) => [...spans.values()].filter((s) => s.c === c);
+  expect(of("t1-1440x900")).toHaveLength(4);
+  expect(of("t2-390x844")).toHaveLength(4);
+  expect(of("t1-1440x900").some((a) => of("t2-390x844").some((b) => a.start < b.end && b.start < a.end))).toBe(true);
+  expect(sessionOf(run.runDir).verdicts.map((v: { case: string }) => v.case).sort()).toEqual(["t1-1440x900", "t2-390x844"]);
+});
