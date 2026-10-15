@@ -43954,7 +43954,7 @@ var Config = external_exports.strictObject({
 var log = (...a) => console.error((/* @__PURE__ */ new Date()).toISOString(), ...a);
 process.on("unhandledRejection", (e) => log("unhandledRejection", e));
 var { values } = parseArgs({ options: { project: { type: "string" } }, strict: false });
-var given = (v) => typeof v === "string" && v !== "" ? v : void 0;
+var given = (v) => typeof v === "string" && v !== "" && !v.includes("${") ? v : void 0;
 function projectRoot() {
   const root = given(values.project) ?? given(process.env.CLAUDE_PROJECT_DIR);
   if (root) return resolve(root);

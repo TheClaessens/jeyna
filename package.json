@@ -6,7 +6,7 @@
   "scripts": {
     "build": "node build.mjs",
     "typecheck": "tsc --noEmit",
-    "test": "npm run build && vitest run"
+    "test": "npm run build && vitest run --exclude '.claude/**' --exclude '**/node_modules/**'"
   },
   "devDependencies": {
     "@modelcontextprotocol/sdk": "^1.32.1",
