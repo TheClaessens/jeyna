@@ -30,6 +30,15 @@ test("NotebookEdit and Windows paths are guarded too", () => {
   expect(guard("Write", { file_path: "C:\\app\\.jeyna\\.env" }).permissionDecision).toBe("deny");
 });
 
+test("Read of .jeyna/.env is denied; reading findings, the config and other .env files is not (D32)", () => {
+  const d = guard("Read", { file_path: "/app/.jeyna/.env" });
+  expect(d.permissionDecision).toBe("deny");
+  expect(d.permissionDecisionReason).toMatch(/get_context/);
+  expect(guard("Read", { file_path: "/app/.jeyna/playtests/2026-10-15-login/findings/PT-login-001.md" })).toBeUndefined();
+  expect(guard("Read", { file_path: "/app/.jeyna/jeyna.config.yaml" })).toBeUndefined();
+  expect(guard("Read", { file_path: "/app/.env.example" })).toBeUndefined();
+});
+
 test("other files, including the config and conventions, are left to the normal permission flow", () => {
   expect(guard("Write", { file_path: "/app/.jeyna/jeyna.config.yaml" })).toBeUndefined();
   expect(guard("Edit", { file_path: "/app/.jeyna/CONVENTIONS.md" })).toBeUndefined();

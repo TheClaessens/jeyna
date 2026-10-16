@@ -823,4 +823,20 @@ The developer ran the plugin interactively (`claude --plugin-dir plugin`, Claude
 
 **Open**
 - A tester signed in as one account plays its viewport cases one after the other on the same app state. In the todos flow the second case saw the first case's todo, and `Account: consumes` scenarios leave accounts changed (password reset, lockout) for the next run. The sample app resets on restart. Real apps need a precondition, a cleanup step, or one account per case. Not decided.
-- Still pending live verification: P6 and P7 (the SubagentStop hook's `agent_type` in a debug log, and a tester blocked once then released), P8 (overlap of same-batch testers' calls; the run times suggest it), whether `effort` per spawn is accepted, AC3 over a whole transcript, AC5 (a tester retrying with a screenshot), and the "run `/jeyna:init`" message in a project without `.jeyna/`.
+- Missing credentials: see above. Shared account state across cases is tracked in issue #12.
+
+**Checked after the runs (2026-10-16)**
+- P6 passed: each run's `hooks.log` shows one SubagentStop per tester, with `agent_type=jeyna:jeyna-tester`, the cases parsed from the marker line, and `allow` with nothing missing (17 tester stops over 5 runs).
+- P7 was not triggered: no tester stopped without its verdicts, so the block-once path was not exercised live. It stays covered by the hook tests.
+- P8 is consistent with parallel spawning: testers of the same batch stopped seconds apart (for example 21:19:46 and 21:19:49). Call overlap was not measured.
+- `effort` per spawn: no errors were seen.
+- AC3 passed for every playtest run: no account value appears in the main or tester transcripts of the runs. The one hit in a transcript was `/jeyna:init` printing the sample app's committed `.env.example` with Bash while inspecting the project, before any run. D32 closes that path and the `Read` path.
+- Still pending live verification: AC5 (a tester retrying with a screenshot; no tester omitted evidence) and the "run `/jeyna:init`" message in a project without `.jeyna/`.
+
+## D32 · 2026-10-16 · The guard also denies `Read` of `.jeyna/.env`; init reads only variable names
+
+Live AC3 check (D31): during `/jeyna:init` the agent printed the project's `.env.example` with Bash, values included, while looking for the app's settings. In the sample app those are the test accounts; in a real project `.env.example` may hold real values. Nothing stopped the agent from `Read`ing `.jeyna/.env` either.
+
+- The PreToolUse guard now also matches `Read`, and denies it on `.jeyna/.env` only, pointing to `get_context` (which reports where each variable is found, never its value) and to `cut -d= -f1` for the names. Reading findings, the config and any other file is unchanged.
+- `/jeyna:init` reads `.env.example` and `.jeyna/.env` by variable names only (`cut -d= -f1`).
+- Not covered: Bash can still print `.jeyna/.env`. A PreToolUse hook cannot reliably parse every shell command. The skills never ask for it, and the guard's message names the safe command.

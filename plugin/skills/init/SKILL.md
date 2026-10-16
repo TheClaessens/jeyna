@@ -15,7 +15,7 @@ If `${CLAUDE_PROJECT_DIR}/.jeyna/jeyna.config.yaml` already exists, say so and s
 
 ## 2. Inspect the project
 
-Look for how the app starts and on which port: `package.json` scripts, framework config (vite, next, …), `.env.example`, a README. Propose an app name (the folder or package name) and an app URL such as `http://localhost:<port>`.
+Look for how the app starts and on which port: `package.json` scripts, framework config (vite, next, …), a README, and the variable names in `.env.example` (names only: `cut -d= -f1 .env.example`; never print its values, which may be real). Propose an app name (the folder or package name) and an app URL such as `http://localhost:<port>`.
 
 ## 3. Ask the developer
 
@@ -30,7 +30,7 @@ Ask in one round:
 1. `mkdir -p .jeyna`.
 2. `.jeyna/jeyna.config.yaml`: copy the template, replace `__APP_NAME__` and `__APP_URL__`, and replace `accounts: []` with one line per account, e.g. `  - { handle: user_a, user_env: JEYNA_USER_A_USER, pass_env: JEYNA_USER_A_PASS }` under `accounts:`. Keep the comments.
 3. `.jeyna/CONVENTIONS.md`: copy the template as is.
-4. `.jeyna/.env`: create it **with Bash** (the write guard denies `Write`/`Edit` on this file): `cp` the `env` template, then append one empty line per variable, e.g. `printf 'JEYNA_USER_A_USER=\nJEYNA_USER_A_PASS=\n' >> .jeyna/.env`. Leave the values empty. If `.jeyna/.env` already exists, only append the variables it lacks.
+4. `.jeyna/.env`: create it **with Bash** (the write guard denies `Write`/`Edit` on this file): `cp` the `env` template, then append one empty line per variable, e.g. `printf 'JEYNA_USER_A_USER=\nJEYNA_USER_A_PASS=\n' >> .jeyna/.env`. Leave the values empty. If `.jeyna/.env` already exists, only append the variables it lacks; list the names it has with `cut -d= -f1 .jeyna/.env`. Never read or print the file itself (the guard denies `Read` on it).
 5. `.gitignore` at the project root (create it if missing), adding only lines not already there:
    - always `.jeyna/.env`;
    - if evidence is gitignored, also `.jeyna/playtests/*/evidence/`.
