@@ -64,6 +64,32 @@ async function launch(headed: boolean): Promise<Browser> {
 const pages = new Map<string, Promise<Page>>();
 const shots = new Map<string, number>();
 
+// What the app said behind the page, per case, since the tester's last call: uncaught errors, console
+// errors, failed requests and 4xx/5xx responses (D31). Drained into the next goto/click/press/snapshot result.
+const events = new Map<string, string[]>();
+const EVENTS_MAX = 30;
+function note(caseId: string, line: string) {
+  const list = events.get(caseId) ?? [];
+  if (list.length < EVENTS_MAX) list.push(line.length > 300 ? `${line.slice(0, 300)}…` : line);
+  else if (list.length === EVENTS_MAX) list.push("… and more; the rest is dropped until the next call");
+  events.set(caseId, list);
+}
+function drain(caseId: string): string[] | undefined {
+  const list = events.get(caseId);
+  events.delete(caseId);
+  return list;
+}
+// Chrome also logs every failed request as a console error; the request events already carry it.
+// A missing favicon is the browser's own request, not the app's.
+const NOISE = /^Failed to load resource/;
+const favicon = (url: string) => /\/favicon\.ico(\?|$)/.test(url);
+function listen(caseId: string, pg: Page) {
+  pg.on("pageerror", (e) => note(caseId, `page error: ${e.message}`));
+  pg.on("console", (m) => m.type() === "error" && !NOISE.test(m.text()) && note(caseId, `console error: ${m.text()}`));
+  pg.on("requestfailed", (r) => !favicon(r.url()) && note(caseId, `${r.method()} ${r.url()} failed: ${r.failure()?.errorText ?? "unknown"}`));
+  pg.on("response", (r) => r.status() >= 400 && !favicon(r.url()) && note(caseId, `${r.request().method()} ${r.url()} ${r.status()}`));
+}
+
 // "chromium 155.0.8059.41" for findings; "unknown" when no browser was launched.
 export async function browserName(): Promise<string> {
   try {
@@ -78,6 +104,7 @@ export async function closeContexts() {
   const all = [...pages.values()];
   pages.clear();
   shots.clear();
+  events.clear();
   await Promise.allSettled(all.map(async (p) => (await p).context().close()));
 }
 
@@ -109,6 +136,7 @@ function page(caseId: string, config: Config): Promise<Page> {
       const pg = await (await b.newContext({ viewport: { width, height } })).newPage();
       // A page closed under us (its tab or window shut) is replaced on the next call, not reused.
       pg.on("close", () => forget(caseId, created));
+      listen(caseId, pg);
       return pg;
     });
     created.catch(() => forget(caseId, created));
@@ -133,9 +161,11 @@ export function nearest(selector: string, aria: string, max = 5): string[] {
   return [...new Set(found.sort((a, b) => b.score - a.score || a.i - b.i).map((c) => c.sel))].slice(0, max);
 }
 
-async function settled(p: Page) {
+// The url and title after a navigation, plus the app's console events since the case's last call (D31).
+async function settled(caseId: string, p: Page) {
   await p.waitForLoadState("load").catch(() => {});
-  return ok({ url: p.url(), title: await p.title() });
+  const heard = drain(caseId);
+  return ok({ url: p.url(), title: await p.title(), ...(heard && { console: heard }) });
 }
 
 const SNAPSHOT_MAX = 90_000; // just under Claude Code's default 25k-token MCP output cap (D14)
@@ -152,7 +182,7 @@ export function registerBrowserTools(
     "goto",
     {
       description:
-        "Open a page in this case's browser. Give `path` (relative to the app url, including its base path: /login on http://host/app/ opens http://host/app/login) or a full `url`. Returns the final url and title.",
+        "Open a page in this case's browser. Give `path` (relative to the app url, including its base path: /login on http://host/app/ opens http://host/app/login) or a full `url`. Returns the final url and title, and `console`: page errors, console errors, failed requests and 4xx/5xx responses since your last call, when there were any.",
       inputSchema: { case: caseId, path: z.string().optional(), url: z.string().optional() },
     },
     async (a) => {
@@ -161,7 +191,7 @@ export function registerBrowserTools(
         if (!a.path === !a.url) throw new Error("Give exactly one of path or url.");
         const p = await page(a.case, config);
         await p.goto(a.url ?? appUrl(a.path!, config.app.url), { waitUntil: "load" });
-        return ok({ url: p.url(), title: await p.title() });
+        return await settled(a.case, p);
       } catch (e) {
         return fail(e);
       }
@@ -174,7 +204,7 @@ export function registerBrowserTools(
     "click",
     {
       description:
-        "Click the element a Playwright selector matches. On a miss, the error lists the nearest candidates from the page's accessibility tree. Returns the url and title after the click.",
+        "Click the element a Playwright selector matches. On a miss, the error lists the nearest candidates from the page's accessibility tree. Returns the url and title after the click, and `console` (errors and failed or 4xx/5xx requests since your last call) when there were any.",
       inputSchema: { case: caseId, selector },
     },
     async (a) => {
@@ -189,7 +219,7 @@ export function registerBrowserTools(
               (near.length ? `Nearest candidates:\n${near.map((n) => `- ${n}`).join("\n")}` : "The page has no clickable controls."),
           );
         }
-        return await settled(p);
+        return await settled(a.case, p);
       } catch (e) {
         return fail(e);
       }
@@ -235,7 +265,7 @@ export function registerBrowserTools(
         const focused = p.locator("*:focus");
         if (await focused.count()) await focused.press(a.key, { timeout: ACT_TIMEOUT });
         else await p.keyboard.press(a.key);
-        return await settled(p);
+        return await settled(a.case, p);
       } catch (e) {
         return fail(e);
       }
@@ -246,7 +276,7 @@ export function registerBrowserTools(
     "snapshot",
     {
       description:
-        "The page's accessibility tree as text: roles, names, text. Your main way of reading the page. It does not show layout: use screenshot with look: true for visual questions.",
+        "The page's accessibility tree as text: roles, names, text. Your main way of reading the page. It does not show layout: use screenshot with look: true for visual questions. Ends with the app's console events since your last call (errors, failed or 4xx/5xx requests), when there were any.",
       inputSchema: { case: caseId },
       annotations: { readOnlyHint: true },
     },
@@ -254,7 +284,8 @@ export function registerBrowserTools(
       try {
         const p = await page(a.case, getContext().config);
         const text = clip(await p.locator("body").ariaSnapshot(), SNAPSHOT_MAX, redact);
-        return { content: [{ type: "text", text }] };
+        const heard = drain(a.case);
+        return { content: [{ type: "text", text: heard ? `${text}\n\nConsole since your last call:\n${heard.map((l) => `- ${l}`).join("\n")}` : text }] };
       } catch (e) {
         return fail(e);
       }

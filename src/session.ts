@@ -1,5 +1,5 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { z } from "zod";
@@ -83,6 +83,18 @@ function buildId(root: string, config: Config): string {
   }
 }
 
+// app.reset, run from the project root before every run so each run starts from the same app state (D31).
+// A failure refuses the run: a tester judging leftover state is worse than no run.
+const RESET_TIMEOUT = 120_000;
+function resetApp(root: string, command: string) {
+  const r = spawnSync("sh", ["-c", command], { cwd: root, timeout: RESET_TIMEOUT, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+  if (r.error || r.status !== 0) {
+    const why = r.error ? r.error.message : `exit ${r.status ?? `signal ${r.signal}`}`;
+    const out = `${r.stderr ?? ""}${r.stdout ?? ""}`.trim().split("\n").slice(-5).join("\n");
+    throw new Error(`app.reset failed (${why}): ${command}${out ? `\n${out}` : ""}\nNo run was started. Fix the command in jeyna.config.yaml, or set reset: null.`);
+  }
+}
+
 // Runs left `running` on disk, by this server or an earlier one.
 function runningRuns(dir: string): string[] {
   if (!existsSync(dir)) return [];
@@ -105,7 +117,7 @@ export function registerSessionTools(server: McpServer, getContext: () => { root
     "session_start",
     {
       description:
-        "Start a playtest run, guided from a flow in .jeyna/flows/ or exploratory from an explicit scenario list (with its slug and entry path). Closes the scout look. only and viewports narrow the run; unknown names are refused with the valid ones. Plans one tester per scenario, one case per viewport, one account per tester, and the batch to spawn each tester in (no account is held by two testers in one batch). Refused while another run is running unless force is true.",
+        "Start a playtest run, guided from a flow in .jeyna/flows/ or exploratory from an explicit scenario list (with its slug and entry path). Closes the scout look. only and viewports narrow the run; unknown names are refused with the valid ones. Runs app.reset from jeyna.config.yaml first, if set, and refuses the run when it fails. Plans one tester per scenario, one case per viewport, one account per tester, and the batch to spawn each tester in (no account is held by two testers in one batch). Refused while another run is running unless force is true.",
       inputSchema: {
         flow: z.string().optional().describe("Flow name from get_context (guided run)"),
         scenarios: z.array(Scenario).min(1).optional().describe("Explicit scenario list (exploratory run)"),
@@ -159,6 +171,7 @@ export function registerSessionTools(server: McpServer, getContext: () => { root
         }
         current = undefined;
         await closeContexts();
+        if (config.app.reset) resetApp(root, config.app.reset);
 
         const base = `${new Date().toLocaleDateString("sv")}-${flowName ?? slug ?? "exploratory"}`;
         let id = base;

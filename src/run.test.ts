@@ -365,3 +365,53 @@ test("two cases run interleaved: per-call stderr logs overlap and both verdicts 
   expect(of("t1-1440x900").some((a) => of("t2-390x844").some((b) => a.start < b.end && b.start < a.end))).toBe(true);
   expect(sessionOf(run.runDir).verdicts.map((v: { case: string }) => v.case).sort()).toEqual(["t1-1440x900", "t2-390x844"]);
 });
+
+test("app.reset runs from the project root before a run; a failing one refuses the run and starts nothing (D31)", async () => {
+  const withReset = (cmd: string) => CONFIG().replace(`url: ${APP} }`, `url: ${APP}, reset: "${cmd}" }`);
+  const root = project(withReset("touch reset-ran"));
+  const ran = await connect(root);
+  const r = await ran.call("session_start", { scenarios: [SIGN_IN] });
+  expect(r.isError, ran.text(r)).toBeFalsy();
+  expect(existsSync(join(root, "reset-ran"))).toBe(true);
+
+  const broken = project(withReset("echo seed is missing >&2; exit 3"));
+  const c = await connect(broken);
+  const refused = await c.call("session_start", { scenarios: [SIGN_IN] });
+  expect(refused.isError).toBe(true);
+  expect(c.text(refused)).toMatch(/app\.reset failed \(exit 3\): echo seed is missing[\s\S]*seed is missing/);
+  expect(existsSync(join(broken, ".jeyna", "playtests"))).toBe(false);
+});
+
+test("POST /__reset returns the sample app to its seeded state: sessions, todos and passwords (D31)", async () => {
+  const signIn = async () => {
+    const r = await fetch(`${APP}/login`, { method: "POST", body: new URLSearchParams({ email: "user_a@example.test", password: "correct-horse-a" }), redirect: "manual" });
+    expect(r.status).toBe(303);
+    return r.headers.get("set-cookie")!.split(";")[0];
+  };
+  const cookie = await signIn();
+  await fetch(`${APP}/todos`, { method: "POST", headers: { cookie }, body: new URLSearchParams({ title: "Leftover", priority: "High" }), redirect: "manual" });
+  expect(await (await fetch(`${APP}/todos`, { headers: { cookie } })).text()).toContain("Leftover");
+
+  expect((await fetch(`${APP}/__reset`, { method: "POST" })).status).toBe(204);
+  expect((await fetch(`${APP}/todos`, { headers: { cookie }, redirect: "manual" })).status).toBe(303); // the session is gone
+  expect(await (await fetch(`${APP}/todos`, { headers: { cookie: await signIn() } })).text()).not.toContain("Leftover");
+});
+
+test("goto, click, press and snapshot carry the app's console since the case's last call: page errors, console errors, 4xx/5xx and failed requests (D31)", async () => {
+  const { call, text } = await started();
+  const page = (html: string) => `data:text/html,${encodeURIComponent(html)}`;
+  const r = await call("goto", { case: "t1-1440x900", url: page(`<script>console.error("boom"); throw new Error("bang")</script>`) });
+  expect(r.isError, text(r)).toBeFalsy();
+  expect(JSON.parse(text(r)).console).toEqual(["console error: boom", "page error: bang"]);
+  // A 4xx response, once: Chrome's own "Failed to load resource" console line for it is dropped.
+  expect(JSON.parse(text(await call("goto", { case: "t1-1440x900", path: "/nope" }))).console).toEqual([`GET ${APP}/nope 404`]);
+  // Drained: the next call carries nothing, and a quiet page has no console key at all.
+  const quiet = JSON.parse(text(await call("goto", { case: "t1-1440x900", path: "/login" })));
+  expect(quiet.console).toBeUndefined();
+  expect(text(await call("snapshot", { case: "t1-1440x900" }))).not.toContain("Console since");
+  // A failed request lands in the snapshot's tail, so the tester sees it where it reads the page.
+  await call("goto", { case: "t1-1440x900", url: page(`<script>fetch("http://localhost:1/x").catch(() => {})</script>`) });
+  await new Promise((r) => setTimeout(r, 500));
+  const snap = text(await call("snapshot", { case: "t1-1440x900" }));
+  expect(snap).toMatch(/Console since your last call:\n- GET http:\/\/localhost:1\/x failed: /);
+});

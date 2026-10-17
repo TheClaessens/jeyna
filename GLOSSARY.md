@@ -9,6 +9,8 @@ The one glossary for Jeyna. Use these words in docs, code, issues and agent prom
 - **Exploratory run**: a run whose scenarios were derived from the prompt and a scout look, and confirmed by the developer.
 - **Flow**: a named set of scenarios for one area of the app, in `flows/<name>.md`. Usually first written by the loop at the end of an exploratory run (`save_flow`), then edited by people.
 - **Scenario**: one named path through a flow, with a description, a `Pass:` line and an optional `Account:` line (`none` or `consumes`).
+- **Reset**: the `app.reset` shell command in `jeyna.config.yaml`, run by `session_start` from the project root before every run so each run starts from the same app state. A failing command refuses the run. (D31)
+- **Retest**: a run of one finding's scenario at its viewport, started by `/jeyna:playtest PT-<slug>-<nnn>`. A `pass` marks the finding `fixed`. (D31)
 - **Slug**: the flow name or exploratory slug used in the run folder and finding ids. It never contains a colon. (D7)
 
 ## Who does the work
@@ -26,7 +28,8 @@ The one glossary for Jeyna. Use these words in docs, code, issues and agent prom
 - **Finding**: one observed divergence, one markdown file `findings/PT-<slug>-<nnn>.md`. Its kind is `bug`, `ux`, `a11y` or `question` (no `perf` in v0, D8). Its status is `open`, `duplicate` (with `of`), `wontfix` or `fixed`. (D11)
 - **Verdict**: `pass`, `fail`, `blocked` or `skipped` for one case. Recorded by the tester and checked by the server. (D8)
 - **Evidence**: PNG files under the run's `evidence/` folder, named `<case>-<seq>[-<label>].png` and referenced by name from findings. No clips in v0. (D9)
-- **Report**: `report.md`, written by `session_finish`: counts, scenario matrix, and findings sorted by severity then kind.
+- **Console**: the app's page errors, console errors, failed requests and 4xx/5xx responses in a case's browser since the tester's last call, carried by the results of `goto`, `click`, `press` and `snapshot`. Not stored. (D31)
+- **Report**: `report.md`, written by `session_finish`: counts, scenario matrix, the verdicts that changed since the latest done run of the same flow, and findings sorted by severity then kind.
 
 ## Rules of the fan-out
 

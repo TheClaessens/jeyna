@@ -7,7 +7,7 @@ A hand-written flow for the sample app. Copy it to `.jeyna/flows/todos.md` after
 
 ## Preconditions
 
-The app runs on its configured url. Each account starts with an empty todo list (restarting `node sample-app/server.mjs` resets it).
+The app runs on its configured url. Each account starts with an empty todo list: set `reset: curl -fsS -X POST http://localhost:4173/__reset` under `app` in `jeyna.config.yaml`, and every run starts from a fresh state (restarting `node sample-app/server.mjs` does the same by hand).
 
 ## Scenarios
 

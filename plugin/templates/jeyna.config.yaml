@@ -3,6 +3,8 @@ app:
   name: __APP_NAME__
   url: __APP_URL__
   build: null            # optional fixed build id; else git describe --always --dirty
+  reset: null            # optional shell command run from the project root before every run, so each run
+                         # starts from the same app state, e.g. npm run db:seed. A failing command refuses the run.
 
 # Each viewport is one case per scenario, run in sequence by one tester (D4).
 viewports: [1440x900, 390x844]

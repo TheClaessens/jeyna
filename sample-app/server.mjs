@@ -6,13 +6,15 @@ import { createServer } from "node:http";
 const PORT = Number(process.env.PORT ?? 4173);
 const MAX_FAILURES = 3;
 
-// Same values as .env.example. Restarting the server resets everything.
+// Same values as .env.example. Restarting the server, or POST /__reset (the config's app.reset), resets everything.
 const account = (pass) => ({ passwords: new Set([pass]), failures: 0, todos: [], next: 1 });
-const accounts = new Map([
-  ["user_a@example.test", account("correct-horse-a")],
-  ["user_b@example.test", account("correct-horse-b")],
-]);
-const sessions = new Map(); // session id -> email
+const seed = () =>
+  new Map([
+    ["user_a@example.test", account("correct-horse-a")],
+    ["user_b@example.test", account("correct-horse-b")],
+  ]);
+let accounts = seed();
+let sessions = new Map(); // session id -> email
 
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 
@@ -109,6 +111,11 @@ const server = createServer(async (req, res) => {
   const user = accounts.get(sessions.get(sid));
   const path = new URL(req.url, "http://x").pathname;
 
+  if (req.method === "POST" && path === "/__reset") {
+    accounts = seed();
+    sessions = new Map();
+    return res.writeHead(204).end();
+  }
   if (req.method === "GET" && (path === "/" || path === "/login")) return user ? redirect("/todos") : send(200, login());
   if (req.method === "POST" && path === "/login") {
     const f = await form(req);

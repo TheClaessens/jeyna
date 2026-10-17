@@ -9,6 +9,7 @@ export const Config = z.strictObject({
     name: z.string().min(1),
     url: z.url(),
     build: z.string().nullish(),
+    reset: z.string().min(1).nullish().describe("Shell command that resets the app's state; run before every run"),
   }),
   viewports: z.array(z.string().regex(/^\d+x\d+$/, "must look like 1440x900")).min(1),
   browser: z.strictObject({ headed: z.boolean().default(false) }).default({ headed: false }),

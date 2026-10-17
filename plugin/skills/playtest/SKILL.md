@@ -1,7 +1,7 @@
 ---
-description: Playtest this project's web app. Matches the request to a flow in .jeyna/flows/ (or, with none, takes a short scout look and proposes scenarios), starts a run, spawns one jeyna-tester per scenario batch by batch, marks duplicate findings, ends with a report and offers to save an exploratory run as a flow.
+description: Playtest this project's web app. Matches the request to a flow in .jeyna/flows/ (or, with none, takes a short scout look and proposes scenarios), starts a run, spawns one jeyna-tester per scenario batch by batch, marks duplicate findings, ends with a report (with the verdicts that changed since the last run) and offers to save an exploratory run as a flow. Given a finding id (PT-…), retests that one finding and marks it fixed when its scenario passes.
 disable-model-invocation: true
-argument-hint: "[what to test]"
+argument-hint: "[what to test, or a finding id PT-…]"
 ---
 
 # /jeyna:playtest
@@ -26,6 +26,8 @@ Call `get_context`.
 Keep from the result: `config.app.url`, `config.viewports`, `config.tester` (`model`, `effort`), `conventions`, and `flows` (each with its scenario names, or an `error`).
 
 ## 2. Match the request to a flow
+
+If the request is a finding id (`PT-<slug>-<nnn>`, with or without words around it), skip to 2c.
 
 Match the request against the flow names and their scenario names from `get_context`. There are no aliases: "authentication", "auth" and "login flow" match a flow named `authentication`; "add a todo" matches a flow with a scenario named "Add a todo with a priority".
 
@@ -74,6 +76,21 @@ Start this run, or tell me what to change?
 Start only after the developer confirms. If they edit (add, drop or rename scenarios, change a Pass: line, the slug, the entry or the viewports), apply exactly what they said; if the edit is clear, start; if not, show the changed list once more and wait. If they decline, stop.
 
 **Start.** Call `session_start {scenarios, slug, entry, viewports?}` with the confirmed list: `[{name, description, pass, account?}]`, exactly as confirmed. It closes the scout. Then go on as in 3 from "The result has `runDir`": state the plan, and steps 4 to 7. In the tester prompt template, `Entry` is the confirmed entry, Preconditions is "None given." and What matters most here is the developer's request in their words. Afterwards, step 8.
+
+## 2c. Retest a finding
+
+Only when the request is a finding id. The run plays that finding's scenario at its viewport, and its verdict decides the finding.
+
+**Find it.** `Glob` `.jeyna/playtests/*/findings/<id>.md`. None: say so and stop. Several (ids repeat across runs of a flow): take the newest run folder (folder names sort by date) unless the request names a run. `Read` the finding: its frontmatter (`flow`, `scenario`, `viewport`, `status`), the title and the Actual section. Then `Read` that run's `session.json` for `mode`, `entry` and `scenarios`. Reading these files is fine; never write them.
+
+**Start it.** One scenario, one viewport:
+- guided (`flow` has no `exploratory:` prefix): `session_start {flow, only: [scenario], viewports: [viewport]}`, after `get_flow {name}` for the preconditions and what matters most;
+- exploratory: `session_start {scenarios: [<the scenario object with that name, from session.json>], slug: <flow without the exploratory: prefix>, entry, viewports: [viewport]}`.
+
+Then continue at 3 from "The result has `runDir`" and do steps 4 to 7. In the tester prompt, What matters most here is: `Retest of <id>: <title>. Last time: <the Actual text>.` (after the flow's own text, if any). In 7, the retested case's verdict decides the finding:
+- `pass`: call `update_status {id, run: <the old run's folder name>, status: "fixed", note: "passed in run <new run id>"}` and say the finding is fixed;
+- `fail`: say it persists and name the new finding ids; the old finding stays `open`;
+- `blocked` or `skipped`: say why and leave the status.
 
 ## 3. Start the run
 
@@ -148,6 +165,7 @@ Its result has `reportPath`, `counts`, `elapsedSeconds` and `testers`. Tell the 
 - the summary;
 - cases passed, failed, blocked and skipped; findings by severity, and how many duplicates you marked;
 - the most severe findings, one line each: id, kind, title;
+- what changed since the last run of this flow, from `since` (null on the first run): the previous run id and each changed case as `<scenario> at <viewport>: <was> → <now>`, or "no changes" when `changed` is empty;
 - the report path (`reportPath`);
 - elapsed time (from `elapsedSeconds`, as minutes and seconds) and the number of testers.
 

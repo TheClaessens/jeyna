@@ -801,3 +801,29 @@ A code review of the integration branch found races, leaks and duplicated logic.
 - New: `src/shared.ts`, `src/shared.test.ts`, `src/testkit.ts`.
 - `src/browser.ts`, `src/accounts.ts`, `src/findings.ts`, `src/finish.ts`, `src/flows.ts`, `src/session.ts`, `src/server.ts`, and the tests.
 - analysis: §5.4 `update_status`, `validate` and `goto` rows. The bundle is rebuilt.
+
+## D31 · 2026-10-17 · Harden the loop: `app.reset`, console capture, since last run, retest (issue #12)
+
+The live runs behind issue #12 showed that a run's verdicts depend on what earlier runs and earlier cases left in the app, and that a tester only sees the screen: "the button did nothing" is as far as it gets. Four small changes make a run comparable with the last one. Verified locally (vitest over MCP stdio against the bundle, with the sample app); the prompt changes are pending live verification (Claude Code 2.1.302).
+
+**`app.reset` (issue #12, option 4)**
+- `jeyna.config.yaml` gets an optional `app.reset`: a shell command. `session_start` runs it from the project root (`sh -c`, 120 s timeout) after the stale-run check and before the run folder is created. A non-zero exit refuses the run with the command and its last output lines: a tester judging leftover state is worse than no run. Nothing runs between batches or cases: a reset mid-run would wipe the state of the testers still playing.
+- Inside a run, the tester undoes what its previous case created before starting the next (issue #12, option 2); what cannot be undone (a changed password) stays and is noted in the verdict. One sentence in `jeyna-tester.md`; unverified live.
+- The sample app gets `POST /__reset`, which reseeds accounts, passwords, lockouts, todos and sessions; the todos flow's preconditions say to set `reset: curl -fsS -X POST http://localhost:4173/__reset`. The issue's done-when (two back-to-back runs of `todos` and `authentication` with the same verdicts, no restart by hand) is a live run and still to be done.
+
+**Console capture**
+- Each case's page keeps the app's page errors, console errors, failed requests and 4xx/5xx responses since the case's last call (at most 30, 300 characters each). `goto`, `click` and `press` return them as `console`; `snapshot` ends with them under "Console since your last call". A quiet page adds nothing. Chrome's own "Failed to load resource" console line duplicates the request event and is dropped; `favicon.ico` is the browser's request, not the app's, and is dropped too.
+- Not written to disk: a finding quotes the line that explains it in `actual`; a full log per case is a later addition if the quotes prove too thin. The tester is told that a console line with nothing wrong on the page is a `question`, not a `bug`.
+
+**Since last run**
+- `report.md` gets a "Since last run" section: against the latest `done` run of the same `flow` string that started before this one, every (scenario, viewport) both runs played, and a table of those whose verdict changed. The first run of a flow says so. `session_finish` returns the same as `since` (`{run, compared, changed}`, or `null`), and the skill reports it.
+- Verdicts, not findings: finding ids restart per run and titles are an agent's words, so matching findings across runs is agent work, not code. The retest below is how a finding gets closed.
+
+**Retest**
+- `/jeyna:playtest PT-<slug>-<nnn>` retests one finding: the skill finds the file (newest run on a repeated id), reads its `flow`, `scenario` and `viewport` and the run's `session.json`, and starts a run of that one case (`only` and `viewports` on a guided run; the stored scenario and slug on an exploratory one). The tester's "What matters most here" names the finding and its Actual text. A `pass` sets the old finding `fixed` through `update_status {run, note}`; a `fail` leaves it `open` beside the new finding. No new tool: the pieces (`only`, `viewports`, `update_status` with `run`) existed. Unverified live.
+
+**Changed**
+- `src/schema.ts` (`app.reset`), `src/session.ts`, `src/browser.ts`, `src/finish.ts`; tests in `src/run.test.ts` and `src/finish.test.ts`. The bundle is rebuilt.
+- `plugin/agents/jeyna-tester.md`, `plugin/skills/playtest/SKILL.md` (2c and step 7), `plugin/templates/jeyna.config.yaml`.
+- `sample-app/server.mjs` (`POST /__reset`), `sample-app/flows/todos.md`.
+- GLOSSARY (Reset, Retest, Console, Report); analysis §5.4 rows for `session_start`, `session_finish`, `goto`, `snapshot` and the config block.

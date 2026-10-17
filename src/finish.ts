@@ -1,6 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
-import { basename, join, relative, resolve } from "node:path";
+import { basename, dirname, join, relative, resolve } from "node:path";
 import { parse, stringify } from "yaml";
 import { z } from "zod";
 import { closeContexts } from "./browser.js";
@@ -106,8 +106,45 @@ const link = (id: string) => `[${id}](findings/${id}.md)`;
 // Wall time from session_start to session_finish, in whole seconds (N5, D14).
 const elapsed = (s: Session) => Math.round((Date.parse(s.finished!) - Date.parse(s.started)) / 1000);
 
-// report.md (F7.3): summary counts, scenario matrix, findings sorted by severity then kind. Plain markdown, no HTML.
+// The latest done run of the same flow started before this one: the baseline of "Since last run" (D31).
+function previousRun(runDir: string, session: Session): Session | undefined {
+  const dir = dirname(runDir);
+  return readdirSync(dir)
+    .flatMap((d) => {
+      try {
+        return [readSession(join(dir, d))];
+      } catch {
+        return [];
+      }
+    })
+    .filter((s) => s.flow === session.flow && s.status === "done" && s.started < session.started)
+    .sort((a, b) => b.started.localeCompare(a.started))[0];
+}
+
+type Change = { scenario: string; viewport: string; was: string; now: string };
+export type Since = { run: string; compared: number; changed: Change[] };
+
+// Verdicts of this run against the previous one, per (scenario, viewport) that both runs played (D31).
+function since(session: Session, prev: Session | undefined): Since | undefined {
+  if (!prev) return undefined;
+  const verdictOf = (s: Session, scenario: string, viewport: string) => {
+    const c = s.cases.find((c) => c.scenario === scenario && c.viewport === viewport);
+    return c && s.verdicts.find((v) => v.case === c.id)?.result;
+  };
+  const out: Since = { run: prev.id, compared: 0, changed: [] };
+  for (const { scenario, viewport } of session.cases) {
+    const now = verdictOf(session, scenario, viewport);
+    const was = verdictOf(prev, scenario, viewport);
+    if (!now || !was) continue;
+    out.compared++;
+    if (now !== was) out.changed.push({ scenario, viewport, was, now });
+  }
+  return out;
+}
+
+// report.md (F7.3): summary counts, scenario matrix, verdicts since the last run, findings sorted by severity then kind. Plain markdown, no HTML.
 function report(runDir: string, session: Session) {
+  const diff = since(session, previousRun(runDir, session));
   const findings = readFindings(runDir, session).filter((f) => f.front) as (Finding & { front: FindingFront })[];
   findings.sort(
     (a, b) =>
@@ -159,6 +196,13 @@ function report(runDir: string, session: Session) {
       [row([counts.findings, ...SEVERITIES.map((s) => counts[s]), counts.duplicate])],
     ),
     `## Scenario matrix\n\n${table(["Scenario", ...viewports], matrix)}`,
+    `## Since last run\n\n` +
+      (diff
+        ? `Compared with ${diff.run}: ${diff.compared} cases in both runs, ${diff.changed.length} changed.` +
+          (diff.changed.length
+            ? `\n\n${table(["Scenario", "Viewport", "Was", "Now"], diff.changed.map((c) => row([c.scenario, c.viewport, c.was, c.now])))}`
+            : "")
+        : "No earlier done run of this flow."),
     `## Findings\n\n` +
       (findings.length
         ? table(
@@ -178,7 +222,7 @@ function report(runDir: string, session: Session) {
         : "No findings."),
   ].join("\n\n");
   writeFileSync(join(runDir, "report.md"), md + "\n");
-  return counts;
+  return { counts, since: diff ?? null };
 }
 
 // Run folders under .jeyna/playtests/, newest first by start time.
@@ -239,7 +283,7 @@ export function registerFinishTools(server: McpServer, getContext: () => { root:
     "session_finish",
     {
       description:
-        "End the running run: runs the validate checks and refuses with the error list while any remain (the run stays running); otherwise writes report.md, sets status done and closes the browser contexts. Returns {reportPath, counts, elapsedSeconds, testers}: elapsed is the wall time since session_start.",
+        "End the running run: runs the validate checks and refuses with the error list while any remain (the run stays running); otherwise writes report.md, sets status done and closes the browser contexts. Returns {reportPath, counts, since, elapsedSeconds, testers}: elapsed is the wall time since session_start; since compares verdicts with the latest done run of the same flow ({run, compared, changed: [{scenario, viewport, was, now}]}), or null with none.",
       inputSchema: { summary: z.string().min(1).describe("A short summary of the run for the top of report.md") },
     },
     async ({ summary }) => {
@@ -252,12 +296,12 @@ export function registerFinishTools(server: McpServer, getContext: () => { root:
         }
         session.summary = summary;
         session.finished = new Date().toISOString();
-        const counts = report(runDir, session);
+        const { counts, since } = report(runDir, session);
         session.status = "done";
         save(runDir, session);
         endRun();
         await closeContexts();
-        return ok({ reportPath: join(runDir, "report.md"), counts, elapsedSeconds: elapsed(session), testers: session.testers.length });
+        return ok({ reportPath: join(runDir, "report.md"), counts, since, elapsedSeconds: elapsed(session), testers: session.testers.length });
       } catch (e) {
         return fail(e);
       }

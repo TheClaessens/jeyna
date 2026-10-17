@@ -190,6 +190,7 @@ app:
   name: todo-sample
   url: http://localhost:4173
   build: null            # optional fixed id; else git HEAD
+  reset: null            # optional shell command run before every run, e.g. npm run db:seed (D31)
 viewports: [1440x900, 390x844]
 browser:
   headed: false
@@ -234,23 +235,23 @@ Run family:
 |---|---|---|
 | `get_context` | — | project root, config (env variable names only), `secrets`: per account variable `env` \| `.env` \| `missing`, never the value (D18, D21), conventions text, flows with their scenario names, active session if any |
 | `get_flow` | `{name}` | flow frontmatter + body + parsed scenario list |
-| `session_start` | `{flow?, scenarios?: [{name, description, pass, account?}], slug?, entry?, only?: string[], viewports?: string[], force?}` | session id, run dir, testers[{id, scenario, account handle?, batch, cases[{id, viewport}]}]. Either `flow` (guided) or an explicit `scenarios` list (exploratory) is required; `slug` and `entry` are for exploratory runs (D29). Closes the scout. |
+| `session_start` | `{flow?, scenarios?: [{name, description, pass, account?}], slug?, entry?, only?: string[], viewports?: string[], force?}` | session id, run dir, testers[{id, scenario, account handle?, batch, cases[{id, viewport}]}]. Either `flow` (guided) or an explicit `scenarios` list (exploratory) is required; `slug` and `entry` are for exploratory runs (D29). Closes the scout. Runs `app.reset` first, if set; a failure refuses the run (D31). |
 | `save_flow` | `{run, name}` | writes `flows/<name>.md` from that run's `session.json` scenarios and `entry` (F2.4); refuses if the file exists, a bad name, or a scenario that would not read back the same (D29) |
 | `scenario_verdict` | `{case, result, note?, findings?}` | ok; refused if `fail` has no finding of this case, or `blocked`/`skipped` has no note |
 | `record_finding` | `{case, finding: FindingInput}` | `{id, path}`; refused if kind is `bug` with no evidence, or an evidence file does not exist |
 | `update_status` | `{id, status, of?, note?, run?}` | ok; `of` required when status is `duplicate`. Looks in `run` if given, else the current run; with no run running and the id in several runs, refused with their ids (D30) |
 | `validate` | `{run?}` | `{errors: string[]}`; `run` is a run id under `.jeyna/playtests/`, anything outside is refused (D30) |
-| `session_finish` | `{summary}` | `{reportPath, counts, elapsedSeconds, testers}` (elapsed since `session_start`, N5), or a tool error listing validation errors (run stays `running`) |
+| `session_finish` | `{summary}` | `{reportPath, counts, since, elapsedSeconds, testers}` (elapsed since `session_start`, N5; `since` compares verdicts with the latest done run of the same flow, D31), or a tool error listing validation errors (run stays `running`) |
 
 Browser family (all `{case, …}`; `case: "scout"` is reserved for the pre-session look, F2.3):
 
 | tool | input | output |
 |---|---|---|
-| `goto` | `{url \| path}` | final url, title; `path` is relative to the app url including its base path (D30) |
+| `goto` | `{url \| path}` | final url, title, and `console` (page errors, console errors, failed and 4xx/5xx requests since the case's last call, D31); `path` is relative to the app url including its base path (D30) |
 | `click` | `{selector}` | ok, or error with nearest candidates |
 | `fill` | `{selector, value}` | ok; placeholders substituted; `<select>` handled via `selectOption` |
 | `press` | `{key}` | ok |
-| `snapshot` | — | aria snapshot text, truncated with a note above ~90k characters |
+| `snapshot` | — | aria snapshot text, truncated with a note above ~90k characters, ending with the console events since the case's last call (D31) |
 | `screenshot` | `{label?, fullPage?, look?}` | file name; plus image content when `look: true` |
 
 Errors are returned as tool errors with actionable text (what exists, what was expected), never as thrown exceptions that kill the server.

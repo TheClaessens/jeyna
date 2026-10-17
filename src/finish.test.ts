@@ -4,7 +4,7 @@ import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 import { spawnSync } from "node:child_process";
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 import { afterEach, beforeAll, expect, test } from "vitest";
 
 let bundle: string;
@@ -227,3 +227,23 @@ test("validate runs from a shell via the bundle: one path: message line per erro
   expect(gone.status).toBe(1);
   expect(gone.stdout).toBe(`${rel}/report.md: missing, but the run is done\n`);
 }, 20_000); // three bundle starts from a shell: slow when test files run in parallel
+
+test("report.md compares verdicts with the latest done run of the same flow, and session_finish returns the changes (D31)", async () => {
+  const s = await started([SIGN_IN]);
+  await s.call("scenario_verdict", { case: "t1-1440x900", result: "pass" });
+  await s.call("scenario_verdict", { case: "t1-390x844", result: "pass" });
+  const first = JSON.parse(s.text(await s.call("session_finish", { summary: "First." })));
+  expect(first.since).toBeNull();
+  expect(readFileSync(first.reportPath, "utf8")).toContain("## Since last run\n\nNo earlier done run of this flow.");
+
+  const run2 = JSON.parse(s.text(await s.call("session_start", { scenarios: [SIGN_IN], slug: "login" })));
+  writeFileSync(join(run2.runDir, "evidence", "t1-390x844-1-login.png"), "png");
+  const bug = JSON.parse(s.text(await s.call("record_finding", { case: "t1-390x844", finding: BUG }))).id;
+  await s.call("scenario_verdict", { case: "t1-1440x900", result: "pass" });
+  await s.call("scenario_verdict", { case: "t1-390x844", result: "fail", findings: [bug] });
+  const second = JSON.parse(s.text(await s.call("session_finish", { summary: "Second." })));
+  const firstId = basename(s.runDir);
+  expect(second.since).toEqual({ run: firstId, compared: 2, changed: [{ scenario: "Sign in", viewport: "390x844", was: "pass", now: "fail" }] });
+  const md = readFileSync(second.reportPath, "utf8");
+  expect(md).toContain(`## Since last run\n\nCompared with ${firstId}: 2 cases in both runs, 1 changed.\n\n| Scenario | Viewport | Was | Now |\n|---|---|---|---|\n| Sign in | 390x844 | pass | fail |`);
+});
