@@ -35,7 +35,7 @@ MCP tools (server key `mcp`, so `mcp__plugin_jeyna_mcp__<tool>`): run family (`g
 - **Personas** (UX playtests: an 80-year-old and a 20-year-old use the app differently). Fan-out rule (D4): environment axes (viewport) run in sequence inside one tester; identity axes (persona) get their own tester. v1 adds `persona?` to cases, findings and the matrix under a new `schema` version.
 
 ## Stack
-TypeScript / Node ≥ 20 / ESM · zod v4 · gray-matter + template · @modelcontextprotocol/sdk (stdio) · Playwright library · YAML config · POSIX sh hooks · vitest · npm + esbuild at build time only (users get a committed bundle from the GitHub plugin marketplace, no npm publish) · viewer later on TanStack Start.
+TypeScript / Node ≥ 20 / ESM · zod v4 · gray-matter + template · @modelcontextprotocol/sdk (stdio) · Playwright library · YAML config · POSIX sh hooks · vitest · npm + esbuild at build time only (users get committed bundles from the GitHub plugin marketplace, no npm publish) · viewer on TanStack Router + remark, bundled the same way and started by `/jeyna:studio` (D34).
 
 ## Build order
 0. Walking skeleton that settles the eight unverified platform facts: see `docs/first-slice.md` (D19). 1. Schema + conventions + sample app. 2. jeyna-mcp, both tool families. 3. Skill, agents, hooks; run it; read the output in a plain markdown viewer. 4. Viewer, only once the findings are worth reading.

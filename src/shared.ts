@@ -1,5 +1,6 @@
 // Small pure helpers shared by the tool modules. No side effects at import, so unit tests can load it.
-import { dirname, resolve } from "node:path";
+import { existsSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
 
 // YAML frontmatter between --- lines, then the body: [_, yaml, body] (flows §5.2 and findings).
 export const splitFront = (md: string) => /^---\n([\s\S]*?)\n?---\n([\s\S]*)$/.exec(md);
@@ -35,4 +36,19 @@ export function runDirOf(root: string, run: string): string {
   const dir = resolve(playtests, run);
   if (!run || dirname(dir) !== playtests) throw new Error(`run must be a run id under .jeyna/playtests/, not ${run || "an empty string"}.`);
   return dir;
+}
+
+// Project root: the first usable candidate (--project, then CLAUDE_PROJECT_DIR), else the nearest folder above
+// the cwd with .jeyna/ (D7, D13). An unset variable reaches a plugin process as its literal "${...}" text, so that counts as absent.
+export function findProjectRoot(...candidates: unknown[]): string {
+  const from = process.cwd();
+  for (const c of candidates) if (typeof c === "string" && c !== "" && !c.includes("${")) return resolve(c);
+  for (let dir = from; ; dir = dirname(dir)) {
+    if (existsSync(join(dir, ".jeyna"))) return dir;
+    if (dirname(dir) === dir) break;
+  }
+  throw new Error(
+    "Jeyna could not find the project root: no --project argument, no CLAUDE_PROJECT_DIR, and no .jeyna/ folder above " +
+      from + ". Start Claude Code in your project folder.",
+  );
 }

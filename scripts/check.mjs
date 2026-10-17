@@ -4,11 +4,13 @@ import { readdirSync, readFileSync } from "node:fs";
 
 const errors = [];
 
-// The plugin ships the committed bundle (D13), so it must be the one source builds.
-try {
-  execFileSync("git", ["diff", "--quiet", "--", "plugin/server"]);
-} catch {
-  errors.push("plugin/server differs from git's index after the build: stage the rebuilt bundle (git add plugin/server).");
+// The plugin ships the committed bundles (D13, D34), so they must be the ones source builds.
+for (const dir of ["plugin/server", "plugin/studio"]) {
+  try {
+    execFileSync("git", ["diff", "--quiet", "--", dir]);
+  } catch {
+    errors.push(`${dir} differs from git's index after the build: stage the rebuilt bundle (git add ${dir}).`);
+  }
 }
 
 // Decisions are D1, D2, … with no gap or repeat.

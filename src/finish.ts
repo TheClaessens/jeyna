@@ -1,146 +1,21 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
-import { basename, dirname, join, relative, resolve } from "node:path";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { basename, join, relative, resolve } from "node:path";
 import { parse, stringify } from "yaml";
 import { z } from "zod";
 import { closeContexts } from "./browser.js";
-import { FindingInput } from "./schema.js";
 import { current, endRun, fail, ok, save, type Session } from "./session.js";
 import { runDirOf, splitFront } from "./shared.js";
+import { type Finding, type FindingFront, KINDS, previousRun, readFindings, runs, SEVERITIES, since, STATUSES, validateRun } from "./validate.js";
 
-const SEVERITIES = FindingInput.shape.severity.options;
-const KINDS = FindingInput.shape.kind.options;
-const STATUSES = ["open", "duplicate", "wontfix", "fixed"] as const;
-const SECTIONS = ["Steps", "Expected", "Actual", "Evidence", "Suggested next step"];
-
-// Finding frontmatter (§5.2). Strict, so a hand edit with a misspelt key is reported.
-const FindingFront = z.strictObject({
-  schema: z.literal(1),
-  id: z.string(),
-  kind: z.enum(KINDS),
-  severity: z.enum(SEVERITIES),
-  status: z.enum(STATUSES),
-  of: z.string().optional(),
-  note: z.string().optional(),
-  flow: z.string(),
-  case: z.string(),
-  scenario: z.string(),
-  route: z.string(),
-  viewport: z.string(),
-  browser: z.string(),
-  build: z.string(),
-  author: z.string().optional(),
-  created: z.string(),
-  evidence: z.array(z.string()),
-});
-type FindingFront = z.infer<typeof FindingFront>;
-
-type Finding = { path: string; id: string; front?: FindingFront; title?: string; errors: string[] };
-
-// Every findings/*.md of a run, parsed, with its own errors (F8.1). Paths are relative to the run folder.
-function readFindings(runDir: string, session: Session): Finding[] {
-  const dir = join(runDir, "findings");
-  if (!existsSync(dir)) return [];
-  return readdirSync(dir)
-    .filter((f) => f.endsWith(".md"))
-    .sort()
-    .map((file) => {
-      const f: Finding = { path: `findings/${file}`, id: file.slice(0, -3), errors: [] };
-      const m = splitFront(readFileSync(join(dir, file), "utf8"));
-      if (!m) return { ...f, errors: ["no YAML frontmatter between --- lines"] };
-      let raw: unknown;
-      try {
-        raw = parse(m[1]);
-      } catch (e) {
-        return { ...f, errors: [`frontmatter is not valid YAML: ${(e as Error).message.split("\n")[0]}`] };
-      }
-      const r = FindingFront.safeParse(raw);
-      if (!r.success) {
-        return { ...f, errors: r.error.issues.map((i) => `frontmatter ${i.path.join(".") || "(root)"}: ${i.message}`) };
-      }
-      const front = (f.front = r.data);
-      f.title = /^# (.+)$/m.exec(m[2])?.[1];
-      if (front.id !== f.id) f.errors.push(`id ${front.id} does not match the file name`);
-      if (!session.cases.some((c) => c.id === front.case)) f.errors.push(`case ${front.case} is not a case of this run`);
-      if (!f.title) f.errors.push("missing the # title line");
-      for (const s of SECTIONS) if (!new RegExp(`^## ${s}$`, "m").test(m[2])) f.errors.push(`missing the ## ${s} section`);
-      for (const e of front.evidence) if (!existsSync(join(runDir, "evidence", e))) f.errors.push(`evidence ${e} does not exist in evidence/`);
-      if (front.kind === "bug" && !front.evidence.length) f.errors.push("a bug needs evidence");
-      if (front.status === "duplicate" && !front.of) f.errors.push("status duplicate needs of: PT-…");
-      return f;
-    });
-}
-
-function readSession(runDir: string): Session {
-  if (!existsSync(join(runDir, "session.json"))) throw new Error(`${runDir} is not a run folder: it has no session.json.`);
-  return JSON.parse(readFileSync(join(runDir, "session.json"), "utf8"));
-}
-
-// F8.1 over the files on disk only, so it also runs from a shell with no server state. One `path: message` per error.
-export function validateRun(runDir: string): string[] {
-  let session: Session;
-  try {
-    session = readSession(runDir);
-  } catch (e) {
-    return [`session.json: ${(e as Error).message}`];
-  }
-  const findings = readFindings(runDir, session);
-  const ids = new Set(findings.map((f) => f.id));
-  const errors = findings.flatMap((f) => {
-    const of = f.front?.of;
-    const dangling = of && !ids.has(of) ? [`of ${of} is not a finding of this run`] : [];
-    return [...f.errors, ...dangling].map((e) => `${f.path}: ${e}`);
-  });
-  for (const c of session.cases) {
-    const v = session.verdicts.find((v) => v.case === c.id);
-    if (!v) errors.push(`session.json: case ${c.id} has no verdict`);
-    for (const id of v?.findings ?? []) if (!ids.has(id)) errors.push(`session.json: verdict of ${c.id} lists ${id}, which has no file in findings/`);
-  }
-  if (session.status === "done" && !existsSync(join(runDir, "report.md"))) errors.push("report.md: missing, but the run is done");
-  return errors;
-}
+// The checks themselves live in validate.ts, shared with the studio sidecar; this module is the MCP and shell face of them.
+export { validateRun, type Since } from "./validate.js";
 
 const cell = (s: string) => s.replace(/\|/g, "\\|").replace(/\s*\n\s*/g, " ");
 const link = (id: string) => `[${id}](findings/${id}.md)`;
 
 // Wall time from session_start to session_finish, in whole seconds (N5, D14).
 const elapsed = (s: Session) => Math.round((Date.parse(s.finished!) - Date.parse(s.started)) / 1000);
-
-// The latest done run of the same flow started before this one: the baseline of "Since last run" (D31).
-function previousRun(runDir: string, session: Session): Session | undefined {
-  const dir = dirname(runDir);
-  return readdirSync(dir)
-    .flatMap((d) => {
-      try {
-        return [readSession(join(dir, d))];
-      } catch {
-        return [];
-      }
-    })
-    .filter((s) => s.flow === session.flow && s.status === "done" && s.started < session.started)
-    .sort((a, b) => b.started.localeCompare(a.started))[0];
-}
-
-type Change = { scenario: string; viewport: string; was: string; now: string };
-export type Since = { run: string; compared: number; changed: Change[] };
-
-// Verdicts of this run against the previous one, per (scenario, viewport) that both runs played (D31).
-function since(session: Session, prev: Session | undefined): Since | undefined {
-  if (!prev) return undefined;
-  const verdictOf = (s: Session, scenario: string, viewport: string) => {
-    const c = s.cases.find((c) => c.scenario === scenario && c.viewport === viewport);
-    return c && s.verdicts.find((v) => v.case === c.id)?.result;
-  };
-  const out: Since = { run: prev.id, compared: 0, changed: [] };
-  for (const { scenario, viewport } of session.cases) {
-    const now = verdictOf(session, scenario, viewport);
-    const was = verdictOf(prev, scenario, viewport);
-    if (!now || !was) continue;
-    out.compared++;
-    if (now !== was) out.changed.push({ scenario, viewport, was, now });
-  }
-  return out;
-}
 
 // report.md (F7.3): summary counts, scenario matrix, verdicts since the last run, findings sorted by severity then kind. Plain markdown, no HTML.
 function report(runDir: string, session: Session) {
@@ -223,23 +98,6 @@ function report(runDir: string, session: Session) {
   ].join("\n\n");
   writeFileSync(join(runDir, "report.md"), md + "\n");
   return { counts, since: diff ?? null };
-}
-
-// Run folders under .jeyna/playtests/, newest first by start time.
-function runs(root: string): string[] {
-  const dir = join(root, ".jeyna", "playtests");
-  if (!existsSync(dir)) return [];
-  const started = (d: string) => {
-    try {
-      return readSession(d).started;
-    } catch {
-      return "";
-    }
-  };
-  return readdirSync(dir)
-    .map((d) => join(dir, d))
-    .filter((d) => started(d))
-    .sort((a, b) => started(b).localeCompare(started(a)));
 }
 
 // Shell entry: `node jeyna-mcp.mjs validate [runDir]`. One `path: message` line per error; exit 1 on errors (F8.2).

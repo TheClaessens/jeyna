@@ -35,9 +35,9 @@ Started by the plugin as `node ${CLAUDE_PLUGIN_ROOT}/server/jeyna-mcp.mjs --proj
 - `playtests/<run>/evidence/*` — PNG — screenshots; committed or gitignored per project, chosen at init.
 - Committed with the branch; context for every later session.
 
-**Jeyna studio (v1, read-only; install path decided in v1, not `npx`, D13)**
-- Sidecar (Node): chokidar watches run folders; gray-matter + markdown AST parse; validates against the same zod schema; failures go to a "needs attention" lane; keeps a derived `index.json` (gitignored); serves `evidence/` as static files; pushes changes over SSE.
-- UI (TanStack Start): report view with matrix, filters, finding detail, inline PNGs, source markdown; status chip from `session.json`.
+**Jeyna studio (v1, read-only; ships inside the plugin as committed bundles, started by `/jeyna:studio`, D34)**
+- Sidecar (Node, `plugin/studio/jeyna-studio.mjs`): `fs.watch` on `.jeyna/playtests/` (recursive); reads every run with the server's own `src/validate.ts` (same zod schema, same checks) and renders finding bodies with remark; what does not parse goes to the "needs attention" lane with its source, never dropped; keeps a derived `.jeyna/index.json` (gitignored); serves `evidence/` as files; pushes the whole index over SSE after every change.
+- UI (TanStack Router, client-rendered, `plugin/studio/app.js`): `/runs/<id>` with the runs rail, counts as filter chips, scenario × viewport matrix, Since last run, the findings table with duplicates folded; `/runs/<id>/findings/<id>` with Steps / Expected / Actual, evidence at natural size, source. Filters live in the URL.
 - You, in a browser tab on localhost, reading along during the run.
 
 **Web app under test**: any URL (dev server, staging, preview; in this repo the `sample-app/`, D16). Reached only from inside jeyna-mcp's Playwright contexts over HTTP + CDP. Nothing else touches a browser.
@@ -115,9 +115,9 @@ flowchart LR
 
   PW -->|HTTP + CDP| APP
 
-  SJ -->|chokidar fs events| SC
-  FD -->|chokidar fs events| SC
-  RP -->|chokidar fs events| SC
+  SJ -->|fs.watch events| SC
+  FD -->|fs.watch events| SC
+  RP -->|fs.watch events| SC
   EV -.->|served as-is| UI
 ```
 
@@ -139,8 +139,8 @@ flowchart LR
 | Subagent transcript → hooks | fs read of `agent_transcript_path` | JSONL; the hook looks for the marker line | Claude Code (format), the skill (marker) |
 | Hooks → `.jeyna/` | fs read | `session.json` (active run, verdicts) | jeyna-mcp |
 | Hooks → Claude Code | stdout | JSON `{decision: "block", reason}` or `permissionDecision: "deny"`; reason is TEXT for the agent | Claude Code |
-| `.jeyna/` → sidecar (v1) | chokidar fs events, then fs read | MD+YAML → parsed to JSON (frontmatter + body AST) | shared schema + converter module |
-| Sidecar → UI (v1) | localhost HTTP + SSE | JSON index and documents; evidence as static files | Jeyna |
+| `.jeyna/` → sidecar (v1) | fs.watch events, then fs read | MD+YAML → parsed to JSON (frontmatter, body sections as HTML) | `src/validate.ts`, shared with the server (D34) |
+| Sidecar → UI (v1) | localhost HTTP + SSE | one JSON index for the whole folder; evidence as files | `src/studio/types.ts` |
 | CI → validator (v1) | shell exec | TEXT exit code + stderr | jeyna-mcp; how CI obtains the bundle is a v1 question |
 | Claude Code ↔ Jeyna studio | **none** | — | The folder is the only shared thing. Run progress in the studio is a side effect of files being written one at a time. |
 

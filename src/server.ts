@@ -12,6 +12,7 @@ import { accountValues, redactDeep, redactor } from "./accounts.js";
 import { registerFindingTools } from "./findings.js";
 import { registerFinishTools, validateCli } from "./finish.js";
 import { listFlows, registerFlowTools } from "./flows.js";
+import { findProjectRoot } from "./shared.js";
 
 // stdout is the JSON-RPC channel: log to stderr only.
 const log = (...a: unknown[]) => console.error(new Date().toISOString(), ...a);
@@ -19,22 +20,8 @@ process.on("unhandledRejection", (e) => log("unhandledRejection", e));
 
 const { values, positionals } = parseArgs({ options: { project: { type: "string" } }, strict: false });
 
-// An unset variable reaches us as its literal "${...}" text, so treat that as absent.
-const given = (v: unknown) => (typeof v === "string" && v !== "" && !v.includes("${") ? v : undefined);
-
 // Project root: --project, then CLAUDE_PROJECT_DIR, then the nearest folder with .jeyna/ (D7, D13).
-function projectRoot(): string {
-  const root = given(values.project) ?? given(process.env.CLAUDE_PROJECT_DIR);
-  if (root) return resolve(root);
-  for (let dir = process.cwd(); ; dir = dirname(dir)) {
-    if (existsSync(join(dir, ".jeyna"))) return dir;
-    if (dirname(dir) === dir) break;
-  }
-  throw new Error(
-    "Jeyna could not find the project root: no --project argument, no CLAUDE_PROJECT_DIR, and no .jeyna/ folder above " +
-      process.cwd() + ". Start Claude Code in your project folder.",
-  );
-}
+const projectRoot = () => findProjectRoot(values.project, process.env.CLAUDE_PROJECT_DIR);
 
 function getContext() {
   const root = projectRoot();
