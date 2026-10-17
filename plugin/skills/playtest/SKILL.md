@@ -79,17 +79,21 @@ Start only after the developer confirms. If they edit (add, drop or rename scena
 
 ## 2c. Retest a finding
 
-Only when the request is a finding id. The run plays that finding's scenario at its viewport, and its verdict decides the finding.
+Only when the request is a finding id. The run plays the finding itself: its Steps, judged against its Expected. Not the scenario it was found in: a finding is often something seen on the way (an unlabelled field while signing in to add a todo), and that scenario's `Pass:` line says nothing about it.
 
-**Find it.** `Glob` `.jeyna/playtests/*/findings/<id>.md`. None: say so and stop. Several (ids repeat across runs of a flow): take the newest run folder (folder names sort by date) unless the request names a run. `Read` the finding: its frontmatter (`flow`, `scenario`, `viewport`, `status`), the title and the Actual section. Then `Read` that run's `session.json` for `mode`, `entry` and `scenarios`. Reading these files is fine; never write them.
+**Find it.** `Glob` `.jeyna/playtests/*/findings/<id>.md`. None: say so and stop. Several (ids repeat across runs of a flow): take the newest run folder (folder names sort by date) unless the request names a run. `Read` the finding: its frontmatter (`flow`, `scenario`, `viewport`, `status`), the title and the Steps, Expected and Actual sections. Then `Read` that run's `session.json` for `entry` and the `account` of the scenario named in the finding. Reading these files is fine; never write them.
 
-**Start it.** One scenario, one viewport:
-- guided (`flow` has no `exploratory:` prefix): `session_start {flow, only: [scenario], viewports: [viewport]}`, after `get_flow {name}` for the preconditions and what matters most;
-- exploratory: `session_start {scenarios: [<the scenario object with that name, from session.json>], slug: <flow without the exploratory: prefix>, entry, viewports: [viewport]}`.
+**Start it.** An exploratory run of one scenario at one viewport:
 
-Then continue at 3 from "The result has `runDir`" and do steps 4 to 7. In the tester prompt, What matters most here is: `Retest of <id>: <title>. Last time: <the Actual text>.` (after the flow's own text, if any). In 7, the retested case's verdict decides the finding:
-- `pass`: call `update_status {id, run: <the old run's folder name>, status: "fixed", note: "passed in run <new run id>"}` and say the finding is fixed;
-- `fail`: say it persists and name the new finding ids; the old finding stays `open`;
+`session_start {scenarios: [{name, description, pass, account?}], slug: "retest-<flow without the exploratory: prefix>", entry, viewports: [viewport]}` with
+- `name`: `Retest <id>: <title>`;
+- `description`: `Retest of <id> from run <run folder name>. <the Steps, as one paragraph: "Open /login, then read the snapshot."> Last time: <the Actual text>.`;
+- `pass`: the finding's Expected text;
+- `account`: the `account` of the scenario the finding was found in, if it has one.
+
+The run folder and the new finding ids carry the `retest-` slug, so they never look like the retested one. Then continue at 3 from "The result has `runDir`" and do steps 4 to 7 (not 8: a retest is never saved as a flow). In the tester prompt, Preconditions is "None given." and What matters most here is: `Whether <id> is fixed: <title>.` In 7, name every finding id with its run, and the retested case's verdict decides the finding:
+- `pass`: call `update_status {id, run: <the old run's folder name>, status: "fixed", note: "passed retest in run <new run id>"}` and say the finding is fixed;
+- `fail`: say it persists and name the new finding ids with their run; the old finding stays `open`;
 - `blocked` or `skipped`: say why and leave the status.
 
 ## 3. Start the run

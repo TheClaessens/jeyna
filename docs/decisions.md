@@ -827,3 +827,20 @@ The live runs behind issue #12 showed that a run's verdicts depend on what earli
 - `plugin/agents/jeyna-tester.md`, `plugin/skills/playtest/SKILL.md` (2c and step 7), `plugin/templates/jeyna.config.yaml`.
 - `sample-app/server.mjs` (`POST /__reset`), `sample-app/flows/todos.md`.
 - GLOSSARY (Reset, Retest, Console, Report); analysis §5.4 rows for `session_start`, `session_finish`, `goto`, `snapshot` and the config block.
+
+## D32 · 2026-10-17 · Live check of D31 on the sample app; a retest plays the finding, not its scenario
+
+Two back-to-back `/jeyna:playtest todos` runs and one retest in `sample-app/` (Claude Code 2.1.302, Sonnet testers), run by the developer.
+
+**Seen**
+- `app.reset` (`curl -fsS -X POST http://localhost:4173/__reset`) ran before each run; run 2 started with empty todo lists and working passwords, no restart by hand. Issue #12's done-when holds for `todos`; `authentication` is not yet run.
+- "Since last run" reported one change, Complete and delete a todo at 390x844, pass → fail. Same app, same state: the run 2 tester failed the case because the Sign in button is off screen at phone width, although it signed in with Enter and the `Pass:` line (done, then gone) held. That is a verdict outside the `Pass:` line, which the tester prompt forbids; the prompt's example now names exactly this (a control you had to reach with Enter does not fail the case). Tester judgement, not Jeyna state.
+- No finding quotes a console line. Expected: the todos flow raises no page error and no 4xx/5xx response (the seeded bugs are server-rendered), so the testers had nothing to quote. Console quoting stays unverified live until a flow hits a failing request (the authentication flow's wrong password gives a 401).
+- The retest of PT-todos-001 (password field has no label, found while playing Add a todo with a priority) replayed that scenario, whose `Pass:` line is about priority. The case failed on the priority bug, so the verdict said nothing about the label; the main agent noticed and said so. A finding is often seen on the way, so its scenario's `Pass:` line is the wrong judge.
+
+**Decided**
+- A retest plays the finding: an exploratory run of one scenario built from the finding file (name `Retest <id>: <title>`, description from its Steps and Actual, `pass` from its Expected, the original scenario's `account`), at the finding's viewport, from the original run's entry, with slug `retest-<slug>`. The run folder and the new ids carry `retest-`, so they never look like the retested id (the live run's report listed a new PT-todos-001 beside the old one). A `pass` sets the old finding `fixed`. Skill section 2c rewritten; no server change.
+- The retest's "Since last run" compares against earlier retests of the same slug only, which is right: a retest is not a run of the flow.
+
+**Changed**
+- `plugin/skills/playtest/SKILL.md` (2c), `plugin/agents/jeyna-tester.md` (the verdict example).
