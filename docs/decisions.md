@@ -841,6 +841,7 @@ Two back-to-back `/jeyna:playtest todos` runs and one retest in `sample-app/` (C
 **Decided**
 - A retest plays the finding: an exploratory run of one scenario built from the finding file (name `Retest <id>: <title>`, description from its Steps and Actual, `pass` from its Expected, the original scenario's `account`), at the finding's viewport, from the original run's entry, with slug `retest-<slug>`. The run folder and the new ids carry `retest-`, so they never look like the retested id (the live run's report listed a new PT-todos-001 beside the old one). A `pass` sets the old finding `fixed`. Skill section 2c rewritten; no server change.
 - The retest's "Since last run" compares against earlier retests of the same slug only, which is right: a retest is not a run of the flow.
+- A second retest request was refused by the main agent: it read `server.mjs`'s mtime and the password input's markup and concluded the result would be the same. A run judges the app through the browser; the skill's rules now forbid reading the app's source, build or history to decide what to run, and say to start the requested run even when the result looks predictable. (That session had started before the 2c rewrite: `--plugin-dir` loads skills at session start, so a running session needs `/reload-plugins` or a restart to see edits.)
 
 **Changed**
 - `plugin/skills/playtest/SKILL.md` (2c), `plugin/agents/jeyna-tester.md` (the verdict example).

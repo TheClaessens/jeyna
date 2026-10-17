@@ -14,6 +14,7 @@ Rules for the whole run:
 - Read config and flows only through `get_context` and `get_flow`, never with your own file tools.
 - Never write under `.jeyna/playtests/` or to `.jeyna/.env`. The server writes the run; the write guard denies you anyway.
 - Never ask for, read or print an account's username or password.
+- Never read the app's source code, build or git history to decide what to run or what a verdict should be: a run judges the app through the browser, and that is the point. Start the run the request asks for, even when you expect the same result as last time.
 
 ## 1. Context
 
