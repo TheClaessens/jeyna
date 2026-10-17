@@ -843,5 +843,7 @@ Two back-to-back `/jeyna:playtest todos` runs and one retest in `sample-app/` (C
 - The retest's "Since last run" compares against earlier retests of the same slug only, which is right: a retest is not a run of the flow.
 - A second retest request was refused by the main agent: it read `server.mjs`'s mtime and the password input's markup and concluded the result would be the same. A run judges the app through the browser; the skill's rules now forbid reading the app's source, build or history to decide what to run, and say to start the requested run even when the result looks predictable. (That session had started before the 2c rewrite: `--plugin-dir` loads skills at session start, so a running session needs `/reload-plugins` or a restart to see edits.)
 
+**Verified live** (after `/reload-plugins`): `/jeyna:playtest PT-todos-001 from 2026-10-17-todos-2` ran one tester on "Retest PT-todos-001" at 1440x900 in `2026-10-17-retest-todos`, judged the password field against the finding's Expected, failed, recorded `PT-retest-todos-001`, and left the old finding open; 27 s. Seen on the way: the retest rated the same problem major where the original said minor. Severity is not stable between testers; a later change may hand the original severity to the retest.
+
 **Changed**
 - `plugin/skills/playtest/SKILL.md` (2c), `plugin/agents/jeyna-tester.md` (the verdict example).
