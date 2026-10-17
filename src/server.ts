@@ -1,12 +1,12 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import { existsSync, readFileSync, statSync } from "node:fs";
+import { appendFileSync, existsSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { parseArgs, parseEnv } from "node:util";
 import { parse } from "yaml";
 import { z } from "zod";
 import { Config } from "./schema.js";
-import { registerSessionTools } from "./session.js";
+import { current, registerSessionTools } from "./session.js";
 import { registerBrowserTools } from "./browser.js";
 import { accountValues, redactDeep, redactor } from "./accounts.js";
 import { registerFindingTools } from "./findings.js";
@@ -93,7 +93,10 @@ const redact = (text: string) => currentRedactor()(text);
 
 const server = new McpServer({ name: "jeyna", version: "0.0.1" });
 
-// Every tool call logs start and end to stderr, so concurrent calls show as overlapping spans (P8).
+// Every tool call logs start and end to stderr, so concurrent calls show as overlapping spans (P8), and
+// to the running run's server.log, so a run folder records what its testers called and got (D33).
+// A browser result's line says how many console lines it carried; no page text or error message, so
+// nothing to redact. The run of a call is the one running when it started, or when it ended (session_start).
 let calls = 0;
 const register = server.registerTool.bind(server);
 server.registerTool = ((name: string, config: unknown, handler: (...a: unknown[]) => unknown) =>
@@ -101,13 +104,34 @@ server.registerTool = ((name: string, config: unknown, handler: (...a: unknown[]
     const id = ++calls;
     const t0 = Date.now();
     const what = `call ${id} ${name} ${(a[0] as { case?: string } | undefined)?.case ?? "-"}`;
-    log(`${what} start`);
+    const runDir = current?.runDir;
+    const record = (line: string) => {
+      log(line);
+      const dir = current?.runDir ?? runDir;
+      if (dir) try { appendFileSync(join(dir, "server.log"), `${new Date().toISOString()} ${line}\n`); } catch {} // the run folder may be gone
+    };
+    record(`${what} start`);
+    let result: unknown;
     try {
-      return await handler(...a);
+      return (result = await handler(...a));
     } finally {
-      log(`${what} end ${Date.now() - t0}ms`);
+      const r = result as { isError?: boolean; content?: { text?: unknown }[] } | undefined;
+      record(`${what} end ${Date.now() - t0}ms${r?.isError ? " error" : ""}${heard(name, r?.content?.[0]?.text)}`);
     }
   }) as never)) as typeof server.registerTool;
+
+// " console=<n>" when a goto/click/press result carried console lines, " console" when a snapshot ended with them.
+function heard(name: string, text: unknown): string {
+  if (typeof text !== "string") return "";
+  if (name === "snapshot") return /\nConsole since your last call:\n/.test(text) ? " console" : "";
+  if (name !== "goto" && name !== "click" && name !== "press") return "";
+  try {
+    const n = (JSON.parse(text) as { console?: unknown[] }).console?.length;
+    return n ? ` console=${n}` : "";
+  } catch {
+    return "";
+  }
+}
 
 server.registerTool(
   "get_context",

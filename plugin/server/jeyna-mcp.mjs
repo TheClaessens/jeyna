@@ -207031,7 +207031,7 @@ var StdioServerTransport2 = class {
 
 // src/server.ts
 var import_yaml4 = __toESM2(require_dist2(), 1);
-import { existsSync as existsSync6, readFileSync as readFileSync5, statSync } from "node:fs";
+import { appendFileSync, existsSync as existsSync6, readFileSync as readFileSync5, statSync } from "node:fs";
 import { dirname as dirname3, join as join7, resolve as resolve3 } from "node:path";
 import { parseArgs, parseEnv as parseEnv2 } from "node:util";
 
@@ -207326,8 +207326,8 @@ function nearest(selector, aria, max = 5) {
 async function settled(caseId, p) {
   await p.waitForLoadState("load").catch(() => {
   });
-  const heard = drain(caseId);
-  return ok({ url: p.url(), title: await p.title(), ...heard && { console: heard } });
+  const heard2 = drain(caseId);
+  return ok({ url: p.url(), title: await p.title(), ...heard2 && { console: heard2 } });
 }
 var SNAPSHOT_MAX = 9e4;
 function registerBrowserTools(server3, getContext2, redact2) {
@@ -207428,11 +207428,11 @@ ${near.map((n) => `- ${n}`).join("\n")}` : "The page has no clickable controls."
       try {
         const p = await page(a.case, getContext2().config);
         const text2 = clip(await p.locator("body").ariaSnapshot(), SNAPSHOT_MAX, redact2);
-        const heard = drain(a.case);
-        return { content: [{ type: "text", text: heard ? `${text2}
+        const heard2 = drain(a.case);
+        return { content: [{ type: "text", text: heard2 ? `${text2}
 
 Console since your last call:
-${heard.map((l) => `- ${l}`).join("\n")}` : text2 }] };
+${heard2.map((l) => `- ${l}`).join("\n")}` : text2 }] };
       } catch (e) {
         return fail(e);
       }
@@ -208278,13 +208278,36 @@ server2.registerTool = ((name, config2, handler) => register(name, config2, (asy
   const id = ++calls;
   const t0 = Date.now();
   const what = `call ${id} ${name} ${a[0]?.case ?? "-"}`;
-  log3(`${what} start`);
+  const runDir = current?.runDir;
+  const record2 = (line) => {
+    log3(line);
+    const dir = current?.runDir ?? runDir;
+    if (dir) try {
+      appendFileSync(join7(dir, "server.log"), `${(/* @__PURE__ */ new Date()).toISOString()} ${line}
+`);
+    } catch {
+    }
+  };
+  record2(`${what} start`);
+  let result2;
   try {
-    return await handler(...a);
+    return result2 = await handler(...a);
   } finally {
-    log3(`${what} end ${Date.now() - t0}ms`);
+    const r = result2;
+    record2(`${what} end ${Date.now() - t0}ms${r?.isError ? " error" : ""}${heard(name, r?.content?.[0]?.text)}`);
   }
 })));
+function heard(name, text2) {
+  if (typeof text2 !== "string") return "";
+  if (name === "snapshot") return /\nConsole since your last call:\n/.test(text2) ? " console" : "";
+  if (name !== "goto" && name !== "click" && name !== "press") return "";
+  try {
+    const n = JSON.parse(text2).console?.length;
+    return n ? ` console=${n}` : "";
+  } catch {
+    return "";
+  }
+}
 server2.registerTool(
   "get_context",
   {

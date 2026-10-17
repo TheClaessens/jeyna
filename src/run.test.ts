@@ -398,7 +398,7 @@ test("POST /__reset returns the sample app to its seeded state: sessions, todos 
 });
 
 test("goto, click, press and snapshot carry the app's console since the case's last call: page errors, console errors, 4xx/5xx and failed requests (D31)", async () => {
-  const { call, text } = await started();
+  const { call, text, runDir } = await started();
   const page = (html: string) => `data:text/html,${encodeURIComponent(html)}`;
   const r = await call("goto", { case: "t1-1440x900", url: page(`<script>console.error("boom"); throw new Error("bang")</script>`) });
   expect(r.isError, text(r)).toBeFalsy();
@@ -414,4 +414,9 @@ test("goto, click, press and snapshot carry the app's console since the case's l
   await new Promise((r) => setTimeout(r, 500));
   const snap = text(await call("snapshot", { case: "t1-1440x900" }));
   expect(snap).toMatch(/Console since your last call:\n- GET http:\/\/localhost:1\/x failed: /);
+  // The run's server.log records each call with how many console lines its result carried (D33).
+  const serverLog = readFileSync(join(runDir, "server.log"), "utf8");
+  expect(serverLog).toMatch(/^\S+ call \d+ goto t1-1440x900 start\n\S+ call \d+ goto t1-1440x900 end \d+ms console=2$/m);
+  expect(serverLog).toMatch(/ call \d+ snapshot t1-1440x900 end \d+ms console$/m);
+  expect(serverLog).toMatch(/ call \d+ goto t1-1440x900 end \d+ms$/m); // the quiet /login
 });

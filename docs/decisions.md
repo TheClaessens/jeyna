@@ -847,3 +847,13 @@ Two back-to-back `/jeyna:playtest todos` runs and one retest in `sample-app/` (C
 
 **Changed**
 - `plugin/skills/playtest/SKILL.md` (2c), `plugin/agents/jeyna-tester.md` (the verdict example).
+
+## D33 · 2026-10-17 · Retro of the D31 build: reload pointer, server.log per run, vitest config
+
+Three environment changes from the retro of the session that built D31 and D32.
+
+- **Live checks hit stale skill text.** The developer's `claude --plugin-dir` session had started before the retest rewrite and ran the old 2c, costing one billed run and two rounds of diagnosis. The fact (plugin.md: skills load at session start) was not where the hand-off is written. IMPLEMENTER-RULES step 3 now says every live-verification note tells the developer to `/reload-plugins` or restart first.
+- **A run folder records what the server did.** Whether testers ever received a console line could not be answered from disk: only `hooks.log` existed. The per-call stderr spans (P8) now also go to `<runDir>/server.log` while a run is running: timestamp, call number, tool, case, duration, `error` on a refused call, and for `goto`/`click`/`press` `console=<n>` (`console` for a snapshot that ended with lines). No page text, no error message, so nothing to redact. A call's run is the one running when it started, else when it ended (`session_start`).
+- **Direct vitest runs picked up the agent worktrees.** `npm test` excluded `.claude/**`, a bare `npx vitest run <file>` did not, so one-file runs started every leftover worktree's copy of the suite. The excludes moved to `vitest.config.ts`; the nine clean, merged worktrees under `.claude/worktrees/` (966 MB) were removed, their branches kept.
+
+Not applied, recorded for later: staging by path instead of directory (a stray untracked file was committed and amended this session); analysis §5.4 as a cache of the tool descriptions; tester judgement drift (D12's reviewer); the model name hardcoded in IMPLEMENTER-RULES step 6.
