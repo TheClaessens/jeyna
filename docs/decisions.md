@@ -857,3 +857,41 @@ Three environment changes from the retro of the session that built D31 and D32.
 - **Direct vitest runs picked up the agent worktrees.** `npm test` excluded `.claude/**`, a bare `npx vitest run <file>` did not, so one-file runs started every leftover worktree's copy of the suite. The excludes moved to `vitest.config.ts`; the nine clean, merged worktrees under `.claude/worktrees/` (966 MB) were removed, their branches kept.
 
 Not applied, recorded for later: staging by path instead of directory (a stray untracked file was committed and amended this session); analysis §5.4 as a cache of the tool descriptions; tester judgement drift (D12's reviewer); the model name hardcoded in IMPLEMENTER-RULES step 6.
+
+## D34 · 2026-10-17 · Jeyna studio v1: the read-only viewer, shipped inside the plugin
+
+The studio from the architecture doc and the design canvas (Studio · Run, Studio · Finding, Tokens), built against the four runs in `sample-app/.jeyna/`. Choices made on the way, D13's open install question first.
+
+**Install path (settles D13's "decided in v1")**
+- The studio ships inside the plugin as committed bundles under `plugin/studio/`: `jeyna-studio.mjs` (the sidecar), `app.js` and `app.css` (the UI), `index.html`, `anchor.svg` (docs/design/jeyna-anchor.svg, favicon and top-bar mark). `npm run build` produces them with esbuild next to the MCP bundle; `scripts/check.mjs` fails when `plugin/studio` differs from the index after a build, as it does for `plugin/server`.
+- `/jeyna:studio [port]` runs `node ${CLAUDE_PLUGIN_ROOT}/studio/jeyna-studio.mjs --project ${CLAUDE_PROJECT_DIR} --port 4710` in the background and gives the developer the URL. No npm, no npx, nothing in the project's dependencies: the same shape as the MCP server. `npm run studio` does the same against `sample-app/` for development. Pending live verification (Claude Code 2.1.302; `/reload-plugins` first): the skill text, not the sidecar.
+
+**Stack**
+- UI: TanStack Router, the routing half of TanStack Start, as a client-rendered React app bundled by esbuild (code-based routes, `/`, `/runs/$runId`, `/runs/$runId/findings/$findingId`). Not TanStack Start's Vite server build: the committed-bundle install leaves no node_modules at runtime for an SSR server, Start's current toolchain (Vite 7) needs Node ≥ 20.19 where the build machine runs 20.12, and server rendering buys nothing on localhost. The route tree moves to Start's file routes unchanged if server functions are ever wanted.
+- Watch: `fs.watch(playtests, {recursive: true})`, recursive on macOS, Windows and Linux from Node 20 on, so no chokidar in the bundle. Any event rescans every run after 150 ms (ponytail: per-run rescans if a project ever holds hundreds).
+- Markdown: remark in the sidecar (unified, remark-parse, remark-rehype, rehype-stringify). A finding body is split by its `## ` headings and each section rendered to HTML (`../evidence/x.png` rewritten to the studio's evidence URL); the UI shows Steps, Expected, Actual and Suggested next step from those, and evidence from the frontmatter list at natural size. Frontmatter goes through the existing `splitFront` + `yaml`, not gray-matter (one home per parser, CODING_STANDARDS).
+- Fonts from Google Fonts with the Tokens board's fallbacks; offline the fallbacks show.
+
+**Shared code, so the studio validates with the server's rules and duplicates none**
+- `validateRun`, `readFindings`, `readSession`, `FindingFront`, `since`, `previousRun` and `runs` moved from `src/finish.ts` to `src/validate.ts` (fs + zod only); `finish.ts` imports and re-exports them, so the MCP tools and the shell `validate` are unchanged. The studio bundle imports `validate.ts` without pulling Playwright in.
+- `session.json` gets a zod schema, `SessionFile` in `src/schema.ts`; the `Session` and `Verdict` types derive from it. `readSession` validates against it, so a hand-broken `session.json` is reported as such instead of crashing a reader.
+- Project-root resolution (`--project`, then `CLAUDE_PROJECT_DIR`, then the nearest `.jeyna/`) moved to `findProjectRoot` in `src/shared.ts`; both processes use it.
+
+**The index and the live push**
+- One document for the whole folder: `{schema, generated, root, app, runs: [{id, session, sessionError?, errors, since, report, findings: [{…Finding, sections}]}]}`. `GET /api/index` returns it, `GET /api/events` (SSE) sends it on connect and after every rescan; the UI replaces its state with each event. A copy is written to `.jeyna/index.json` (temp + rename), gitignored; `/jeyna:init` adds the line.
+- Evidence is served at `/runs/<run>/evidence/<file>` through `runDirOf` (containment) and a file-name check; everything else is the UI, which routes `/runs/…` itself.
+- `since` is computed for every run with a session, a running one included, so "Since last run" moves while a run plays; `report.md` is not read, the UI mirrors its layout from the same data.
+
+**Rules from the canvas, as built**
+- Verdicts are glyph plus word, in one glyph set (`Glyph` in `ui.tsx`). Severity carries colour and a square; kind is a word in IBM Plex Mono (Tokens board), never coloured. Status: open (tide), duplicate → id, fixed, wontfix. Run status chip: done takes the pass glyph; running is tide with a dot in a ring; aborted is grey with the wontfix slash. The last two are not on the Tokens board; chosen here.
+- Duplicates fold under the finding their `of` names and leave the counts (the report's `live` set). A duplicate whose target is not in the run stands on its own: nothing is dropped. "Show duplicates" (and the `duplicate` status chip) toggles the folded rows; the duplicate rows keep their own severity.
+- The needs-attention lane appears only when `validateRun` reports something, grouped by file, each finding file linked. A file that does not parse lists there and on its own page with its errors and its source; it never counts and never disappears.
+- Filters live in the URL as plain strings, not JSON: `?verdict=fail&severity=critical,major&kind=bug&status=open&scenario=…&viewport=…&q=…&dups=0`. The count chips at the top set the same parameters as the filter row. The finding page keeps them, so j / k walk the run page's order and "1 of 3" counts the same rows.
+- Times are shown in the browser's local time, the ISO value in a `title`; the canvas drew UTC. Thumbnails are 56 px tall and as wide as the viewport's ratio gives, never under 24 px.
+- The "Status after retest" row of the canvas is a legend: the studio edits nothing, `update_status` does.
+
+**Verified** (this session): `npm run check`; `src/studio/model.test.ts` (folding, counts, filters, matrix, formatting) and `src/studio/server.test.ts` (index, SSE arrival of a finding written mid-run, a hand-broken file kept with its errors, evidence containment) against the committed bundle; in the desktop browser pane against `sample-app/.jeyna`: the four runs render, a finding written into a watched copy appeared without a reload, a broken file showed in the needs-attention lane and on its own page, `j` stepped within a URL filter.
+
+**Changed**
+- New: `src/validate.ts`, `src/studio/{types,model,model.test,server,server.test}.ts`, `src/studio/index.html`, `src/studio/app/{main,run,finding,ui}.tsx`, `src/studio/app/{store.ts,studio.css}`, `plugin/studio/*`, `plugin/skills/studio/SKILL.md`.
+- Edited: `src/schema.ts` (SessionFile), `src/session.ts` (types from the schema), `src/shared.ts` (findProjectRoot), `src/server.ts`, `src/finish.ts`, `build.mjs`, `scripts/check.mjs`, `tsconfig.json` (jsx, DOM lib), `package.json` (studio script, UI devDependencies), `plugin/skills/init/SKILL.md`, `sample-app/.gitignore`, GLOSSARY, architecture and concept docs.

@@ -2,20 +2,30 @@
   "name": "jeyna",
   "private": true,
   "type": "module",
-  "description": "Build-time only. The plugin ships the committed bundle plugin/server/jeyna-mcp.mjs; developers never run npm (D13).",
+  "description": "Build-time only. The plugin ships the committed bundles plugin/server/jeyna-mcp.mjs and plugin/studio/; developers never run npm (D13, D34).",
   "scripts": {
     "build": "node build.mjs",
     "typecheck": "tsc --noEmit",
     "test": "npm run build && vitest run",
     "check": "npm test && npm run typecheck && node scripts/check.mjs",
-    "prepare": "git config core.hooksPath .githooks"
+    "prepare": "git config core.hooksPath .githooks",
+    "studio": "node plugin/studio/jeyna-studio.mjs --project sample-app"
   },
   "devDependencies": {
     "@modelcontextprotocol/sdk": "^1.32.1",
+    "@tanstack/react-router": "^1.170.45",
     "@types/node": "^20.19.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "esbuild": "^0.28.2",
     "playwright-core": "^1.64.1",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "rehype-stringify": "^10.0.1",
+    "remark-parse": "^11.0.0",
+    "remark-rehype": "^11.1.2",
     "typescript": "^5.9.3",
+    "unified": "^11.0.5",
     "vitest": "^3.2.4",
     "yaml": "^2.8.1",
     "zod": "^4.6.7"

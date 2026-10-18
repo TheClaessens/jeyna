@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" style="color:#1F5FA8" role="img" aria-label="Jeyna anchor mark">
+  <!-- Jeyna anchor, detailed mark for 32 px and up. Metal: currentColor. Crystal: frost #8FD3FF, outlined in the metal so it reads on light grounds. -->
+  <!-- Ring with Jaina's frost crystal -->
+  <circle cx="32" cy="10.5" r="6.5"/>
+  <path d="M32 7 L35.5 10.5 L32 14 L28.5 10.5 Z" fill="#8FD3FF" stroke="currentColor" stroke-width="1.5"/>
+  <!-- Kul Tiran stock with ball ends -->
+  <path d="M19 23 H45"/>
+  <circle cx="16.5" cy="23" r="4.5" fill="currentColor" stroke="none"/>
+  <circle cx="47.5" cy="23" r="4.5" fill="currentColor" stroke="none"/>
+  <!-- Shank -->
+  <path d="M32 17 V53"/>
+  <!-- Arms -->
+  <path d="M11 35 C12.5 46.5 21 53 32 53 C43 53 51.5 46.5 53 35"/>
+  <!-- Flukes as crab claws: an outer and an inner prong per arm, tips 10 units apart -->
+  <path d="M11 35 C6.5 33.5 4 29.5 5 25.5"/>
+  <path d="M11 35 C14 32 15.5 28.5 15 25"/>
+  <path d="M53 35 C57.5 33.5 60 29.5 59 25.5"/>
+  <path d="M53 35 C50 32 48.5 28.5 49 25"/>
+</svg>

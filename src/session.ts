@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { z } from "zod";
 import { closeContexts } from "./browser.js";
 import { readFlow } from "./flows.js";
-import { type Case, type Config, Scenario } from "./schema.js";
+import { type Case, type Config, Scenario, type Session, type Verdict } from "./schema.js";
 import { duplicateNames } from "./shared.js";
 
 export type Tester = { id: string; scenario: string; account?: string; batch: number; cases: Case[] };
@@ -42,25 +42,7 @@ export function planTesters(scenarios: Scenario[], pool: string[], viewports: st
   return testers;
 }
 
-export type Session = {
-  schema: 1;
-  id: string;
-  flow: string;
-  app: string;
-  build: string;
-  status: "running" | "done" | "aborted";
-  started: string;
-  finished?: string;
-  mode: "guided" | "exploratory";
-  entry?: string;
-  scenarios: Scenario[];
-  testers: (Omit<Tester, "cases"> & { model: string; cases: string[] })[];
-  cases: Case[];
-  verdicts: Verdict[];
-  summary?: string;
-};
-
-export type Verdict = { case: string; result: "pass" | "fail" | "blocked" | "skipped"; note?: string; findings: string[] };
+export type { Session, Verdict } from "./schema.js";
 
 // The in-memory session is the only source of truth during a run (D11).
 // findings: id and case of each finding recorded in this run; its length is the id counter (D11).

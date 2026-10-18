@@ -44,3 +44,34 @@ export const FindingInput = z.strictObject({
   next: z.string().min(1).optional().describe("Suggested next step"),
 });
 export type FindingInput = z.infer<typeof FindingInput>;
+
+// session.json as written by session_start and its successors (D11). Not strict: a later server may add
+// fields, and the studio must still read older files. The studio validates on read (architecture, "one schema").
+export const Verdict = z.object({
+  case: z.string(),
+  result: z.enum(["pass", "fail", "blocked", "skipped"]),
+  note: z.string().optional(),
+  findings: z.array(z.string()),
+});
+export type Verdict = z.infer<typeof Verdict>;
+
+export const SessionFile = z.object({
+  schema: z.literal(1),
+  id: z.string(),
+  flow: z.string(),
+  app: z.string(),
+  build: z.string(),
+  status: z.enum(["running", "done", "aborted"]),
+  started: z.string(),
+  finished: z.string().optional(),
+  mode: z.enum(["guided", "exploratory"]),
+  entry: z.string().optional(),
+  scenarios: z.array(Scenario),
+  testers: z.array(
+    z.object({ id: z.string(), scenario: z.string(), account: z.string().optional(), batch: z.number(), model: z.string(), cases: z.array(z.string()) }),
+  ),
+  cases: z.array(z.object({ id: z.string(), scenario: z.string(), viewport: z.string() })),
+  verdicts: z.array(Verdict),
+  summary: z.string().optional(),
+});
+export type Session = z.infer<typeof SessionFile>;

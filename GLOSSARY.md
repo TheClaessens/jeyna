@@ -31,6 +31,12 @@ The one glossary for Jeyna. Use these words in docs, code, issues and agent prom
 - **Console**: the app's page errors, console errors, failed requests and 4xx/5xx responses in a case's browser since the tester's last call, carried by the results of `goto`, `click`, `press` and `snapshot`. Not stored. (D31)
 - **Report**: `report.md`, written by `session_finish`: counts, scenario matrix, the verdicts that changed since the latest done run of the same flow, and findings sorted by severity then kind.
 
+## Reading a run
+
+- **Studio**: the read-only viewer of `.jeyna/playtests/`, shipped in the plugin and started by `/jeyna:studio`. A sidecar watches the folder, validates every file with the server's rules and pushes an index to a browser page; it edits nothing. (D34)
+- **Needs attention**: the studio's lane for what `validate` reports: a finding or session file that does not parse, or a check that fails. The file stays listed with its errors and its source; nothing is dropped. (D34)
+- **Fold**: in the studio, a finding with status `duplicate` sits under the finding its `of` names and leaves the counts. One whose target is not in the run stands on its own. (D34)
+
 ## Rules of the fan-out
 
 - **Environment axis**: something that changes the browser (viewport; later zoom, reduced motion). It runs in sequence inside one tester.

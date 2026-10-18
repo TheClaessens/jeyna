@@ -1,4 +1,5 @@
-// Bundles src/server.ts into the committed plugin/server/jeyna-mcp.mjs (D13, probe P1).
+// Bundles src/server.ts into the committed plugin/server/jeyna-mcp.mjs (D13, probe P1), and the studio
+// (sidecar + UI) into plugin/studio/ (D34). Developers run neither npm nor a build: the plugin ships the output.
 import { build } from "esbuild";
 import { cpSync, mkdirSync } from "node:fs";
 
@@ -27,3 +28,30 @@ await build({
 
 mkdirSync("plugin/server/pw", { recursive: true });
 for (const f of ["package.json", "browsers.json"]) cpSync(`node_modules/playwright-core/${f}`, `plugin/server/pw/${f}`);
+
+// Jeyna studio (D34): the sidecar as one node bundle, the UI as one browser bundle plus its stylesheet, beside index.html and the mark.
+await build({
+  entryPoints: ["src/studio/server.ts"],
+  outfile: "plugin/studio/jeyna-studio.mjs",
+  bundle: true,
+  platform: "node",
+  format: "esm",
+  target: "node20",
+  banner: { js: "import { createRequire as __cr } from 'node:module'; const require = __cr(import.meta.url);" },
+  logLevel: "warning",
+});
+await build({
+  entryPoints: { app: "src/studio/app/main.tsx" },
+  outdir: "plugin/studio",
+  bundle: true,
+  platform: "browser",
+  format: "esm",
+  target: ["es2022"],
+  jsx: "automatic",
+  minify: true,
+  legalComments: "none",
+  define: { "process.env.NODE_ENV": '"production"' },
+  logLevel: "warning",
+});
+cpSync("src/studio/index.html", "plugin/studio/index.html");
+cpSync("docs/design/jeyna-anchor.svg", "plugin/studio/anchor.svg");
