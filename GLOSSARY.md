@@ -31,6 +31,11 @@ The one glossary for Jeyna. Use these words in docs, code, issues and agent prom
 - **Console**: the app's page errors, console errors, failed requests and 4xx/5xx responses in a case's browser since the tester's last call, carried by the results of `goto`, `click`, `press` and `snapshot`. Not stored. (D31)
 - **Report**: `report.md`, written by `session_finish`: counts, scenario matrix, the verdicts that changed since the latest done run of the same flow, and findings sorted by severity then kind.
 
+## What the developer sees
+
+- **Jeyna's Watch**: the three-line band above the prompt while a run is live: Claw'd as Jaina, the run's status and tally, every case with its verdict, the run path (the report path once done). Read from `session.json` by a once-a-second tick, never from the agents; gone a minute after the run ends. (D34)
+- **Mod**: a change to Claude Code's own interface shipped by the plugin as a function-hooks module (`plugin/hooks/hooks.json` → `modules`). Jeyna's Watch is the first. (D34)
+
 ## Rules of the fan-out
 
 - **Environment axis**: something that changes the browser (viewport; later zoom, reduced motion). It runs in sequence inside one tester.

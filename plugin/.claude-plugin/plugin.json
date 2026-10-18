@@ -2,5 +2,8 @@
   "name": "jeyna",
   "version": "0.0.1",
   "description": "Playtest a web app with Claude Code subagents",
-  "author": { "name": "Thomas Claessens" }
+  "author": {
+    "name": "Thomas Claessens"
+  },
+  "types": "./types/index.d.ts"
 }
