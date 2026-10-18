@@ -1,0 +1,142 @@
+{
+  "schema": 1,
+  "id": "2026-10-18-todos",
+  "flow": "todos",
+  "app": "sample-app",
+  "build": "17d5c39-dirty",
+  "status": "aborted",
+  "started": "2026-10-18T07:39:59.237Z",
+  "mode": "guided",
+  "entry": "/login",
+  "scenarios": [
+    {
+      "name": "Sign-in page",
+      "description": "Open the sign-in page without signing in and check that every control is labelled and on screen.",
+      "pass": "the email field, the password field and the Sign in button are all labelled and visible without scrolling sideways.",
+      "account": "none"
+    },
+    {
+      "name": "Add a todo with a priority",
+      "description": "Sign in, then add a todo called \"Buy milk\" with priority High.",
+      "pass": "\"Buy milk\" appears in the list with High priority."
+    },
+    {
+      "name": "Complete and delete a todo",
+      "description": "Sign in, add a todo, mark it complete, then delete it.",
+      "pass": "the todo shows as done after completing it, and is gone from the list after deleting it."
+    }
+  ],
+  "testers": [
+    {
+      "id": "t1",
+      "scenario": "Sign-in page",
+      "batch": 1,
+      "cases": [
+        "t1-1440x900",
+        "t1-390x844"
+      ],
+      "model": "sonnet"
+    },
+    {
+      "id": "t2",
+      "scenario": "Add a todo with a priority",
+      "batch": 1,
+      "cases": [
+        "t2-1440x900",
+        "t2-390x844"
+      ],
+      "account": "user_a",
+      "model": "sonnet"
+    },
+    {
+      "id": "t3",
+      "scenario": "Complete and delete a todo",
+      "batch": 1,
+      "cases": [
+        "t3-1440x900",
+        "t3-390x844"
+      ],
+      "account": "user_b",
+      "model": "sonnet"
+    }
+  ],
+  "cases": [
+    {
+      "id": "t1-1440x900",
+      "scenario": "Sign-in page",
+      "viewport": "1440x900"
+    },
+    {
+      "id": "t1-390x844",
+      "scenario": "Sign-in page",
+      "viewport": "390x844"
+    },
+    {
+      "id": "t2-1440x900",
+      "scenario": "Add a todo with a priority",
+      "viewport": "1440x900"
+    },
+    {
+      "id": "t2-390x844",
+      "scenario": "Add a todo with a priority",
+      "viewport": "390x844"
+    },
+    {
+      "id": "t3-1440x900",
+      "scenario": "Complete and delete a todo",
+      "viewport": "1440x900"
+    },
+    {
+      "id": "t3-390x844",
+      "scenario": "Complete and delete a todo",
+      "viewport": "390x844"
+    }
+  ],
+  "verdicts": [
+    {
+      "case": "t1-1440x900",
+      "result": "fail",
+      "findings": [
+        "PT-todos-002"
+      ]
+    },
+    {
+      "case": "t1-390x844",
+      "result": "fail",
+      "findings": [
+        "PT-todos-003",
+        "PT-todos-004"
+      ]
+    },
+    {
+      "case": "t2-1440x900",
+      "result": "fail",
+      "findings": [
+        "PT-todos-005"
+      ]
+    },
+    {
+      "case": "t3-1440x900",
+      "result": "pass",
+      "note": "Done state shown, delete removed the item. Priority bug recorded separately.",
+      "findings": []
+    },
+    {
+      "case": "t2-390x844",
+      "result": "fail",
+      "findings": [
+        "PT-todos-010",
+        "PT-todos-008"
+      ]
+    },
+    {
+      "case": "t3-390x844",
+      "result": "fail",
+      "note": "The visible Sign in button was missing, so a real user could not sign in. The scripted click on the hidden button worked, and complete and delete then worked.",
+      "findings": [
+        "PT-todos-009"
+      ]
+    }
+  ],
+  "finished": "2026-10-18T07:46:20.570Z"
+}

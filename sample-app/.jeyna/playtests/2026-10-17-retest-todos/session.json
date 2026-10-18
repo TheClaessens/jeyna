@@ -1,0 +1,48 @@
+{
+  "schema": 1,
+  "id": "2026-10-17-retest-todos",
+  "flow": "exploratory:retest-todos",
+  "app": "sample-app",
+  "build": "0ebd907-dirty",
+  "status": "done",
+  "started": "2026-10-17T18:18:13.628Z",
+  "mode": "exploratory",
+  "entry": "/login",
+  "scenarios": [
+    {
+      "name": "Retest PT-todos-001: Password field on sign-in has no label",
+      "description": "Retest of PT-todos-001 from run 2026-10-17-todos-2. Open /login, then read the form. Last time: Only Email is labelled; the second textbox has no label or name.",
+      "pass": "Password input has a visible label and accessible name"
+    }
+  ],
+  "testers": [
+    {
+      "id": "t1",
+      "scenario": "Retest PT-todos-001: Password field on sign-in has no label",
+      "batch": 1,
+      "cases": [
+        "t1-1440x900"
+      ],
+      "account": "user_a",
+      "model": "sonnet"
+    }
+  ],
+  "cases": [
+    {
+      "id": "t1-1440x900",
+      "scenario": "Retest PT-todos-001: Password field on sign-in has no label",
+      "viewport": "1440x900"
+    }
+  ],
+  "verdicts": [
+    {
+      "case": "t1-1440x900",
+      "result": "fail",
+      "findings": [
+        "PT-retest-todos-001"
+      ]
+    }
+  ],
+  "summary": "Retest of PT-todos-001 from run 2026-10-17-todos-2 at 1440x900. The password field on /login still has no visible label or accessible name, so the finding persists (PT-retest-todos-001).",
+  "finished": "2026-10-17T18:18:40.657Z"
+}

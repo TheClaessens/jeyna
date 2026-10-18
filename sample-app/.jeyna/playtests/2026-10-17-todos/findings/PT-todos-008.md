@@ -1,0 +1,43 @@
+---
+schema: 1
+id: PT-todos-008
+kind: bug
+severity: critical
+status: duplicate
+of: PT-todos-003
+flow: todos
+case: t2-390x844
+scenario: Add a todo with a priority
+route: /login
+viewport: 390x844
+browser: chromium 155.0.8059.80
+build: 876da2a-dirty
+author: sonnet
+created: 2026-10-17T18:03:15.439Z
+evidence:
+  - t2-390x844-1-login.png
+---
+
+# Sign in button not visible at phone width
+
+## Steps
+
+1. Open /login at 390x844
+2. Fill email and password
+3. Look for Sign in button
+
+## Expected
+
+Sign in button visible
+
+## Actual
+
+Only the Forgot password link shows below the fields; the Sign in button is missing from the view
+
+## Evidence
+
+![t2-390x844-1-login.png](../evidence/t2-390x844-1-login.png)
+
+## Suggested next step
+
+None given.

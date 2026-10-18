@@ -1,0 +1,3 @@
+2026-10-18T07:40:44.771Z SubagentStop agent_type=jeyna:jeyna-tester agent_id=a0b0720f02c8928b0 cases=t1-1440x900,t1-390x844 missing= allow
+2026-10-18T07:41:14.227Z SubagentStop agent_type=jeyna:jeyna-tester agent_id=a73b68d71ac8910d4 cases=t2-1440x900,t2-390x844 missing= allow
+2026-10-18T07:41:17.937Z SubagentStop agent_type=jeyna:jeyna-tester agent_id=a663fa7c5bdc33c45 cases=t3-1440x900,t3-390x844 missing= allow

@@ -1,0 +1,175 @@
+2026-10-18T07:46:20.621Z call 4 session_start - end 57ms
+2026-10-18T07:46:43.340Z call 5 goto t2-1440x900 start
+2026-10-18T07:46:43.443Z call 6 goto t3-1440x900 start
+2026-10-18T07:46:44.076Z call 5 goto t2-1440x900 end 736ms
+2026-10-18T07:46:44.079Z call 6 goto t3-1440x900 end 636ms
+2026-10-18T07:46:44.388Z call 7 snapshot t3-1440x900 start
+2026-10-18T07:46:44.406Z call 7 snapshot t3-1440x900 end 18ms
+2026-10-18T07:46:44.565Z call 8 goto t1-1440x900 start
+2026-10-18T07:46:44.685Z call 8 goto t1-1440x900 end 121ms
+2026-10-18T07:46:44.898Z call 9 goto t1-390x844 start
+2026-10-18T07:46:45.019Z call 9 goto t1-390x844 end 121ms
+2026-10-18T07:46:46.411Z call 10 snapshot t2-1440x900 start
+2026-10-18T07:46:46.426Z call 10 snapshot t2-1440x900 end 16ms
+2026-10-18T07:46:46.691Z call 11 screenshot t2-1440x900 start
+2026-10-18T07:46:46.714Z call 11 screenshot t2-1440x900 end 23ms
+2026-10-18T07:46:47.626Z call 12 fill t3-1440x900 start
+2026-10-18T07:46:47.662Z call 12 fill t3-1440x900 end 37ms
+2026-10-18T07:46:47.878Z call 13 fill t3-1440x900 start
+2026-10-18T07:46:47.908Z call 13 fill t3-1440x900 end 30ms
+2026-10-18T07:46:48.135Z call 14 screenshot t3-1440x900 start
+2026-10-18T07:46:48.143Z call 15 snapshot t1-1440x900 start
+2026-10-18T07:46:48.160Z call 14 screenshot t3-1440x900 end 26ms
+2026-10-18T07:46:48.165Z call 15 snapshot t1-1440x900 end 22ms
+2026-10-18T07:46:48.496Z call 16 screenshot t1-1440x900 start
+2026-10-18T07:46:48.514Z call 16 screenshot t1-1440x900 end 18ms
+2026-10-18T07:46:48.751Z call 17 snapshot t1-390x844 start
+2026-10-18T07:46:48.763Z call 17 snapshot t1-390x844 end 12ms
+2026-10-18T07:46:49.001Z call 18 screenshot t1-390x844 start
+2026-10-18T07:46:49.026Z call 18 screenshot t1-390x844 end 26ms
+2026-10-18T07:46:49.431Z call 19 fill t2-1440x900 start
+2026-10-18T07:46:49.456Z call 19 fill t2-1440x900 end 26ms
+2026-10-18T07:46:49.675Z call 20 fill t2-1440x900 start
+2026-10-18T07:46:49.704Z call 20 fill t2-1440x900 end 29ms
+2026-10-18T07:46:51.705Z call 21 click t2-1440x900 start
+2026-10-18T07:46:51.747Z call 22 record_finding t3-1440x900 start
+2026-10-18T07:46:51.753Z call 22 record_finding t3-1440x900 end 6ms
+2026-10-18T07:46:51.794Z call 21 click t2-1440x900 end 88ms
+2026-10-18T07:46:52.207Z call 23 click t3-1440x900 start
+2026-10-18T07:46:52.247Z call 23 click t3-1440x900 end 40ms
+2026-10-18T07:46:52.484Z call 24 snapshot t3-1440x900 start
+2026-10-18T07:46:52.497Z call 24 snapshot t3-1440x900 end 13ms
+2026-10-18T07:46:53.551Z call 25 snapshot t2-1440x900 start
+2026-10-18T07:46:53.578Z call 25 snapshot t2-1440x900 end 28ms
+2026-10-18T07:46:53.975Z call 26 record_finding t1-1440x900 start
+2026-10-18T07:46:53.977Z call 26 record_finding t1-1440x900 end 2ms
+2026-10-18T07:46:54.219Z call 27 record_finding t1-390x844 start
+2026-10-18T07:46:54.220Z call 27 record_finding t1-390x844 end 1ms
+2026-10-18T07:46:54.460Z call 28 record_finding t1-390x844 start
+2026-10-18T07:46:54.460Z call 28 record_finding t1-390x844 end 0ms
+2026-10-18T07:46:55.829Z call 29 fill t3-1440x900 start
+2026-10-18T07:46:55.855Z call 29 fill t3-1440x900 end 26ms
+2026-10-18T07:46:55.918Z call 30 fill t2-1440x900 start
+2026-10-18T07:46:55.933Z call 30 fill t2-1440x900 end 14ms
+2026-10-18T07:46:56.138Z call 31 fill t3-1440x900 start
+2026-10-18T07:46:56.146Z call 31 fill t3-1440x900 end 9ms
+2026-10-18T07:46:56.231Z call 32 fill t2-1440x900 start
+2026-10-18T07:46:56.238Z call 32 fill t2-1440x900 end 7ms
+2026-10-18T07:46:56.468Z call 33 click t3-1440x900 start
+2026-10-18T07:46:56.515Z call 33 click t3-1440x900 end 47ms
+2026-10-18T07:46:56.722Z call 34 snapshot t3-1440x900 start
+2026-10-18T07:46:56.734Z call 34 snapshot t3-1440x900 end 12ms
+2026-10-18T07:46:57.615Z call 35 scenario_verdict t1-1440x900 start
+2026-10-18T07:46:57.617Z call 35 scenario_verdict t1-1440x900 end 2ms
+2026-10-18T07:46:57.878Z call 36 scenario_verdict t1-390x844 start
+2026-10-18T07:46:57.878Z call 36 scenario_verdict t1-390x844 end 0ms
+2026-10-18T07:46:58.399Z call 37 click t2-1440x900 start
+2026-10-18T07:46:58.457Z call 37 click t2-1440x900 end 58ms
+2026-10-18T07:46:58.732Z call 38 screenshot t2-1440x900 start
+2026-10-18T07:46:58.758Z call 38 screenshot t2-1440x900 end 26ms
+2026-10-18T07:46:59.804Z call 39 screenshot t3-1440x900 start
+2026-10-18T07:46:59.833Z call 39 screenshot t3-1440x900 end 29ms
+2026-10-18T07:47:00.209Z call 40 click t3-1440x900 start
+2026-10-18T07:47:00.256Z call 40 click t3-1440x900 end 47ms
+2026-10-18T07:47:00.522Z call 41 snapshot t3-1440x900 start
+2026-10-18T07:47:00.534Z call 41 snapshot t3-1440x900 end 12ms
+2026-10-18T07:47:03.227Z call 42 record_finding t2-1440x900 start
+2026-10-18T07:47:03.229Z call 42 record_finding t2-1440x900 end 2ms
+2026-10-18T07:47:03.583Z call 43 record_finding t2-1440x900 start
+2026-10-18T07:47:03.584Z call 43 record_finding t2-1440x900 end 1ms
+2026-10-18T07:47:03.612Z call 44 record_finding t3-1440x900 start
+2026-10-18T07:47:03.612Z call 44 record_finding t3-1440x900 end 1ms
+2026-10-18T07:47:03.874Z call 45 scenario_verdict t2-1440x900 start
+2026-10-18T07:47:03.874Z call 45 scenario_verdict t2-1440x900 end 0ms error
+2026-10-18T07:47:03.929Z call 46 click t3-1440x900 start
+2026-10-18T07:47:03.978Z call 46 click t3-1440x900 end 49ms
+2026-10-18T07:47:04.312Z call 47 snapshot t3-1440x900 start
+2026-10-18T07:47:04.324Z call 47 snapshot t3-1440x900 end 12ms
+2026-10-18T07:47:06.904Z call 48 scenario_verdict t2-1440x900 start
+2026-10-18T07:47:06.905Z call 48 scenario_verdict t2-1440x900 end 1ms
+2026-10-18T07:47:07.199Z call 49 click t2-1440x900 start
+2026-10-18T07:47:07.264Z call 49 click t2-1440x900 end 66ms
+2026-10-18T07:47:07.872Z call 50 scenario_verdict t3-1440x900 start
+2026-10-18T07:47:07.874Z call 50 scenario_verdict t3-1440x900 end 2ms
+2026-10-18T07:47:08.133Z call 51 click t3-1440x900 start
+2026-10-18T07:47:08.183Z call 51 click t3-1440x900 end 50ms
+2026-10-18T07:47:08.408Z call 52 goto t3-390x844 start
+2026-10-18T07:47:08.584Z call 52 goto t3-390x844 end 176ms
+2026-10-18T07:47:08.876Z call 53 screenshot t3-390x844 start
+2026-10-18T07:47:08.893Z call 53 screenshot t3-390x844 end 17ms
+2026-10-18T07:47:09.275Z call 54 click t2-1440x900 start
+2026-10-18T07:47:09.355Z call 54 click t2-1440x900 end 80ms
+2026-10-18T07:47:09.602Z call 55 goto t2-390x844 start
+2026-10-18T07:47:09.731Z call 55 goto t2-390x844 end 129ms
+2026-10-18T07:47:12.656Z call 56 screenshot t2-390x844 start
+2026-10-18T07:47:12.688Z call 56 screenshot t2-390x844 end 32ms
+2026-10-18T07:47:13.387Z call 57 record_finding t3-390x844 start
+2026-10-18T07:47:13.388Z call 57 record_finding t3-390x844 end 1ms
+2026-10-18T07:47:13.625Z call 58 fill t3-390x844 start
+2026-10-18T07:47:13.652Z call 58 fill t3-390x844 end 27ms
+2026-10-18T07:47:13.883Z call 59 fill t3-390x844 start
+2026-10-18T07:47:13.923Z call 59 fill t3-390x844 end 40ms
+2026-10-18T07:47:14.216Z call 60 press t3-390x844 start
+2026-10-18T07:47:14.250Z call 60 press t3-390x844 end 34ms
+2026-10-18T07:47:14.959Z call 61 snapshot t2-390x844 start
+2026-10-18T07:47:14.980Z call 61 snapshot t2-390x844 end 21ms
+2026-10-18T07:47:18.277Z call 62 fill t3-390x844 start
+2026-10-18T07:47:18.315Z call 62 fill t3-390x844 end 38ms
+2026-10-18T07:47:18.653Z call 63 fill t3-390x844 start
+2026-10-18T07:47:18.662Z call 63 fill t3-390x844 end 9ms
+2026-10-18T07:47:18.921Z call 64 click t3-390x844 start
+2026-10-18T07:47:18.949Z call 65 record_finding t2-390x844 start
+2026-10-18T07:47:18.949Z call 65 record_finding t2-390x844 end 1ms
+2026-10-18T07:47:18.979Z call 64 click t3-390x844 end 59ms
+2026-10-18T07:47:19.354Z call 66 fill t2-390x844 start
+2026-10-18T07:47:19.379Z call 66 fill t2-390x844 end 25ms
+2026-10-18T07:47:19.426Z call 67 click t3-390x844 start
+2026-10-18T07:47:19.487Z call 67 click t3-390x844 end 61ms
+2026-10-18T07:47:19.740Z call 68 fill t2-390x844 start
+2026-10-18T07:47:19.787Z call 68 fill t2-390x844 end 47ms
+2026-10-18T07:47:19.803Z call 69 snapshot t3-390x844 start
+2026-10-18T07:47:19.818Z call 69 snapshot t3-390x844 end 15ms
+2026-10-18T07:47:21.969Z call 70 press t2-390x844 start
+2026-10-18T07:47:22.004Z call 70 press t2-390x844 end 35ms
+2026-10-18T07:47:23.750Z call 71 click t3-390x844 start
+2026-10-18T07:47:23.815Z call 71 click t3-390x844 end 66ms
+2026-10-18T07:47:24.103Z call 72 snapshot t3-390x844 start
+2026-10-18T07:47:24.116Z call 72 snapshot t3-390x844 end 12ms
+2026-10-18T07:47:24.389Z call 73 click t3-390x844 start
+2026-10-18T07:47:24.437Z call 73 click t3-390x844 end 48ms
+2026-10-18T07:47:24.530Z call 74 fill t2-390x844 start
+2026-10-18T07:47:24.551Z call 74 fill t2-390x844 end 22ms
+2026-10-18T07:47:24.778Z call 75 fill t2-390x844 start
+2026-10-18T07:47:24.784Z call 75 fill t2-390x844 end 6ms
+2026-10-18T07:47:26.880Z call 76 scenario_verdict t3-390x844 start
+2026-10-18T07:47:26.881Z call 76 scenario_verdict t3-390x844 end 1ms
+2026-10-18T07:47:27.042Z call 77 click t2-390x844 start
+2026-10-18T07:47:27.093Z call 77 click t2-390x844 end 51ms
+2026-10-18T07:47:27.381Z call 78 screenshot t2-390x844 start
+2026-10-18T07:47:27.402Z call 78 screenshot t2-390x844 end 20ms
+2026-10-18T07:47:30.249Z call 79 record_finding t2-390x844 start
+2026-10-18T07:47:30.251Z call 79 record_finding t2-390x844 end 2ms
+2026-10-18T07:47:30.547Z call 80 click t2-390x844 start
+2026-10-18T07:47:30.611Z call 80 click t2-390x844 end 64ms
+2026-10-18T07:47:33.427Z call 81 click t2-390x844 start
+2026-10-18T07:47:33.505Z call 81 click t2-390x844 end 78ms
+2026-10-18T07:47:33.810Z call 82 scenario_verdict t2-390x844 start
+2026-10-18T07:47:33.811Z call 82 scenario_verdict t2-390x844 end 1ms
+2026-10-18T07:47:40.988Z call 83 validate - start
+2026-10-18T07:47:40.998Z call 83 validate - end 11ms
+2026-10-18T07:47:51.146Z call 84 update_status - start
+2026-10-18T07:47:51.149Z call 84 update_status - end 4ms
+2026-10-18T07:47:51.483Z call 85 update_status - start
+2026-10-18T07:47:51.485Z call 85 update_status - end 2ms
+2026-10-18T07:47:51.772Z call 86 update_status - start
+2026-10-18T07:47:51.774Z call 86 update_status - end 2ms
+2026-10-18T07:47:52.088Z call 87 update_status - start
+2026-10-18T07:47:52.089Z call 87 update_status - end 1ms
+2026-10-18T07:47:52.363Z call 88 update_status - start
+2026-10-18T07:47:52.364Z call 88 update_status - end 1ms
+2026-10-18T07:47:52.624Z call 89 update_status - start
+2026-10-18T07:47:52.626Z call 89 update_status - end 1ms
+2026-10-18T07:47:52.883Z call 90 update_status - start
+2026-10-18T07:47:52.884Z call 90 update_status - end 1ms
+2026-10-18T07:47:55.598Z call 91 session_finish - start
+2026-10-18T07:47:55.690Z call 91 session_finish - end 92ms

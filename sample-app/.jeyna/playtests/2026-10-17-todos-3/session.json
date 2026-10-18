@@ -1,0 +1,49 @@
+{
+  "schema": 1,
+  "id": "2026-10-17-todos-3",
+  "flow": "todos",
+  "app": "sample-app",
+  "build": "876da2a-dirty",
+  "status": "done",
+  "started": "2026-10-17T18:06:53.341Z",
+  "mode": "guided",
+  "entry": "/login",
+  "scenarios": [
+    {
+      "name": "Add a todo with a priority",
+      "description": "Sign in, then add a todo called \"Buy milk\" with priority High.",
+      "pass": "\"Buy milk\" appears in the list with High priority."
+    }
+  ],
+  "testers": [
+    {
+      "id": "t1",
+      "scenario": "Add a todo with a priority",
+      "batch": 1,
+      "cases": [
+        "t1-1440x900"
+      ],
+      "account": "user_a",
+      "model": "sonnet"
+    }
+  ],
+  "cases": [
+    {
+      "id": "t1-1440x900",
+      "scenario": "Add a todo with a priority",
+      "viewport": "1440x900"
+    }
+  ],
+  "verdicts": [
+    {
+      "case": "t1-1440x900",
+      "result": "fail",
+      "note": "Buy milk listed as Normal priority, not High.",
+      "findings": [
+        "PT-todos-001"
+      ]
+    }
+  ],
+  "summary": "Retest of PT-todos-001 (password field on sign-in has no label) by replaying Add a todo with a priority at 1440x900. The password field still has no label (PT-todos-002), and a todo saved with priority High still comes back as Normal (PT-todos-001), which fails the case.",
+  "finished": "2026-10-17T18:07:34.195Z"
+}

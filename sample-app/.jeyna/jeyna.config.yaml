@@ -1,0 +1,25 @@
+# Jeyna project config. Hand-edited; get_context validates it.
+app:
+  name: sample-app
+  url: http://localhost:4173
+  build: null # optional fixed build id; else git describe --always --dirty
+  reset:
+    curl -fsS -X POST http://localhost:4173/__reset # optional shell command run from the project root before every run, so each run
+    # starts from the same app state, e.g. npm run db:seed. A failing command refuses the run.
+
+# Each viewport is one case per scenario, run in sequence by one tester (D4).
+viewports: [1440x900, 390x844]
+
+browser:
+  headed: false # true to watch the browser while tuning a run
+
+tester: # model and effort for every tester (D15)
+  model: sonnet
+  effort: medium
+
+# Test accounts. Only env variable NAMES live here, never values (D18).
+# Values come from the shell environment, else from .jeyna/.env (gitignored, filled by people only).
+#   - { handle: user_a, user_env: JEYNA_USER_A_USER, pass_env: JEYNA_USER_A_PASS }
+accounts:
+  - { handle: user_a, user_env: JEYNA_USER_A_USER, pass_env: JEYNA_USER_A_PASS }
+  - { handle: user_b, user_env: JEYNA_USER_B_USER, pass_env: JEYNA_USER_B_PASS }
