@@ -37,6 +37,11 @@ The one glossary for Jeyna. Use these words in docs, code, issues and agent prom
 - **Needs attention**: the studio's lane for what `validate` reports: a finding or session file that does not parse, or a check that fails. The file stays listed with its errors and its source; nothing is dropped. (D34)
 - **Fold**: in the studio, a finding with status `duplicate` sits under the finding its `of` names and leaves the counts. One whose target is not in the run stands on its own. (D34)
 
+## What the developer sees
+
+- **Jeyna's Watch**: the three-line band above the prompt while a run is live: Claw'd as Jaina, the run's status and tally, every case with its verdict, the run path (the report path once done). Read from `session.json` by a once-a-second tick, never from the agents; gone a minute after the run ends. (D35)
+- **Mod**: a change to Claude Code's own interface shipped by the plugin as a function-hooks module (`plugin/hooks/hooks.json` → `modules`). Jeyna's Watch is the first. (D35)
+
 ## Rules of the fan-out
 
 - **Environment axis**: something that changes the browser (viewport; later zoom, reduced motion). It runs in sequence inside one tester.
