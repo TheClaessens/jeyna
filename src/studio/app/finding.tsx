@@ -1,9 +1,11 @@
 // Studio · Finding: chips row, Steps / Expected / Actual, evidence at natural size, Suggested next step, the duplicates
-// of this finding, the source (frontmatter, or the whole file), Copy path and Copy id, j / k / esc.
+// of this finding, the source (frontmatter, or the whole file), Copy path and Copy id, j / k / esc. Give feedback on an
+// evidence image crops it into a feedback item (D36).
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import * as m from "../model.js";
 import type { StudioFinding, StudioIndex, StudioRun } from "../types.js";
+import { CaptureEditor, type Frame } from "./capture.js";
 import { Attention, evidenceUrl, filePath } from "./run.js";
 import { Arrow, Card, CopyButton, CopyIcon, Glyph, IdIcon, KindChip, Severity, StatusChip } from "./ui.js";
 
@@ -17,6 +19,14 @@ export function FindingScreen({ index, run, finding }: { index: StudioIndex; run
   const search = useSearch({ strict: false }) as Search;
   const navigate = useNavigate();
   const [whole, setWhole] = useState(false);
+  const [editor, setEditor] = useState<{ evidence: string; frame: Frame }>();
+  // The evidence image itself, same-origin, so the crop canvas is not tainted.
+  const giveFeedback = async (evidence: string) => {
+    const img = new Image();
+    img.src = evidenceUrl(run.id, evidence);
+    await img.decode();
+    setEditor({ evidence, frame: { src: img, w: img.naturalWidth, h: img.naturalHeight, ms: 0 } });
+  };
   const { view, ...filters } = search;
 
   // Position among the rows the run screen shows with the same filters; a folded duplicate steps from its parent.
@@ -137,7 +147,10 @@ export function FindingScreen({ index, run, finding }: { index: StudioIndex; run
                 fr.evidence.map((e) => (
                   <figure key={e}>
                     <a href={evidenceUrl(run.id, e)} target="_blank" rel="noreferrer"><img src={evidenceUrl(run.id, e)} alt={e} /></a>
-                    <figcaption><span>{e}</span><span className="dot">·</span><span className="vp">{fr.viewport}</span></figcaption>
+                    <figcaption>
+                      <span>{e}</span><span className="dot">·</span><span className="vp">{fr.viewport}</span>
+                      <button type="button" className="btn sm" onClick={() => giveFeedback(e)}>Give feedback</button>
+                    </figcaption>
                   </figure>
                 ))
               ) : (
@@ -170,6 +183,10 @@ export function FindingScreen({ index, run, finding }: { index: StudioIndex; run
               <button type="button" className="more" onClick={() => setWhole(!whole)}>{whole ? "Show the frontmatter only" : "Show the whole file"}</button>
             </Card>
           </>
+        )}
+
+        {editor && (
+          <CaptureEditor frames={[editor.frame]} origin={{ source: "evidence", run: run.id, evidence: editor.evidence, finding: finding.id }} onClose={() => setEditor(undefined)} />
         )}
 
         <footer className="foot-keys">

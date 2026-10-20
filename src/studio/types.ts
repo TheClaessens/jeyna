@@ -1,5 +1,6 @@
-// What the sidecar serves and pushes: one JSON document for the whole .jeyna/playtests/ folder (index.json).
+// What the sidecar serves and pushes: one JSON document for .jeyna/playtests/ and .jeyna/feedback/ (index.json).
 // Type-only imports, so the browser bundle pulls in no server code.
+import type { FeedbackItem } from "../feedback.js";
 import type { Session } from "../schema.js";
 import type { Finding, Since } from "../validate.js";
 
@@ -26,4 +27,6 @@ export type StudioIndex = {
   app: { name: string; url: string } | null;
   // Newest first by start time; runs without a readable session.json go last, by folder name.
   runs: StudioRun[];
+  // Every .jeyna/feedback/FB-*.md, oldest id first, each with its own errors (D36).
+  feedback: FeedbackItem[];
 };

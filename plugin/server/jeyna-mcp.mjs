@@ -172,10 +172,10 @@ var require_code = __commonJS2({
     function interpolate(x) {
       return typeof x == "number" || typeof x == "boolean" || x === null ? x : safeStringify(Array.isArray(x) ? x.join(",") : x);
     }
-    function stringify4(x) {
+    function stringify5(x) {
       return new _Code(safeStringify(x));
     }
-    exports2.stringify = stringify4;
+    exports2.stringify = stringify5;
     function safeStringify(x) {
       return JSON.stringify(x).replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
     }
@@ -3848,7 +3848,7 @@ var require_fast_uri = __commonJS2({
         normalizeString(uri, options2);
       } else if (typeof uri === "object") {
         uri = /** @type {T} */
-        parse7(serialize2(uri, options2), options2);
+        parse8(serialize2(uri, options2), options2);
       }
       return uri;
     }
@@ -3888,8 +3888,8 @@ var require_fast_uri = __commonJS2({
     function resolveComponent(base, relative2, options2, skipNormalization) {
       const target = {};
       if (!skipNormalization) {
-        base = parse7(serialize2(base, options2), options2);
-        relative2 = parse7(serialize2(relative2, options2), options2);
+        base = parse8(serialize2(base, options2), options2);
+        relative2 = parse8(serialize2(relative2, options2), options2);
       }
       options2 = options2 || {};
       if (!options2.tolerant && relative2.scheme) {
@@ -4188,7 +4188,7 @@ var require_fast_uri = __commonJS2({
       }
       return { parsed, malformedAuthorityOrPort, malformedPercentEncoding, malformedSchemeSpecific, malformedHost, malformedScheme };
     }
-    function parse7(uri, opts) {
+    function parse8(uri, opts) {
       return parseWithStatus(uri, opts).parsed;
     }
     function normalizeString(uri, opts) {
@@ -4225,7 +4225,7 @@ var require_fast_uri = __commonJS2({
       resolveComponent,
       equal,
       serialize: serialize2,
-      parse: parse7
+      parse: parse8
     };
     module3.exports = fastUri;
     module3.exports.default = fastUri;
@@ -8680,7 +8680,7 @@ var require_stringify = __commonJS2({
         props.push(doc.directives.tagString(tag));
       return props.join(" ");
     }
-    function stringify4(item, ctx, onComment, onChompKeep) {
+    function stringify5(item, ctx, onComment, onChompKeep) {
       if (identity.isPair(item))
         return item.toString(ctx, onComment, onChompKeep);
       if (identity.isAlias(item)) {
@@ -8709,7 +8709,7 @@ var require_stringify = __commonJS2({
 ${ctx.indent}${str}`;
     }
     exports2.createStringifyContext = createStringifyContext;
-    exports2.stringify = stringify4;
+    exports2.stringify = stringify5;
   }
 });
 
@@ -8719,7 +8719,7 @@ var require_stringifyPair = __commonJS2({
     "use strict";
     var identity = require_identity();
     var Scalar = require_Scalar();
-    var stringify4 = require_stringify();
+    var stringify5 = require_stringify();
     var stringifyComment = require_stringifyComment();
     function stringifyPair({ key, value: value2 }, ctx, onComment, onChompKeep) {
       const { allNullValues, doc, indent: indent2, indentStep, options: { commentString, indentSeq, simpleKeys } } = ctx;
@@ -8741,7 +8741,7 @@ var require_stringifyPair = __commonJS2({
       });
       let keyCommentDone = false;
       let chompKeep = false;
-      let str = stringify4.stringify(key, ctx, () => keyCommentDone = true, () => chompKeep = true);
+      let str = stringify5.stringify(key, ctx, () => keyCommentDone = true, () => chompKeep = true);
       if (!explicitKey && !ctx.inFlow && str.length > 1024) {
         if (simpleKeys)
           throw new Error("With simple keys, single line scalar must not span more than 1024 characters");
@@ -8793,7 +8793,7 @@ ${indent2}:`;
         ctx.indent = ctx.indent.substring(2);
       }
       let valueCommentDone = false;
-      const valueStr = stringify4.stringify(value2, ctx, () => valueCommentDone = true, () => chompKeep = true);
+      const valueStr = stringify5.stringify(value2, ctx, () => valueCommentDone = true, () => chompKeep = true);
       let ws4 = " ";
       if (keyComment || vsb || vcb) {
         ws4 = vsb ? "\n" : "";
@@ -8934,7 +8934,7 @@ var require_addPairToJSMap = __commonJS2({
     "use strict";
     var log4 = require_log();
     var merge2 = require_merge();
-    var stringify4 = require_stringify();
+    var stringify5 = require_stringify();
     var identity = require_identity();
     var toJS = require_toJS();
     function addPairToJSMap(ctx, map2, { key, value: value2 }) {
@@ -8970,7 +8970,7 @@ var require_addPairToJSMap = __commonJS2({
       if (typeof jsKey !== "object")
         return String(jsKey);
       if (identity.isNode(key) && ctx?.doc) {
-        const strCtx = stringify4.createStringifyContext(ctx.doc, {});
+        const strCtx = stringify5.createStringifyContext(ctx.doc, {});
         strCtx.anchors = /* @__PURE__ */ new Set();
         for (const node2 of ctx.anchors.keys())
           strCtx.anchors.add(node2.anchor);
@@ -9037,12 +9037,12 @@ var require_stringifyCollection = __commonJS2({
   "node_modules/.pnpm/yaml@2.9.1/node_modules/yaml/dist/stringify/stringifyCollection.js"(exports2) {
     "use strict";
     var identity = require_identity();
-    var stringify4 = require_stringify();
+    var stringify5 = require_stringify();
     var stringifyComment = require_stringifyComment();
     function stringifyCollection(collection, ctx, options2) {
       const flow = ctx.inFlow ?? collection.flow;
-      const stringify5 = flow ? stringifyFlowCollection : stringifyBlockCollection;
-      return stringify5(collection, ctx, options2);
+      const stringify6 = flow ? stringifyFlowCollection : stringifyBlockCollection;
+      return stringify6(collection, ctx, options2);
     }
     function stringifyBlockCollection({ comment, items }, ctx, { blockItemPrefix, flowChars, itemIndent, onChompKeep, onComment }) {
       const { indent: indent2, options: { commentString } } = ctx;
@@ -9067,7 +9067,7 @@ var require_stringifyCollection = __commonJS2({
           }
         }
         chompKeep = false;
-        let str2 = stringify4.stringify(item, itemCtx, () => comment2 = null, () => chompKeep = true);
+        let str2 = stringify5.stringify(item, itemCtx, () => comment2 = null, () => chompKeep = true);
         if (comment2)
           str2 += stringifyComment.lineComment(str2, itemIndent, commentString(comment2));
         if (chompKeep && comment2)
@@ -9134,7 +9134,7 @@ ${indent2}${line}` : "\n";
         }
         if (comment)
           reqNewline = true;
-        let str = stringify4.stringify(item, itemCtx, () => comment = null);
+        let str = stringify5.stringify(item, itemCtx, () => comment = null);
         reqNewline || (reqNewline = lines.length > linesAtValue || str.includes("\n"));
         if (i < items.length - 1) {
           str += ",";
@@ -10495,7 +10495,7 @@ var require_stringifyDocument = __commonJS2({
   "node_modules/.pnpm/yaml@2.9.1/node_modules/yaml/dist/stringify/stringifyDocument.js"(exports2) {
     "use strict";
     var identity = require_identity();
-    var stringify4 = require_stringify();
+    var stringify5 = require_stringify();
     var stringifyComment = require_stringifyComment();
     function stringifyDocument(doc, options2) {
       const lines = [];
@@ -10510,7 +10510,7 @@ var require_stringifyDocument = __commonJS2({
       }
       if (hasDirectives)
         lines.push("---");
-      const ctx = stringify4.createStringifyContext(doc, options2);
+      const ctx = stringify5.createStringifyContext(doc, options2);
       const { commentString } = ctx.options;
       if (doc.commentBefore) {
         if (lines.length !== 1)
@@ -10532,7 +10532,7 @@ var require_stringifyDocument = __commonJS2({
           contentComment = doc.contents.comment;
         }
         const onChompKeep = contentComment ? void 0 : () => chompKeep = true;
-        let body = stringify4.stringify(doc.contents, ctx, () => contentComment = null, onChompKeep);
+        let body = stringify5.stringify(doc.contents, ctx, () => contentComment = null, onChompKeep);
         if (contentComment)
           body += stringifyComment.lineComment(body, "", commentString(contentComment));
         if ((body[0] === "|" || body[0] === ">") && lines[lines.length - 1] === "---") {
@@ -10540,7 +10540,7 @@ var require_stringifyDocument = __commonJS2({
         } else
           lines.push(body);
       } else {
-        lines.push(stringify4.stringify(doc.contents, ctx));
+        lines.push(stringify5.stringify(doc.contents, ctx));
       }
       if (doc.directives?.docEnd) {
         if (doc.comment) {
@@ -12676,7 +12676,7 @@ var require_cst_scalar = __commonJS2({
 var require_cst_stringify = __commonJS2({
   "node_modules/.pnpm/yaml@2.9.1/node_modules/yaml/dist/parse/cst-stringify.js"(exports2) {
     "use strict";
-    var stringify4 = (cst) => "type" in cst ? stringifyToken(cst) : stringifyItem(cst);
+    var stringify5 = (cst) => "type" in cst ? stringifyToken(cst) : stringifyItem(cst);
     function stringifyToken(token) {
       switch (token.type) {
         case "block-scalar": {
@@ -12729,7 +12729,7 @@ var require_cst_stringify = __commonJS2({
         res += stringifyToken(value2);
       return res;
     }
-    exports2.stringify = stringify4;
+    exports2.stringify = stringify5;
   }
 });
 
@@ -14440,7 +14440,7 @@ var require_public_api = __commonJS2({
       }
       return doc;
     }
-    function parse7(src, reviver, options2) {
+    function parse8(src, reviver, options2) {
       let _reviver = void 0;
       if (typeof reviver === "function") {
         _reviver = reviver;
@@ -14459,7 +14459,7 @@ var require_public_api = __commonJS2({
       }
       return doc.toJS(Object.assign({ reviver: _reviver }, options2));
     }
-    function stringify4(value2, replacer, options2) {
+    function stringify5(value2, replacer, options2) {
       let _replacer = null;
       if (typeof replacer === "function" || Array.isArray(replacer)) {
         _replacer = replacer;
@@ -14481,10 +14481,10 @@ var require_public_api = __commonJS2({
         return value2.toString(options2);
       return new Document.Document(value2, _replacer, options2).toString(options2);
     }
-    exports2.parse = parse7;
+    exports2.parse = parse8;
     exports2.parseAllDocuments = parseAllDocuments;
     exports2.parseDocument = parseDocument;
-    exports2.stringify = stringify4;
+    exports2.stringify = stringify5;
   }
 });
 
@@ -30561,7 +30561,7 @@ ${indent2}`);
             props.push(doc.directives.tagString(tag));
           return props.join(" ");
         }
-        function stringify4(item, ctx, onComment, onChompKeep) {
+        function stringify5(item, ctx, onComment, onChompKeep) {
           if (identity2.isPair(item))
             return item.toString(ctx, onComment, onChompKeep);
           if (identity2.isAlias(item)) {
@@ -30590,7 +30590,7 @@ ${indent2}`);
 ${ctx.indent}${str}`;
         }
         exports22.createStringifyContext = createStringifyContext;
-        exports22.stringify = stringify4;
+        exports22.stringify = stringify5;
       }
     });
     var require_stringifyPair2 = __commonJS3({
@@ -30598,7 +30598,7 @@ ${ctx.indent}${str}`;
         "use strict";
         var identity2 = require_identity2();
         var Scalar = require_Scalar2();
-        var stringify4 = require_stringify2();
+        var stringify5 = require_stringify2();
         var stringifyComment = require_stringifyComment2();
         function stringifyPair({ key, value: value2 }, ctx, onComment, onChompKeep) {
           const { allNullValues, doc, indent: indent2, indentStep, options: { commentString, indentSeq, simpleKeys } } = ctx;
@@ -30620,7 +30620,7 @@ ${ctx.indent}${str}`;
           });
           let keyCommentDone = false;
           let chompKeep = false;
-          let str = stringify4.stringify(key, ctx, () => keyCommentDone = true, () => chompKeep = true);
+          let str = stringify5.stringify(key, ctx, () => keyCommentDone = true, () => chompKeep = true);
           if (!explicitKey && !ctx.inFlow && str.length > 1024) {
             if (simpleKeys)
               throw new Error("With simple keys, single line scalar must not span more than 1024 characters");
@@ -30672,7 +30672,7 @@ ${indent2}:`;
             ctx.indent = ctx.indent.substring(2);
           }
           let valueCommentDone = false;
-          const valueStr = stringify4.stringify(value2, ctx, () => valueCommentDone = true, () => chompKeep = true);
+          const valueStr = stringify5.stringify(value2, ctx, () => valueCommentDone = true, () => chompKeep = true);
           let ws22 = " ";
           if (keyComment || vsb || vcb) {
             ws22 = vsb ? "\n" : "";
@@ -30807,7 +30807,7 @@ ${ctx.indent}`;
         "use strict";
         var log4 = require_log2();
         var merge22 = require_merge2();
-        var stringify4 = require_stringify2();
+        var stringify5 = require_stringify2();
         var identity2 = require_identity2();
         var toJS = require_toJS2();
         function addPairToJSMap(ctx, map22, { key, value: value2 }) {
@@ -30843,7 +30843,7 @@ ${ctx.indent}`;
           if (typeof jsKey !== "object")
             return String(jsKey);
           if (identity2.isNode(key) && ctx?.doc) {
-            const strCtx = stringify4.createStringifyContext(ctx.doc, {});
+            const strCtx = stringify5.createStringifyContext(ctx.doc, {});
             strCtx.anchors = /* @__PURE__ */ new Set();
             for (const node2 of ctx.anchors.keys())
               strCtx.anchors.add(node2.anchor);
@@ -30906,7 +30906,7 @@ ${ctx.indent}`;
       "node_modules/yaml/dist/stringify/stringifyCollection.js"(exports22) {
         "use strict";
         var identity2 = require_identity2();
-        var stringify4 = require_stringify2();
+        var stringify5 = require_stringify2();
         var stringifyComment = require_stringifyComment2();
         function stringifyCollection(collection, ctx, options2) {
           const flow = ctx.inFlow ?? collection.flow;
@@ -30936,7 +30936,7 @@ ${ctx.indent}`;
               }
             }
             chompKeep = false;
-            let str2 = stringify4.stringify(item, itemCtx, () => comment2 = null, () => chompKeep = true);
+            let str2 = stringify5.stringify(item, itemCtx, () => comment2 = null, () => chompKeep = true);
             if (comment2)
               str2 += stringifyComment.lineComment(str2, itemIndent, commentString(comment2));
             if (chompKeep && comment2)
@@ -31003,7 +31003,7 @@ ${indent2}${line}` : "\n";
             }
             if (comment)
               reqNewline = true;
-            let str = stringify4.stringify(item, itemCtx, () => comment = null);
+            let str = stringify5.stringify(item, itemCtx, () => comment = null);
             reqNewline || (reqNewline = lines.length > linesAtValue || str.includes("\n"));
             if (i2 < items.length - 1) {
               str += ",";
@@ -32316,7 +32316,7 @@ ${cn.comment}` : item.comment;
       "node_modules/yaml/dist/stringify/stringifyDocument.js"(exports22) {
         "use strict";
         var identity2 = require_identity2();
-        var stringify4 = require_stringify2();
+        var stringify5 = require_stringify2();
         var stringifyComment = require_stringifyComment2();
         function stringifyDocument(doc, options2) {
           const lines = [];
@@ -32331,7 +32331,7 @@ ${cn.comment}` : item.comment;
           }
           if (hasDirectives)
             lines.push("---");
-          const ctx = stringify4.createStringifyContext(doc, options2);
+          const ctx = stringify5.createStringifyContext(doc, options2);
           const { commentString } = ctx.options;
           if (doc.commentBefore) {
             if (lines.length !== 1)
@@ -32353,7 +32353,7 @@ ${cn.comment}` : item.comment;
               contentComment = doc.contents.comment;
             }
             const onChompKeep = contentComment ? void 0 : () => chompKeep = true;
-            let body = stringify4.stringify(doc.contents, ctx, () => contentComment = null, onChompKeep);
+            let body = stringify5.stringify(doc.contents, ctx, () => contentComment = null, onChompKeep);
             if (contentComment)
               body += stringifyComment.lineComment(body, "", commentString(contentComment));
             if ((body[0] === "|" || body[0] === ">") && lines[lines.length - 1] === "---") {
@@ -32361,7 +32361,7 @@ ${cn.comment}` : item.comment;
             } else
               lines.push(body);
           } else {
-            lines.push(stringify4.stringify(doc.contents, ctx));
+            lines.push(stringify5.stringify(doc.contents, ctx));
           }
           if (doc.directives?.docEnd) {
             if (doc.comment) {
@@ -34456,7 +34456,7 @@ ${end.comment}` : end.comment;
     var require_cst_stringify2 = __commonJS3({
       "node_modules/yaml/dist/parse/cst-stringify.js"(exports22) {
         "use strict";
-        var stringify4 = (cst) => "type" in cst ? stringifyToken(cst) : stringifyItem(cst);
+        var stringify5 = (cst) => "type" in cst ? stringifyToken(cst) : stringifyItem(cst);
         function stringifyToken(token) {
           switch (token.type) {
             case "block-scalar": {
@@ -34509,7 +34509,7 @@ ${end.comment}` : end.comment;
             res += stringifyToken(value2);
           return res;
         }
-        exports22.stringify = stringify4;
+        exports22.stringify = stringify5;
       }
     });
     var require_cst_visit2 = __commonJS3({
@@ -36227,7 +36227,7 @@ ${end.comment}` : end.comment;
           }
           return doc.toJS(Object.assign({ reviver: _reviver }, options2));
         }
-        function stringify4(value2, replacer, options2) {
+        function stringify5(value2, replacer, options2) {
           let _replacer = null;
           if (typeof replacer === "function" || Array.isArray(replacer)) {
             _replacer = replacer;
@@ -36252,7 +36252,7 @@ ${end.comment}` : end.comment;
         exports22.parse = parse32;
         exports22.parseAllDocuments = parseAllDocuments;
         exports22.parseDocument = parseDocument;
-        exports22.stringify = stringify4;
+        exports22.stringify = stringify5;
       }
     });
     var require_dist3 = __commonJS3({
@@ -37182,7 +37182,7 @@ ${end.comment}` : end.comment;
     var require_stringify22 = __commonJS3({
       "node_modules/json5/lib/stringify.js"(exports22, module22) {
         var util22 = require_util22();
-        module22.exports = function stringify4(value2, replacer, space) {
+        module22.exports = function stringify5(value2, replacer, space) {
           const stack = [];
           let indent2 = "";
           let propertyList;
@@ -37399,10 +37399,10 @@ ${end.comment}` : end.comment;
     var require_lib = __commonJS3({
       "node_modules/json5/lib/index.js"(exports22, module22) {
         var parse32 = require_parse();
-        var stringify4 = require_stringify22();
+        var stringify5 = require_stringify22();
         var JSON5 = {
           parse: parse32,
-          stringify: stringify4
+          stringify: stringify5
         };
         module22.exports = JSON5;
       }
@@ -47499,10 +47499,10 @@ ${end.comment}` : end.comment;
         function interpolate(x) {
           return typeof x == "number" || typeof x == "boolean" || x === null ? x : safeStringify(Array.isArray(x) ? x.join(",") : x);
         }
-        function stringify4(x) {
+        function stringify5(x) {
           return new _Code(safeStringify(x));
         }
-        exports22.stringify = stringify4;
+        exports22.stringify = stringify5;
         function safeStringify(x) {
           return JSON.stringify(x).replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
         }
@@ -54412,10 +54412,10 @@ ${end.comment}` : end.comment;
         function interpolate(x) {
           return typeof x == "number" || typeof x == "boolean" || x === null ? x : safeStringify(Array.isArray(x) ? x.join(",") : x);
         }
-        function stringify4(x) {
+        function stringify5(x) {
           return new _Code(safeStringify(x));
         }
-        exports22.stringify = stringify4;
+        exports22.stringify = stringify5;
         function safeStringify(x) {
           return JSON.stringify(x).replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
         }
@@ -64329,7 +64329,7 @@ ${end.comment}` : end.comment;
     var qmark = "[^/]";
     var star = qmark + "*?";
     var starNoEmpty = qmark + "+?";
-    var ID = 0;
+    var ID2 = 0;
     var AST = class {
       type;
       #root;
@@ -64345,7 +64345,7 @@ ${end.comment}` : end.comment;
       // set to true if it's an extglob with no children
       // (which really means one child of '')
       #emptyExt = false;
-      id = ++ID;
+      id = ++ID2;
       get depth() {
         return (this.#parent?.depth ?? -1) + 1;
       }
@@ -65726,7 +65726,7 @@ ${end.comment}` : end.comment;
     minimatch.escape = escape22;
     minimatch.unescape = unescape2;
     var import_node_process7 = __toESM3(__require("node:process"), 1);
-    var import_node_path10 = __toESM3(__require("node:path"), 1);
+    var import_node_path11 = __toESM3(__require("node:path"), 1);
     var import_node_url = __require("node:url");
     var import_node_child_process7 = __toESM3(__require("node:child_process"), 1);
     var import_promises2 = __toESM3(__require("node:fs/promises"), 1);
@@ -65737,11 +65737,11 @@ ${end.comment}` : end.comment;
     var import_node_os = __toESM3(__require("node:os"), 1);
     var import_node_fs32 = __toESM3(__require("node:fs"), 1);
     var import_node_fs22 = __toESM3(__require("node:fs"), 1);
-    var import_node_fs10 = __toESM3(__require("node:fs"), 1);
+    var import_node_fs11 = __toESM3(__require("node:fs"), 1);
     var isDockerCached;
     function hasDockerEnv() {
       try {
-        import_node_fs10.default.statSync("/.dockerenv");
+        import_node_fs11.default.statSync("/.dockerenv");
         return true;
       } catch {
         return false;
@@ -65749,7 +65749,7 @@ ${end.comment}` : end.comment;
     }
     function hasDockerCGroup() {
       try {
-        return import_node_fs10.default.readFileSync("/proc/self/cgroup", "utf8").includes("docker");
+        return import_node_fs11.default.readFileSync("/proc/self/cgroup", "utf8").includes("docker");
       } catch {
         return false;
       }
@@ -66027,8 +66027,8 @@ tell application "System Events" to get value of property list item "CFBundleNam
     var is_in_ssh_default = isInSsh;
     var import_meta = {};
     var fallbackAttemptSymbol = /* @__PURE__ */ Symbol("fallbackAttempt");
-    var __dirname2 = import_meta.url ? import_node_path10.default.dirname((0, import_node_url.fileURLToPath)(import_meta.url)) : "";
-    var localXdgOpenPath = import_node_path10.default.join(__dirname2, "xdg-open");
+    var __dirname2 = import_meta.url ? import_node_path11.default.dirname((0, import_node_url.fileURLToPath)(import_meta.url)) : "";
+    var localXdgOpenPath = import_node_path11.default.join(__dirname2, "xdg-open");
     var { platform, arch } = import_node_process7.default;
     var tryEachApp = async (apps2, opener) => {
       if (apps2.length === 0) {
@@ -69823,7 +69823,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
     var import_websocket = __toESM3(require_websocket(), 1);
     var import_websocket_server = __toESM3(require_websocket_server(), 1);
     var wrapper_default = import_websocket.default;
-    var import_yaml6 = __toESM3(require_dist3());
+    var import_yaml7 = __toESM3(require_dist3());
     var import_json5 = __toESM3(require_lib());
     var import_source_map_support = __toESM3(require_source_map_support());
     var import_enquirer = __toESM3(require_enquirer());
@@ -69977,10 +69977,10 @@ Expecting one of '${allowedValues.join("', '")}'`);
       }
       async _formatEntry(dirent, path4) {
         let entry;
-        const basename3 = this._isDirent ? dirent.name : dirent;
+        const basename32 = this._isDirent ? dirent.name : dirent;
         try {
-          const fullPath = (0, import_node_path32.resolve)((0, import_node_path32.join)(path4, basename3));
-          entry = { path: (0, import_node_path32.relative)(this._root, fullPath), fullPath, basename: basename3 };
+          const fullPath = (0, import_node_path32.resolve)((0, import_node_path32.join)(path4, basename32));
+          entry = { path: (0, import_node_path32.relative)(this._root, fullPath), fullPath, basename: basename32 };
           entry[this._statsProp] = this._isDirent ? dirent : await this._stat(fullPath);
         } catch (err) {
           this._onError(err);
@@ -70517,9 +70517,9 @@ Expecting one of '${allowedValues.join("', '")}'`);
       _watchWithNodeFs(path4, listener) {
         const opts = this.fsw.options;
         const directory = sysPath.dirname(path4);
-        const basename3 = sysPath.basename(path4);
+        const basename32 = sysPath.basename(path4);
         const parent = this.fsw._getWatchedDir(directory);
-        parent.add(basename3);
+        parent.add(basename32);
         const absolutePath = sysPath.resolve(path4);
         const options2 = {
           persistent: opts.persistent
@@ -70529,7 +70529,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
         let closer;
         if (opts.usePolling) {
           const enableBin = opts.interval !== opts.binaryInterval;
-          options2.interval = enableBin && isBinaryPath(basename3) ? opts.binaryInterval : opts.interval;
+          options2.interval = enableBin && isBinaryPath(basename32) ? opts.binaryInterval : opts.interval;
           closer = setFsWatchFileListener(path4, absolutePath, options2, {
             listener,
             rawEmitter: this.fsw._emitRaw
@@ -70552,10 +70552,10 @@ Expecting one of '${allowedValues.join("', '")}'`);
           return;
         }
         const dirname3 = sysPath.dirname(file22);
-        const basename3 = sysPath.basename(file22);
+        const basename32 = sysPath.basename(file22);
         const parent = this.fsw._getWatchedDir(dirname3);
         let prevStats = stats;
-        if (parent.has(basename3))
+        if (parent.has(basename32))
           return;
         const listener = async (path4, newStats) => {
           if (!this.fsw._throttle(THROTTLE_MODE_WATCH, file22, 5))
@@ -70580,9 +70580,9 @@ Expecting one of '${allowedValues.join("', '")}'`);
                 prevStats = newStats2;
               }
             } catch (error512) {
-              this.fsw._remove(dirname3, basename3);
+              this.fsw._remove(dirname3, basename32);
             }
-          } else if (parent.has(basename3)) {
+          } else if (parent.has(basename32)) {
             const at = newStats.atimeMs;
             const mt = newStats.mtimeMs;
             if (!at || at <= mt || mt !== prevStats.mtimeMs) {
@@ -72894,7 +72894,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
       isValidJWT: () => isValidJWT3,
       locales: () => locales_exports2,
       meta: () => meta3,
-      parse: () => parse7,
+      parse: () => parse8,
       parseAsync: () => parseAsync3,
       prettifyError: () => prettifyError2,
       process: () => process11,
@@ -73831,7 +73831,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
       }
       return result2.value;
     };
-    var parse7 = /* @__PURE__ */ _parse3($ZodRealError2);
+    var parse8 = /* @__PURE__ */ _parse3($ZodRealError2);
     var _parseAsync3 = (_Err) => async (schema, value2, _ctx, params2) => {
       const ctx = _ctx ? { ..._ctx, async: true } : { async: true };
       let result2 = schema._zod.run({ value: value2, issues: [] }, ctx);
@@ -76613,10 +76613,10 @@ Expecting one of '${allowedValues.join("', '")}'`);
           throw new Error("implement() must be called with a function");
         }
         return function(...args) {
-          const parsedArgs = inst._def.input ? parse7(inst._def.input, args) : args;
+          const parsedArgs = inst._def.input ? parse8(inst._def.input, args) : args;
           const result2 = Reflect.apply(func, this, parsedArgs);
           if (inst._def.output) {
-            return parse7(inst._def.output, result2);
+            return parse8(inst._def.output, result2);
           }
           return result2;
         };
@@ -99425,7 +99425,7 @@ data:
     var wsServer3 = import_websocket_server.default;
     var wsReceiver = import_receiver.default;
     var wsSender = import_sender.default;
-    var yaml3 = import_yaml6.default;
+    var yaml3 = import_yaml7.default;
     var json5 = import_json5.default;
     var sourceMapSupport = import_source_map_support.default;
     var enquirer = import_enquirer.default;
@@ -133075,12 +133075,12 @@ ${details.join("\n")}`;
       }
       throw new Error("\n" + wrapInASCIIBox(errorLines.join("\n"), 1));
     }
-    function isSharedLib(basename3) {
+    function isSharedLib(basename4) {
       switch (import_os6.default.platform()) {
         case "linux":
-          return basename3.endsWith(".so") || basename3.includes(".so.");
+          return basename4.endsWith(".so") || basename4.includes(".so.");
         case "win32":
-          return basename3.endsWith(".dll");
+          return basename4.endsWith(".dll");
         default:
           return false;
       }
@@ -133092,8 +133092,8 @@ ${details.join("\n")}`;
       const allStats = await Promise.all(allPaths.map((aPath) => import_fs15.default.promises.stat(aPath)));
       const filePaths = allPaths.filter((aPath, index) => allStats[index].isFile());
       const executablersOrLibraries = (await Promise.all(filePaths.map(async (filePath) => {
-        const basename3 = import_path16.default.basename(filePath).toLowerCase();
-        if (isSharedLib(basename3))
+        const basename4 = import_path16.default.basename(filePath).toLowerCase();
+        if (isSharedLib(basename4))
           return filePath;
         if (await checkExecutable(filePath))
           return filePath;
@@ -183129,18 +183129,18 @@ var validateAsync = async (schema, value2, _ctx) => {
   return result2.issues.length === 0;
 };
 var _encode = (_Err) => {
-  const parse7 = _parse(_Err);
+  const parse8 = _parse(_Err);
   const fn = (schema, value2, _ctx, _params) => {
     const ctx = _ctx ? { ..._ctx, direction: "backward" } : { direction: "backward" };
-    return parse7(schema, value2, ctx, finalizeParams(fn, _params));
+    return parse8(schema, value2, ctx, finalizeParams(fn, _params));
   };
   return fn;
 };
 var encode = /* @__PURE__ */ _encode($ZodRealError);
 var _decode = (_Err) => {
-  const parse7 = _parse(_Err);
+  const parse8 = _parse(_Err);
   const fn = (schema, value2, _ctx, _params) => {
-    return parse7(schema, value2, _ctx, finalizeParams(fn, _params));
+    return parse8(schema, value2, _ctx, finalizeParams(fn, _params));
   };
   return fn;
 };
@@ -184635,7 +184635,7 @@ function capSize(inst, size) {
   if (!caps.length)
     return;
   const cap = Math.min(...caps.map((c) => c[0]));
-  const parse7 = inst._zod.parse;
+  const parse8 = inst._zod.parse;
   inst._zod.parse = (payload, ctx) => {
     const n = size(payload.value);
     if (n > cap && !ctx?.skipChecks && ctx?.direction !== "backward") {
@@ -184649,7 +184649,7 @@ function capSize(inst, size) {
         }
       }
     }
-    return parse7(payload, ctx);
+    return parse8(payload, ctx);
   };
 }
 var arraySize = (input2) => Array.isArray(input2) ? input2.length : -1;
@@ -207030,9 +207030,9 @@ var StdioServerTransport2 = class {
 };
 
 // src/server.ts
-var import_yaml5 = __toESM2(require_dist2(), 1);
-import { appendFileSync, existsSync as existsSync8, readFileSync as readFileSync6, statSync } from "node:fs";
-import { join as join9 } from "node:path";
+var import_yaml6 = __toESM2(require_dist2(), 1);
+import { appendFileSync, existsSync as existsSync9, readFileSync as readFileSync7, statSync } from "node:fs";
+import { join as join10 } from "node:path";
 import { parseArgs, parseEnv as parseEnv2 } from "node:util";
 
 // src/schema.ts
@@ -207927,14 +207927,85 @@ function registerFindingTools(server3) {
 }
 
 // src/finish.ts
-var import_yaml4 = __toESM2(require_dist2(), 1);
-import { existsSync as existsSync7, readFileSync as readFileSync5, writeFileSync as writeFileSync5 } from "node:fs";
-import { basename as basename2, join as join8, relative, resolve as resolve2 } from "node:path";
+var import_yaml5 = __toESM2(require_dist2(), 1);
+import { existsSync as existsSync8, readFileSync as readFileSync6, writeFileSync as writeFileSync6 } from "node:fs";
+import { basename as basename3, join as join9, relative, resolve as resolve2 } from "node:path";
+
+// src/feedback.ts
+var import_yaml3 = __toESM2(require_dist2(), 1);
+import { existsSync as existsSync6, mkdirSync as mkdirSync4, readdirSync as readdirSync4, readFileSync as readFileSync4, rmSync, writeFileSync as writeFileSync5 } from "node:fs";
+import { basename as basename2, join as join7 } from "node:path";
+
+// src/recording.ts
+var MAX_FRAMES = 40;
+
+// src/feedback.ts
+var FEEDBACK_STATUSES = ["open", "processed", "done", "wontfix"];
+var ID = /^FB-\d{3,}$/;
+var PNG4 = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+var FeedbackFront = external_exports.strictObject({
+  schema: external_exports.literal(1),
+  id: external_exports.string(),
+  status: external_exports.enum(FEEDBACK_STATUSES),
+  note: external_exports.string().optional(),
+  capture: external_exports.enum(["snap", "recording"]),
+  // ms: time since the recording started, for flipbook playback. A snap is one frame at 0.
+  frames: external_exports.array(external_exports.strictObject({ file: external_exports.string(), ms: external_exports.number().int().min(0) })).min(1).max(MAX_FRAMES),
+  // Where it was captured: the Live page, or an evidence image of a run (with the finding it was opened from).
+  source: external_exports.enum(["live", "evidence"]),
+  run: external_exports.string().optional(),
+  evidence: external_exports.string().optional(),
+  finding: external_exports.string().optional(),
+  created: external_exports.string()
+});
+var feedbackDir = (root) => join7(root, ".jeyna", "feedback");
+function itemFile(root, id) {
+  if (!ID.test(id)) throw new Error(`A feedback id looks like FB-001, not ${id || "an empty string"}.`);
+  const path = join7(feedbackDir(root), `${id}.md`);
+  if (!existsSync6(path)) throw new Error(`No feedback ${id} under .jeyna/feedback/.`);
+  return path;
+}
+var NewFeedback = external_exports.strictObject({
+  text: external_exports.string().trim().min(1, "write what should change"),
+  capture: external_exports.enum(["snap", "recording"]),
+  // PNG bytes as base64, in order.
+  frames: external_exports.array(external_exports.strictObject({ png: external_exports.string().min(1), ms: external_exports.number().int().min(0) })).min(1).max(MAX_FRAMES),
+  source: external_exports.enum(["live", "evidence"]),
+  run: external_exports.string().optional(),
+  evidence: external_exports.string().optional(),
+  finding: external_exports.string().optional()
+});
+function updateFeedback(root, id, change) {
+  const path = itemFile(root, id);
+  const m = splitFront(readFileSync4(path, "utf8"));
+  const r = m ? FeedbackFront.safeParse((0, import_yaml3.parse)(m[1])) : void 0;
+  if (!m || !r?.success) throw new Error(`.jeyna/feedback/${id}.md has no readable frontmatter; fix it by hand.`);
+  const front = r.data;
+  let text2 = m[2].trim();
+  if (change.text !== void 0) {
+    if (front.status !== "open") throw new Error(`${id} is ${front.status}; only an open item's text can change. Reopen it first.`);
+    text2 = change.text.trim();
+    if (!text2) throw new Error("write what should change");
+  }
+  const note2 = change.status ? change.note : front.note;
+  const next = {};
+  for (const [k, v] of Object.entries(front)) {
+    if (k === "note") continue;
+    next[k] = k === "status" ? change.status ?? v : v;
+    if (k === "status" && note2) next.note = note2;
+  }
+  writeFileSync5(path, `---
+${(0, import_yaml3.stringify)(next)}---
+
+${text2}
+`);
+  return next;
+}
 
 // src/validate.ts
-var import_yaml3 = __toESM2(require_dist2(), 1);
-import { existsSync as existsSync6, readdirSync as readdirSync4, readFileSync as readFileSync4 } from "node:fs";
-import { join as join7 } from "node:path";
+var import_yaml4 = __toESM2(require_dist2(), 1);
+import { existsSync as existsSync7, readdirSync as readdirSync5, readFileSync as readFileSync5 } from "node:fs";
+import { join as join8 } from "node:path";
 var SEVERITIES = FindingInput.shape.severity.options;
 var KINDS = FindingInput.shape.kind.options;
 var STATUSES = ["open", "duplicate", "wontfix", "fixed"];
@@ -207959,16 +208030,16 @@ var FindingFront = external_exports.strictObject({
   evidence: external_exports.array(external_exports.string())
 });
 function readFindings(runDir, session) {
-  const dir = join7(runDir, "findings");
-  if (!existsSync6(dir)) return [];
-  return readdirSync4(dir).filter((f) => f.endsWith(".md")).sort().map((file2) => {
-    const text2 = readFileSync4(join7(dir, file2), "utf8");
+  const dir = join8(runDir, "findings");
+  if (!existsSync7(dir)) return [];
+  return readdirSync5(dir).filter((f) => f.endsWith(".md")).sort().map((file2) => {
+    const text2 = readFileSync5(join8(dir, file2), "utf8");
     const f = { path: `findings/${file2}`, id: file2.slice(0, -3), source: text2, errors: [] };
     const m = splitFront(text2);
     if (!m) return { ...f, errors: ["no YAML frontmatter between --- lines"] };
     let raw;
     try {
-      raw = (0, import_yaml3.parse)(m[1]);
+      raw = (0, import_yaml4.parse)(m[1]);
     } catch (e) {
       return { ...f, errors: [`frontmatter is not valid YAML: ${e.message.split("\n")[0]}`] };
     }
@@ -207982,17 +208053,17 @@ function readFindings(runDir, session) {
     if (!session.cases.some((c) => c.id === front.case)) f.errors.push(`case ${front.case} is not a case of this run`);
     if (!f.title) f.errors.push("missing the # title line");
     for (const s of SECTIONS) if (!new RegExp(`^## ${s}$`, "m").test(m[2])) f.errors.push(`missing the ## ${s} section`);
-    for (const e of front.evidence) if (!existsSync6(join7(runDir, "evidence", e))) f.errors.push(`evidence ${e} does not exist in evidence/`);
+    for (const e of front.evidence) if (!existsSync7(join8(runDir, "evidence", e))) f.errors.push(`evidence ${e} does not exist in evidence/`);
     if (front.kind === "bug" && !front.evidence.length) f.errors.push("a bug needs evidence");
     if (front.status === "duplicate" && !front.of) f.errors.push("status duplicate needs of: PT-\u2026");
     return f;
   });
 }
 function readSession(runDir) {
-  if (!existsSync6(join7(runDir, "session.json"))) throw new Error(`${runDir} is not a run folder: it has no session.json.`);
+  if (!existsSync7(join8(runDir, "session.json"))) throw new Error(`${runDir} is not a run folder: it has no session.json.`);
   let raw;
   try {
-    raw = JSON.parse(readFileSync4(join7(runDir, "session.json"), "utf8"));
+    raw = JSON.parse(readFileSync5(join8(runDir, "session.json"), "utf8"));
   } catch (e) {
     throw new Error(`session.json is not valid JSON: ${e.message}`);
   }
@@ -208019,12 +208090,12 @@ function validateRun(runDir) {
     if (!v) errors2.push(`session.json: case ${c.id} has no verdict`);
     for (const id of v?.findings ?? []) if (!ids.has(id)) errors2.push(`session.json: verdict of ${c.id} lists ${id}, which has no file in findings/`);
   }
-  if (session.status === "done" && !existsSync6(join7(runDir, "report.md"))) errors2.push("report.md: missing, but the run is done");
+  if (session.status === "done" && !existsSync7(join8(runDir, "report.md"))) errors2.push("report.md: missing, but the run is done");
   return errors2;
 }
 function runs(root) {
-  const dir = join7(root, ".jeyna", "playtests");
-  if (!existsSync6(dir)) return [];
+  const dir = join8(root, ".jeyna", "playtests");
+  if (!existsSync7(dir)) return [];
   const started = (d) => {
     try {
       return readSession(d).started;
@@ -208032,13 +208103,13 @@ function runs(root) {
       return "";
     }
   };
-  return readdirSync4(dir).map((d) => join7(dir, d)).filter((d) => started(d)).sort((a, b) => started(b).localeCompare(started(a)));
+  return readdirSync5(dir).map((d) => join8(dir, d)).filter((d) => started(d)).sort((a, b) => started(b).localeCompare(started(a)));
 }
 function previousRun(runDir, session) {
-  const dir = join7(runDir, "..");
-  return readdirSync4(dir).flatMap((d) => {
+  const dir = join8(runDir, "..");
+  return readdirSync5(dir).flatMap((d) => {
     try {
-      return [readSession(join7(dir, d))];
+      return [readSession(join8(dir, d))];
     } catch {
       return [];
     }
@@ -208139,15 +208210,15 @@ ${table(["Scenario", "Viewport", "Was", "Now"], diff2.changed.map((c) => row([c.
       )
     ) : "No findings.")
   ].join("\n\n");
-  writeFileSync5(join8(runDir, "report.md"), md + "\n");
+  writeFileSync6(join9(runDir, "report.md"), md + "\n");
   return { counts, since: diff2 ?? null };
 }
 function validateCli(arg2, root) {
   try {
     const dir = arg2 ? resolve2(arg2) : runs(root())[0];
-    if (!dir) throw new Error(`No run folders in ${join8(root(), ".jeyna", "playtests")}.`);
+    if (!dir) throw new Error(`No run folders in ${join9(root(), ".jeyna", "playtests")}.`);
     const errors2 = validateRun(dir);
-    for (const e of errors2) console.log(relative(process.cwd(), join8(dir, e.slice(0, e.indexOf(": ")))) + e.slice(e.indexOf(": ")));
+    for (const e of errors2) console.log(relative(process.cwd(), join9(dir, e.slice(0, e.indexOf(": ")))) + e.slice(e.indexOf(": ")));
     console.error(errors2.length ? `${errors2.length} errors in ${dir}` : `ok: ${dir}`);
     return errors2.length ? 1 : 0;
   } catch (e) {
@@ -208168,7 +208239,7 @@ function registerFinishTools(server3, getContext2) {
         const root = getContext2().root;
         const dir = run !== void 0 ? runDirOf(root, run) : current?.runDir ?? runs(root)[0];
         if (!dir) throw new Error("No run to validate: no run is running and .jeyna/playtests/ has none.");
-        if (!existsSync7(dir)) throw new Error(`No run folder ${dir}.`);
+        if (!existsSync8(dir)) throw new Error(`No run folder ${dir}.`);
         return ok({ run: dir, errors: validateRun(dir) });
       } catch (e) {
         return fail(e);
@@ -208197,7 +208268,7 @@ ${errors2.join("\n")}`);
         save(runDir, session);
         endRun();
         await closeContexts();
-        return ok({ reportPath: join8(runDir, "report.md"), counts, since: since2, elapsedSeconds: elapsed(session), testers: session.testers.length });
+        return ok({ reportPath: join9(runDir, "report.md"), counts, since: since2, elapsedSeconds: elapsed(session), testers: session.testers.length });
       } catch (e) {
         return fail(e);
       }
@@ -208206,10 +208277,10 @@ ${errors2.join("\n")}`);
   server3.registerTool(
     "update_status",
     {
-      description: "Change a finding's status (the only mutable field, D11). During a run, mark a cross-scenario duplicate with status duplicate and of: the finding it repeats. wontfix and fixed are for later sessions. Looks in `run` if given, else the current run; with no run running, the one run holding the id. Ids repeat across runs of the same flow, so when several runs hold it, it refuses and lists them: give run.",
+      description: "Change a finding's status (the only mutable field, D11). During a run, mark a cross-scenario duplicate with status duplicate and of: the finding it repeats. wontfix and fixed are for later sessions. Looks in `run` if given, else the current run; with no run running, the one run holding the id. Ids repeat across runs of the same flow, so when several runs hold it, it refuses and lists them: give run. Also a feedback item's status (FB-001): open, processed (you implemented it; the developer still checks it), done (only on the developer's explicit OK), wontfix (D36).",
       inputSchema: {
-        id: external_exports.string().describe("Finding id, e.g. PT-login-003"),
-        status: external_exports.enum(STATUSES),
+        id: external_exports.string().describe("Finding id, e.g. PT-login-003, or feedback id, e.g. FB-007"),
+        status: external_exports.enum([.../* @__PURE__ */ new Set([...STATUSES, ...FEEDBACK_STATUSES])]),
         of: external_exports.string().optional().describe("Required for duplicate: the id of the finding this one repeats"),
         note: external_exports.string().min(1).optional(),
         run: external_exports.string().min(1).optional().describe("Run id holding the finding, e.g. 2026-10-15-login; needed when several runs hold the id")
@@ -208217,9 +208288,16 @@ ${errors2.join("\n")}`);
     },
     async ({ id, status, of, note: note2, run }) => {
       try {
+        if (id.startsWith("FB-")) {
+          if (!FEEDBACK_STATUSES.includes(status)) throw new Error(`A feedback item's status is one of ${FEEDBACK_STATUSES.join(", ")}, not ${status}.`);
+          if (of || run) throw new Error("of and run are for findings, not feedback.");
+          updateFeedback(getContext2().root, id, { status, note: note2 });
+          return ok({ id, status, path: `.jeyna/feedback/${id}.md` });
+        }
+        if (!STATUSES.includes(status)) throw new Error(`A finding's status is one of ${STATUSES.join(", ")}, not ${status}.`);
         if (status === "duplicate" && !of) throw new Error(`A duplicate needs of: the id of the finding ${id} repeats.`);
         if (status !== "duplicate" && of) throw new Error("of is only for status duplicate.");
-        const holds = (d) => existsSync7(join8(d, "findings", `${id}.md`));
+        const holds = (d) => existsSync8(join9(d, "findings", `${id}.md`));
         let runDir;
         if (run !== void 0) {
           runDir = runDirOf(getContext2().root, run);
@@ -208230,16 +208308,16 @@ ${errors2.join("\n")}`);
           const all = runs(getContext2().root).filter(holds);
           if (!all.length) throw new Error(`No finding ${id} in any run under .jeyna/playtests/.`);
           if (all.length > 1) {
-            const ids = all.map((d) => basename2(d));
+            const ids = all.map((d) => basename3(d));
             throw new Error(`${all.length} runs hold a finding ${id}: ${ids.join(", ")} (newest first). Call update_status again with run set to one of them.`);
           }
           runDir = all[0];
         }
         if (of === id) throw new Error("A finding cannot be a duplicate of itself.");
-        if (of && !existsSync7(join8(runDir, "findings", `${of}.md`))) throw new Error(`No finding ${of} in ${runDir}; of must name a finding of the same run.`);
-        const path = join8(runDir, "findings", `${id}.md`);
-        const m = splitFront(readFileSync5(path, "utf8"));
-        const front = m && (0, import_yaml4.parse)(m[1]);
+        if (of && !existsSync8(join9(runDir, "findings", `${of}.md`))) throw new Error(`No finding ${of} in ${runDir}; of must name a finding of the same run.`);
+        const path = join9(runDir, "findings", `${id}.md`);
+        const m = splitFront(readFileSync6(path, "utf8"));
+        const front = m && (0, import_yaml5.parse)(m[1]);
         if (!m || !front || typeof front !== "object") throw new Error(`${path} has no readable frontmatter; fix it by hand.`);
         const next = {};
         for (const [k, v] of Object.entries(front)) {
@@ -208247,8 +208325,8 @@ ${errors2.join("\n")}`);
           next[k] = k === "status" ? status : v;
           if (k === "status") Object.assign(next, of && { of }, note2 && { note: note2 });
         }
-        writeFileSync5(path, `---
-${(0, import_yaml4.stringify)(next)}---
+        writeFileSync6(path, `---
+${(0, import_yaml5.stringify)(next)}---
 ${m[2]}`);
         return ok({ id, status, ...of && { of }, path });
       } catch (e) {
@@ -208265,11 +208343,11 @@ var { values, positionals } = parseArgs({ options: { project: { type: "string" }
 var projectRoot = () => findProjectRoot(values.project, process.env.CLAUDE_PROJECT_DIR);
 function getContext() {
   const root = projectRoot();
-  const file2 = join9(root, ".jeyna", "jeyna.config.yaml");
-  if (!existsSync8(file2)) throw new Error(`No ${file2}. Run /jeyna:init in ${root} to create it.`);
+  const file2 = join10(root, ".jeyna", "jeyna.config.yaml");
+  if (!existsSync9(file2)) throw new Error(`No ${file2}. Run /jeyna:init in ${root} to create it.`);
   let raw;
   try {
-    raw = (0, import_yaml5.parse)(readFileSync6(file2, "utf8"));
+    raw = (0, import_yaml6.parse)(readFileSync7(file2, "utf8"));
   } catch (e) {
     throw new Error(`.jeyna/jeyna.config.yaml is not valid YAML: ${e.message}`);
   }
@@ -208281,8 +208359,8 @@ ${external_exports.prettifyError(parsed.error)}`);
   return { root, config: parsed.data, secrets: secretSources(root, parsed.data) };
 }
 function secretSources(root, config2) {
-  const file2 = join9(root, ".jeyna", ".env");
-  const dotenv3 = existsSync8(file2) ? parseEnv2(readFileSync6(file2, "utf8")) : {};
+  const file2 = join10(root, ".jeyna", ".env");
+  const dotenv3 = existsSync9(file2) ? parseEnv2(readFileSync7(file2, "utf8")) : {};
   const names = config2.accounts.flatMap((a) => [a.user_env, a.pass_env]);
   return Object.fromEntries(names.map((n) => [n, process.env[n] ? "env" : dotenv3[n] ? ".env" : "missing"]));
 }
@@ -208292,7 +208370,7 @@ function currentRedactor() {
   let stamp = "no root";
   try {
     const root = projectRoot();
-    const files = [join9(root, ".jeyna", "jeyna.config.yaml"), join9(root, ".jeyna", ".env")];
+    const files = [join10(root, ".jeyna", "jeyna.config.yaml"), join10(root, ".jeyna", ".env")];
     stamp = [root, ...files.map((f) => {
       const st = statSync(f, { throwIfNoEntry: false });
       return st ? `${st.mtimeMs}:${st.size}` : "-";
@@ -208325,7 +208403,7 @@ server2.registerTool = ((name, config2, handler) => register(name, config2, (asy
     log3(line);
     const dir = current?.runDir ?? runDir;
     if (dir) try {
-      appendFileSync(join9(dir, "server.log"), `${(/* @__PURE__ */ new Date()).toISOString()} ${line}
+      appendFileSync(join10(dir, "server.log"), `${(/* @__PURE__ */ new Date()).toISOString()} ${line}
 `);
     } catch {
     }
@@ -208360,10 +208438,10 @@ server2.registerTool(
   async () => {
     try {
       const ctx = getContext();
-      const conventions = join9(ctx.root, ".jeyna", "CONVENTIONS.md");
+      const conventions = join10(ctx.root, ".jeyna", "CONVENTIONS.md");
       const text2 = JSON.stringify({
         ...ctx,
-        conventions: existsSync8(conventions) ? readFileSync6(conventions, "utf8") : null,
+        conventions: existsSync9(conventions) ? readFileSync7(conventions, "utf8") : null,
         flows: listFlows(ctx.root)
       });
       return { content: [{ type: "text", text: text2 }] };

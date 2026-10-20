@@ -247,3 +247,16 @@ test("report.md compares verdicts with the latest done run of the same flow, and
   const md = readFileSync(second.reportPath, "utf8");
   expect(md).toContain(`## Since last run\n\nCompared with ${firstId}: 2 cases in both runs, 1 changed.\n\n| Scenario | Viewport | Was | Now |\n|---|---|---|---|\n| Sign in | 390x844 | pass | fail |`);
 });
+
+test("update_status sets a feedback item's status; finding-only statuses and arguments are refused for it (D36)", async () => {
+  const { root, call, text } = await started();
+  mkdirSync(join(root, ".jeyna", "feedback"));
+  writeFileSync(join(root, ".jeyna", "feedback", "FB-001.png"), Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==", "base64"));
+  writeFileSync(join(root, ".jeyna", "feedback", "FB-001.md"), "---\nschema: 1\nid: FB-001\nstatus: open\ncapture: snap\nframes:\n  - file: FB-001.png\n    ms: 0\nsource: live\ncreated: 2026-10-20T10:00:00.000Z\n---\n\nBigger button\n");
+  expect(JSON.parse(text(await call("update_status", { id: "FB-001", status: "processed", note: "44 px" })))).toEqual({ id: "FB-001", status: "processed", path: ".jeyna/feedback/FB-001.md" });
+  expect(readFileSync(join(root, ".jeyna", "feedback", "FB-001.md"), "utf8")).toMatch(/^status: processed\nnote: 44 px$/m);
+  expect(text(await call("update_status", { id: "FB-001", status: "fixed" }))).toBe("A feedback item's status is one of open, processed, done, wontfix, not fixed.");
+  expect(text(await call("update_status", { id: "PT-login-001", status: "processed" }))).toBe("A finding's status is one of open, duplicate, wontfix, fixed, not processed.");
+  expect((await call("update_status", { id: "FB-001", status: "done", run: "x" })).isError).toBe(true);
+  expect(text(await call("update_status", { id: "FB-002", status: "done" }))).toBe("No feedback FB-002 under .jeyna/feedback/.");
+});

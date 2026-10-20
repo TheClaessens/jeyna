@@ -1257,27 +1257,27 @@ var require_stringifyString = __commonJS({
       return true;
     }
     function doubleQuotedString(value, ctx) {
-      const json2 = JSON.stringify(value);
+      const json3 = JSON.stringify(value);
       if (ctx.options.doubleQuotedAsJSON)
-        return json2;
+        return json3;
       const { implicitKey } = ctx;
       const minMultiLineLength = ctx.options.doubleQuotedMinMultiLineLength;
       const indent = ctx.indent || (containsDocumentMarker(value) ? "  " : "");
       let str = "";
       let start = 0;
-      for (let i = 0, ch = json2[i]; ch; ch = json2[++i]) {
-        if (ch === " " && json2[i + 1] === "\\" && json2[i + 2] === "n") {
-          str += json2.slice(start, i) + "\\ ";
+      for (let i = 0, ch = json3[i]; ch; ch = json3[++i]) {
+        if (ch === " " && json3[i + 1] === "\\" && json3[i + 2] === "n") {
+          str += json3.slice(start, i) + "\\ ";
           i += 1;
           start = i;
           ch = "\\";
         }
         if (ch === "\\")
-          switch (json2[i + 1]) {
+          switch (json3[i + 1]) {
             case "u":
               {
-                str += json2.slice(start, i);
-                const code2 = json2.substr(i + 2, 4);
+                str += json3.slice(start, i);
+                const code2 = json3.substr(i + 2, 4);
                 switch (code2) {
                   case "0000":
                     str += "\\0";
@@ -1307,23 +1307,23 @@ var require_stringifyString = __commonJS({
                     if (code2.substr(0, 2) === "00")
                       str += "\\x" + code2.substr(2);
                     else
-                      str += json2.substr(i, 6);
+                      str += json3.substr(i, 6);
                 }
                 i += 5;
                 start = i + 1;
               }
               break;
             case "n":
-              if (implicitKey || json2[i + 2] === '"' || json2.length < minMultiLineLength) {
+              if (implicitKey || json3[i + 2] === '"' || json3.length < minMultiLineLength) {
                 i += 1;
               } else {
-                str += json2.slice(start, i) + "\n\n";
-                while (json2[i + 2] === "\\" && json2[i + 3] === "n" && json2[i + 4] !== '"') {
+                str += json3.slice(start, i) + "\n\n";
+                while (json3[i + 2] === "\\" && json3[i + 3] === "n" && json3[i + 4] !== '"') {
                   str += "\n";
                   i += 2;
                 }
                 str += indent;
-                if (json2[i + 2] === " ")
+                if (json3[i + 2] === " ")
                   str += "\\";
                 i += 1;
                 start = i + 1;
@@ -1333,7 +1333,7 @@ var require_stringifyString = __commonJS({
               i += 1;
           }
       }
-      str = start ? str + json2.slice(start) : json2;
+      str = start ? str + json3.slice(start) : json3;
       return implicitKey ? str : foldFlowLines.foldFlowLines(str, indent, foldFlowLines.FOLD_QUOTED, getFoldOptions(ctx, false));
     }
     function singleQuotedString(value, ctx) {
@@ -1433,10 +1433,10 @@ ${indent}`) + "'";
             literalFallback = true;
           };
         }
-        const body3 = foldFlowLines.foldFlowLines(`${start}${foldedValue}${end}`, indent, foldFlowLines.FOLD_BLOCK, foldOptions);
+        const body4 = foldFlowLines.foldFlowLines(`${start}${foldedValue}${end}`, indent, foldFlowLines.FOLD_BLOCK, foldOptions);
         if (!literalFallback)
           return `>${header}
-${indent}${body3}`;
+${indent}${body4}`;
       }
       value = value.replace(/\n+/g, `$&${indent}`);
       return `|${header}
@@ -1600,7 +1600,7 @@ var require_stringify = __commonJS({
         props.push(doc.directives.tagString(tag));
       return props.join(" ");
     }
-    function stringify3(item, ctx, onComment, onChompKeep) {
+    function stringify4(item, ctx, onComment, onChompKeep) {
       if (identity.isPair(item))
         return item.toString(ctx, onComment, onChompKeep);
       if (identity.isAlias(item)) {
@@ -1629,7 +1629,7 @@ var require_stringify = __commonJS({
 ${ctx.indent}${str}`;
     }
     exports.createStringifyContext = createStringifyContext;
-    exports.stringify = stringify3;
+    exports.stringify = stringify4;
   }
 });
 
@@ -1639,7 +1639,7 @@ var require_stringifyPair = __commonJS({
     "use strict";
     var identity = require_identity();
     var Scalar = require_Scalar();
-    var stringify3 = require_stringify();
+    var stringify4 = require_stringify();
     var stringifyComment = require_stringifyComment();
     function stringifyPair({ key: key2, value }, ctx, onComment, onChompKeep) {
       const { allNullValues, doc, indent, indentStep, options: { commentString, indentSeq, simpleKeys } } = ctx;
@@ -1661,7 +1661,7 @@ var require_stringifyPair = __commonJS({
       });
       let keyCommentDone = false;
       let chompKeep = false;
-      let str = stringify3.stringify(key2, ctx, () => keyCommentDone = true, () => chompKeep = true);
+      let str = stringify4.stringify(key2, ctx, () => keyCommentDone = true, () => chompKeep = true);
       if (!explicitKey && !ctx.inFlow && str.length > 1024) {
         if (simpleKeys)
           throw new Error("With simple keys, single line scalar must not span more than 1024 characters");
@@ -1713,7 +1713,7 @@ ${indent}:`;
         ctx.indent = ctx.indent.substring(2);
       }
       let valueCommentDone = false;
-      const valueStr = stringify3.stringify(value, ctx, () => valueCommentDone = true, () => chompKeep = true);
+      const valueStr = stringify4.stringify(value, ctx, () => valueCommentDone = true, () => chompKeep = true);
       let ws = " ";
       if (keyComment || vsb || vcb) {
         ws = vsb ? "\n" : "";
@@ -1854,7 +1854,7 @@ var require_addPairToJSMap = __commonJS({
     "use strict";
     var log2 = require_log();
     var merge3 = require_merge();
-    var stringify3 = require_stringify();
+    var stringify4 = require_stringify();
     var identity = require_identity();
     var toJS = require_toJS();
     function addPairToJSMap(ctx, map2, { key: key2, value }) {
@@ -1890,7 +1890,7 @@ var require_addPairToJSMap = __commonJS({
       if (typeof jsKey !== "object")
         return String(jsKey);
       if (identity.isNode(key2) && ctx?.doc) {
-        const strCtx = stringify3.createStringifyContext(ctx.doc, {});
+        const strCtx = stringify4.createStringifyContext(ctx.doc, {});
         strCtx.anchors = /* @__PURE__ */ new Set();
         for (const node3 of ctx.anchors.keys())
           strCtx.anchors.add(node3.anchor);
@@ -1957,12 +1957,12 @@ var require_stringifyCollection = __commonJS({
   "node_modules/.pnpm/yaml@2.9.1/node_modules/yaml/dist/stringify/stringifyCollection.js"(exports) {
     "use strict";
     var identity = require_identity();
-    var stringify3 = require_stringify();
+    var stringify4 = require_stringify();
     var stringifyComment = require_stringifyComment();
     function stringifyCollection(collection, ctx, options) {
       const flow3 = ctx.inFlow ?? collection.flow;
-      const stringify4 = flow3 ? stringifyFlowCollection : stringifyBlockCollection;
-      return stringify4(collection, ctx, options);
+      const stringify5 = flow3 ? stringifyFlowCollection : stringifyBlockCollection;
+      return stringify5(collection, ctx, options);
     }
     function stringifyBlockCollection({ comment: comment2, items }, ctx, { blockItemPrefix, flowChars, itemIndent, onChompKeep, onComment }) {
       const { indent, options: { commentString } } = ctx;
@@ -1987,7 +1987,7 @@ var require_stringifyCollection = __commonJS({
           }
         }
         chompKeep = false;
-        let str2 = stringify3.stringify(item, itemCtx, () => comment3 = null, () => chompKeep = true);
+        let str2 = stringify4.stringify(item, itemCtx, () => comment3 = null, () => chompKeep = true);
         if (comment3)
           str2 += stringifyComment.lineComment(str2, itemIndent, commentString(comment3));
         if (chompKeep && comment3)
@@ -2054,7 +2054,7 @@ ${indent}${line}` : "\n";
         }
         if (comment2)
           reqNewline = true;
-        let str = stringify3.stringify(item, itemCtx, () => comment2 = null);
+        let str = stringify4.stringify(item, itemCtx, () => comment2 = null);
         reqNewline || (reqNewline = lines.length > linesAtValue || str.includes("\n"));
         if (i < items.length - 1) {
           str += ",";
@@ -2475,9 +2475,9 @@ var require_stringifyNumber = __commonJS({
     function stringifyNumber({ format, minFractionDigits, tag, value }) {
       if (typeof value === "bigint")
         return String(value);
-      const num = typeof value === "number" ? value : Number(value);
-      if (!isFinite(num))
-        return isNaN(num) ? ".nan" : num < 0 ? "-.inf" : ".inf";
+      const num2 = typeof value === "number" ? value : Number(value);
+      if (!isFinite(num2))
+        return isNaN(num2) ? ".nan" : num2 < 0 ? "-.inf" : ".inf";
       let n = Object.is(value, -0) ? "-0" : JSON.stringify(value);
       if (!format && minFractionDigits && (!tag || tag === "tag:yaml.org,2002:float") && /^-?\d/.test(n) && !n.includes("e")) {
         let i = n.indexOf(".");
@@ -2517,8 +2517,8 @@ var require_float = __commonJS({
       test: /^[-+]?(?:\.[0-9]+|[0-9]+(?:\.[0-9]*)?)[eE][-+]?[0-9]+$/,
       resolve: (str) => parseFloat(str),
       stringify(node3) {
-        const num = Number(node3.value);
-        return isFinite(num) ? num.toExponential() : stringifyNumber.stringifyNumber(node3);
+        const num2 = Number(node3.value);
+        return isFinite(num2) ? num2.toExponential() : stringifyNumber.stringifyNumber(node3);
       }
     };
     var float = {
@@ -2957,8 +2957,8 @@ var require_float2 = __commonJS({
       test: /^[-+]?(?:[0-9][0-9_]*)?(?:\.[0-9_]*)?[eE][-+]?[0-9]+$/,
       resolve: (str) => parseFloat(str.replace(/_/g, "")),
       stringify(node3) {
-        const num = Number(node3.value);
-        return isFinite(num) ? num.toExponential() : stringifyNumber.stringifyNumber(node3);
+        const num2 = Number(node3.value);
+        return isFinite(num2) ? num2.toExponential() : stringifyNumber.stringifyNumber(node3);
       }
     };
     var float = {
@@ -3160,23 +3160,23 @@ var require_timestamp = __commonJS({
     function parseSexagesimal(str, asBigInt) {
       const sign = str[0];
       const parts = sign === "-" || sign === "+" ? str.substring(1) : str;
-      const num = (n) => asBigInt ? BigInt(n) : Number(n);
-      const res = parts.replace(/_/g, "").split(":").reduce((res2, p2) => res2 * num(60) + num(p2), num(0));
-      return sign === "-" ? num(-1) * res : res;
+      const num2 = (n) => asBigInt ? BigInt(n) : Number(n);
+      const res = parts.replace(/_/g, "").split(":").reduce((res2, p2) => res2 * num2(60) + num2(p2), num2(0));
+      return sign === "-" ? num2(-1) * res : res;
     }
     function stringifySexagesimal(node3) {
       let { value } = node3;
-      let num = (n) => n;
+      let num2 = (n) => n;
       if (typeof value === "bigint")
-        num = (n) => BigInt(n);
+        num2 = (n) => BigInt(n);
       else if (isNaN(value) || !isFinite(value))
         return stringifyNumber.stringifyNumber(node3);
       let sign = "";
       if (value < 0) {
         sign = "-";
-        value *= num(-1);
+        value *= num2(-1);
       }
-      const _60 = num(60);
+      const _60 = num2(60);
       const parts = [value % _60];
       if (value < 60) {
         parts.unshift(0);
@@ -3415,7 +3415,7 @@ var require_stringifyDocument = __commonJS({
   "node_modules/.pnpm/yaml@2.9.1/node_modules/yaml/dist/stringify/stringifyDocument.js"(exports) {
     "use strict";
     var identity = require_identity();
-    var stringify3 = require_stringify();
+    var stringify4 = require_stringify();
     var stringifyComment = require_stringifyComment();
     function stringifyDocument(doc, options) {
       const lines = [];
@@ -3430,7 +3430,7 @@ var require_stringifyDocument = __commonJS({
       }
       if (hasDirectives)
         lines.push("---");
-      const ctx = stringify3.createStringifyContext(doc, options);
+      const ctx = stringify4.createStringifyContext(doc, options);
       const { commentString } = ctx.options;
       if (doc.commentBefore) {
         if (lines.length !== 1)
@@ -3452,15 +3452,15 @@ var require_stringifyDocument = __commonJS({
           contentComment = doc.contents.comment;
         }
         const onChompKeep = contentComment ? void 0 : () => chompKeep = true;
-        let body3 = stringify3.stringify(doc.contents, ctx, () => contentComment = null, onChompKeep);
+        let body4 = stringify4.stringify(doc.contents, ctx, () => contentComment = null, onChompKeep);
         if (contentComment)
-          body3 += stringifyComment.lineComment(body3, "", commentString(contentComment));
-        if ((body3[0] === "|" || body3[0] === ">") && lines[lines.length - 1] === "---") {
-          lines[lines.length - 1] = `--- ${body3}`;
+          body4 += stringifyComment.lineComment(body4, "", commentString(contentComment));
+        if ((body4[0] === "|" || body4[0] === ">") && lines[lines.length - 1] === "---") {
+          lines[lines.length - 1] = `--- ${body4}`;
         } else
-          lines.push(body3);
+          lines.push(body4);
       } else {
-        lines.push(stringify3.stringify(doc.contents, ctx));
+        lines.push(stringify4.stringify(doc.contents, ctx));
       }
       if (doc.directives?.docEnd) {
         if (doc.comment) {
@@ -3755,11 +3755,11 @@ var require_Document = __commonJS({
           throw new Error(`With a null YAML version, the { schema: Schema } option is required`);
       }
       // json & jsonArg are only used from toJSON()
-      toJS({ json: json2, jsonArg, mapAsMap, maxAliasCount, onAnchor, reviver } = {}) {
+      toJS({ json: json3, jsonArg, mapAsMap, maxAliasCount, onAnchor, reviver } = {}) {
         const ctx = {
           anchors: /* @__PURE__ */ new Map(),
           doc: this,
-          keep: !json2,
+          keep: !json3,
           mapAsMap: mapAsMap === true,
           mapKeyWarned: false,
           maxAliasCount: typeof maxAliasCount === "number" ? maxAliasCount : 100
@@ -5451,13 +5451,13 @@ var require_cst_scalar = __commonJS({
         case ">": {
           const he = source.indexOf("\n");
           const head2 = source.substring(0, he);
-          const body3 = source.substring(he + 1) + "\n";
+          const body4 = source.substring(he + 1) + "\n";
           const props = [
             { type: "block-scalar-header", offset, indent, source: head2 }
           ];
           if (!addEndtoBlockProps(props, end))
             props.push({ type: "newline", offset: -1, indent, source: "\n" });
-          return { type: "block-scalar", offset, indent, props, source: body3 };
+          return { type: "block-scalar", offset, indent, props, source: body4 };
         }
         case '"':
           return { type: "double-quoted-scalar", offset, indent, source, end };
@@ -5514,13 +5514,13 @@ var require_cst_scalar = __commonJS({
     function setBlockScalarValue(token, source) {
       const he = source.indexOf("\n");
       const head2 = source.substring(0, he);
-      const body3 = source.substring(he + 1) + "\n";
+      const body4 = source.substring(he + 1) + "\n";
       if (token.type === "block-scalar") {
         const header = token.props[0];
         if (header.type !== "block-scalar-header")
           throw new Error("Invalid block scalar header");
         header.source = head2;
-        token.source = body3;
+        token.source = body4;
       } else {
         const { offset } = token;
         const indent = "indent" in token ? token.indent : -1;
@@ -5532,7 +5532,7 @@ var require_cst_scalar = __commonJS({
         for (const key2 of Object.keys(token))
           if (key2 !== "type" && key2 !== "offset")
             delete token[key2];
-        Object.assign(token, { type: "block-scalar", indent, props, source: body3 });
+        Object.assign(token, { type: "block-scalar", indent, props, source: body4 });
       }
     }
     function addEndtoBlockProps(props, end) {
@@ -5596,7 +5596,7 @@ var require_cst_scalar = __commonJS({
 var require_cst_stringify = __commonJS({
   "node_modules/.pnpm/yaml@2.9.1/node_modules/yaml/dist/parse/cst-stringify.js"(exports) {
     "use strict";
-    var stringify3 = (cst) => "type" in cst ? stringifyToken(cst) : stringifyItem(cst);
+    var stringify4 = (cst) => "type" in cst ? stringifyToken(cst) : stringifyItem(cst);
     function stringifyToken(token) {
       switch (token.type) {
         case "block-scalar": {
@@ -5649,7 +5649,7 @@ var require_cst_stringify = __commonJS({
         res += stringifyToken(value);
       return res;
     }
-    exports.stringify = stringify3;
+    exports.stringify = stringify4;
   }
 });
 
@@ -7360,7 +7360,7 @@ var require_public_api = __commonJS({
       }
       return doc;
     }
-    function parse5(src, reviver, options) {
+    function parse6(src, reviver, options) {
       let _reviver = void 0;
       if (typeof reviver === "function") {
         _reviver = reviver;
@@ -7379,7 +7379,7 @@ var require_public_api = __commonJS({
       }
       return doc.toJS(Object.assign({ reviver: _reviver }, options));
     }
-    function stringify3(value, replacer, options) {
+    function stringify4(value, replacer, options) {
       let _replacer = null;
       if (typeof replacer === "function" || Array.isArray(replacer)) {
         _replacer = replacer;
@@ -7401,10 +7401,10 @@ var require_public_api = __commonJS({
         return value.toString(options);
       return new Document.Document(value, _replacer, options).toString(options);
     }
-    exports.parse = parse5;
+    exports.parse = parse6;
     exports.parseAllDocuments = parseAllDocuments;
     exports.parseDocument = parseDocument;
-    exports.stringify = stringify3;
+    exports.stringify = stringify4;
   }
 });
 
@@ -7461,9 +7461,9 @@ var require_dist = __commonJS({
 });
 
 // src/studio/server.ts
-import { createReadStream, existsSync as existsSync3, readdirSync as readdirSync2, readFileSync as readFileSync2, renameSync, statSync, watch, writeFileSync } from "node:fs";
+import { createReadStream, existsSync as existsSync4, readdirSync as readdirSync3, readFileSync as readFileSync3, renameSync, statSync, watch, writeFileSync as writeFileSync2 } from "node:fs";
 import { createServer } from "node:http";
-import { basename, dirname as dirname2, extname, join as join3 } from "node:path";
+import { basename as basename2, dirname as dirname2, extname, join as join4 } from "node:path";
 import { fileURLToPath as fileURLToPath2 } from "node:url";
 import { parseArgs } from "node:util";
 
@@ -17254,7 +17254,7 @@ function table(state, node3) {
     tableContent.push(head2);
   }
   if (rows.length > 0) {
-    const body3 = {
+    const body4 = {
       type: "element",
       tagName: "tbody",
       properties: {},
@@ -17262,8 +17262,8 @@ function table(state, node3) {
     };
     const start = pointStart(node3.children[1]);
     const end = pointEnd(node3.children[node3.children.length - 1]);
-    if (start && end) body3.position = { start, end };
-    tableContent.push(body3);
+    if (start && end) body4.position = { start, end };
+    tableContent.push(body4);
   }
   const result = {
     type: "element",
@@ -17556,7 +17556,7 @@ var typeOf = (value) => {
   return [OBJECT, asString];
 };
 var shouldSkip = ([TYPE, type]) => TYPE === PRIMITIVE && (type === "function" || type === "symbol");
-var serializer = (strict, json2, $, _) => {
+var serializer = (strict, json3, $, _) => {
   const as = (out, value) => {
     const index3 = _.push(out) - 1;
     $.set(value, index3);
@@ -17616,7 +17616,7 @@ var serializer = (strict, json2, $, _) => {
               return as([type, value.valueOf()], value);
           }
         }
-        if (json2 && "toJSON" in value)
+        if (json3 && "toJSON" in value)
           return pair(value.toJSON());
         const entries = [];
         const index3 = as([TYPE, entries], value);
@@ -17656,9 +17656,9 @@ var serializer = (strict, json2, $, _) => {
   };
   return pair;
 };
-var serialize = (value, { json: json2, lossy } = {}) => {
+var serialize = (value, { json: json3, lossy } = {}) => {
   const _ = [];
-  return serializer(!(json2 || lossy), !!json2, /* @__PURE__ */ new Map(), _)(value), _;
+  return serializer(!(json3 || lossy), !!json3, /* @__PURE__ */ new Map(), _)(value), _;
 };
 
 // node_modules/.pnpm/@ungap+structured-clone@1.4.0/node_modules/@ungap/structured-clone/esm/index.js
@@ -18499,10 +18499,10 @@ var VFile = class {
    * @returns {undefined}
    *   Nothing.
    */
-  set basename(basename2) {
-    assertNonEmpty(basename2, "basename");
-    assertPart(basename2, "basename");
-    this.path = default2.join(this.dirname || "", basename2);
+  set basename(basename3) {
+    assertNonEmpty(basename3, "basename");
+    assertPart(basename3, "basename");
+    this.path = default2.join(this.dirname || "", basename3);
   }
   /**
    * Get the parent path (example: `'~'`).
@@ -19532,7 +19532,7 @@ function isUint8Array2(value) {
 }
 
 // src/studio/server.ts
-var import_yaml2 = __toESM(require_dist(), 1);
+var import_yaml3 = __toESM(require_dist(), 1);
 
 // node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/classic/external.js
 var external_exports = {};
@@ -21392,18 +21392,18 @@ var validateAsync = async (schema, value, _ctx) => {
   return result.issues.length === 0;
 };
 var _encode = (_Err) => {
-  const parse5 = _parse(_Err);
+  const parse6 = _parse(_Err);
   const fn = (schema, value, _ctx, _params) => {
     const ctx = _ctx ? { ..._ctx, direction: "backward" } : { direction: "backward" };
-    return parse5(schema, value, ctx, finalizeParams(fn, _params));
+    return parse6(schema, value, ctx, finalizeParams(fn, _params));
   };
   return fn;
 };
 var encode = /* @__PURE__ */ _encode($ZodRealError);
 var _decode = (_Err) => {
-  const parse5 = _parse(_Err);
+  const parse6 = _parse(_Err);
   const fn = (schema, value, _ctx, _params) => {
-    return parse5(schema, value, _ctx, finalizeParams(fn, _params));
+    return parse6(schema, value, _ctx, finalizeParams(fn, _params));
   };
   return fn;
 };
@@ -22898,7 +22898,7 @@ function capSize(inst, size) {
   if (!caps.length)
     return;
   const cap2 = Math.min(...caps.map((c) => c[0]));
-  const parse5 = inst._zod.parse;
+  const parse6 = inst._zod.parse;
   inst._zod.parse = (payload2, ctx) => {
     const n = size(payload2.value);
     if (n > cap2 && !ctx?.skipChecks && ctx?.direction !== "backward") {
@@ -22912,7 +22912,7 @@ function capSize(inst, size) {
         }
       }
     }
-    return parse5(payload2, ctx);
+    return parse6(payload2, ctx);
   };
 }
 var arraySize = (input2) => Array.isArray(input2) ? input2.length : -1;
@@ -33891,7 +33891,7 @@ function generateRecordCheck(doc, ctx, schema, accessor) {
   }, `return INVALID;`);
   return outputVar;
 }
-function emitOwnKeys(doc, ctx, accessor, kVar, body3, onSymbol) {
+function emitOwnKeys(doc, ctx, accessor, kVar, body4, onSymbol) {
   const propIsEnumerableConst = addConstant(ctx, Object.prototype.propertyIsEnumerable);
   const symsVar = newVar(ctx);
   const keysVar = newVar(ctx);
@@ -33902,7 +33902,7 @@ function emitOwnKeys(doc, ctx, accessor, kVar, body3, onSymbol) {
   doc.indented((d) => {
     d.write(`const ${kVar} = ${keysVar}[${iVar}];`);
     d.write(`if (${kVar} === "__proto__" || !${propIsEnumerableConst}.call(${accessor}, ${kVar})) continue;`);
-    body3(d);
+    body4(d);
   });
   doc.write(`}`);
   doc.write(`for (let ${iVar} = 0; ${iVar} < ${symsVar}.length; ${iVar}++) {`);
@@ -33912,7 +33912,7 @@ function emitOwnKeys(doc, ctx, accessor, kVar, body3, onSymbol) {
     if (onSymbol)
       d.write(onSymbol);
     else
-      body3(d);
+      body4(d);
   });
   doc.write(`}`);
 }
@@ -35181,13 +35181,13 @@ function initializeContext(params) {
     external: params?.external ?? void 0
   };
 }
-function handleUnrepresentable(schema, ctx, json2, params, message) {
+function handleUnrepresentable(schema, ctx, json3, params, message) {
   const result = typeof ctx.unrepresentable === "function" ? ctx.unrepresentable({ zodSchema: schema, path: params.path, message }) : ctx.unrepresentable;
   if (result === "any")
     return false;
   if (result === void 0 || result === "throw")
     throw new Error(message);
-  Object.assign(json2, result);
+  Object.assign(json3, result);
   return true;
 }
 function processSchema(schema, ctx, _params = { path: [], schemaPath: [] }) {
@@ -35423,12 +35423,12 @@ function foldObjects(members2) {
   }
   return folded;
 }
-function foldIntersection(json2) {
-  const allOf = json2.allOf;
+function foldIntersection(json3) {
+  const allOf = json3.allOf;
   if (!Array.isArray(allOf) || allOf.length < 2)
     return;
   for (const key2 of FOLDABLE_KEYS)
-    if (key2 in json2)
+    if (key2 in json3)
       return;
   const unions = allOf.filter((m) => UNION_KEYS.some((k) => Array.isArray(m[k])));
   let folded = null;
@@ -35447,8 +35447,8 @@ function foldIntersection(json2) {
   }
   if (!folded)
     return;
-  delete json2.allOf;
-  assignProps(json2, folded);
+  delete json3.allOf;
+  assignProps(json3, folded);
 }
 function finalize(ctx, schema) {
   const root4 = ctx.seen.get(schema);
@@ -35530,20 +35530,20 @@ function finalize(ctx, schema) {
     if (ctx.intersections.length) {
       const carriers = /* @__PURE__ */ new Map();
       for (const seen of ctx.seen.values()) {
-        for (const json2 of [seen.schema, seen.def]) {
-          const allOf = json2?.allOf;
+        for (const json3 of [seen.schema, seen.def]) {
+          const allOf = json3?.allOf;
           if (!Array.isArray(allOf))
             continue;
           const existing = carriers.get(allOf);
           if (existing)
-            existing.push(json2);
+            existing.push(json3);
           else
-            carriers.set(allOf, [json2]);
+            carriers.set(allOf, [json3]);
         }
       }
       for (const allOf of ctx.intersections) {
-        for (const json2 of carriers.get(allOf) ?? [])
-          foldIntersection(json2);
+        for (const json3 of carriers.get(allOf) ?? [])
+          foldIntersection(json3);
       }
     }
   }
@@ -35778,29 +35778,29 @@ var exactPatterns = /* @__PURE__ */ new Map([
 ]);
 var exactPattern = (p2) => exactPatterns.get(p2) ?? p2;
 var stringProcessor = (schema, ctx, _json, _params) => {
-  const json2 = _json;
-  json2.type = "string";
+  const json3 = _json;
+  json3.type = "string";
   const { minimum, maximum, format, patterns, contentEncoding, laxFormat } = aggregateChecks(schema);
   if (typeof minimum === "number")
-    json2.minLength = minimum;
+    json3.minLength = minimum;
   if (typeof maximum === "number")
-    json2.maxLength = maximum;
+    json3.maxLength = maximum;
   if (format) {
-    json2.format = formatMap[format] ?? format;
-    if (json2.format === "")
-      delete json2.format;
+    json3.format = formatMap[format] ?? format;
+    if (json3.format === "")
+      delete json3.format;
     if (format === "time" || laxFormat) {
-      delete json2.format;
+      delete json3.format;
     }
   }
   if (contentEncoding)
-    json2.contentEncoding = contentEncoding;
+    json3.contentEncoding = contentEncoding;
   if (patterns && patterns.size > 0) {
     const patternList = [...patterns].map(exactPattern);
     if (patternList.length === 1)
-      json2.pattern = patternList[0].source;
+      json3.pattern = patternList[0].source;
     else if (patternList.length > 1) {
-      json2.allOf = [
+      json3.allOf = [
         ...patternList.map((regex) => ({
           ...ctx.target === "draft-07" || ctx.target === "draft-04" || ctx.target === "openapi-3.0" ? { type: "string" } : {},
           pattern: regex.source
@@ -35810,31 +35810,31 @@ var stringProcessor = (schema, ctx, _json, _params) => {
   }
 };
 var numberProcessor = (schema, ctx, _json, params) => {
-  const json2 = _json;
+  const json3 = _json;
   const { minimum, maximum, multipleOf, exclusiveMaximum, exclusiveMinimum, isInt } = aggregateChecks(schema);
-  json2.type = isInt ? "integer" : "number";
+  json3.type = isInt ? "integer" : "number";
   const exMin = typeof exclusiveMinimum === "number" && exclusiveMinimum >= (minimum ?? Number.NEGATIVE_INFINITY);
   const exMax = typeof exclusiveMaximum === "number" && exclusiveMaximum <= (maximum ?? Number.POSITIVE_INFINITY);
   const legacy = ctx.target === "draft-04" || ctx.target === "openapi-3.0";
   if (exMin) {
     if (legacy) {
-      json2.minimum = exclusiveMinimum;
-      json2.exclusiveMinimum = true;
+      json3.minimum = exclusiveMinimum;
+      json3.exclusiveMinimum = true;
     } else {
-      json2.exclusiveMinimum = exclusiveMinimum;
+      json3.exclusiveMinimum = exclusiveMinimum;
     }
   } else if (typeof minimum === "number") {
-    json2.minimum = minimum;
+    json3.minimum = minimum;
   }
   if (exMax) {
     if (legacy) {
-      json2.maximum = exclusiveMaximum;
-      json2.exclusiveMaximum = true;
+      json3.maximum = exclusiveMaximum;
+      json3.exclusiveMaximum = true;
     } else {
-      json2.exclusiveMaximum = exclusiveMaximum;
+      json3.exclusiveMaximum = exclusiveMaximum;
     }
   } else if (typeof maximum === "number") {
-    json2.maximum = maximum;
+    json3.maximum = maximum;
   }
   if (multipleOf) {
     const divisors = /* @__PURE__ */ new Set();
@@ -35842,75 +35842,75 @@ var numberProcessor = (schema, ctx, _json, params) => {
       if (Number.isFinite(divisor) && divisor !== 0)
         divisors.add(Math.abs(divisor));
       else
-        handleUnrepresentable(schema, ctx, json2, params, `A multipleOf divisor of ${divisor} cannot be represented in JSON Schema`);
+        handleUnrepresentable(schema, ctx, json3, params, `A multipleOf divisor of ${divisor} cannot be represented in JSON Schema`);
     }
     const [first, ...rest] = divisors;
     if (first !== void 0)
-      json2.multipleOf = first;
+      json3.multipleOf = first;
     if (rest.length)
-      json2.allOf = [...json2.allOf ?? [], ...rest.map((m) => ({ multipleOf: m }))];
+      json3.allOf = [...json3.allOf ?? [], ...rest.map((m) => ({ multipleOf: m }))];
   }
 };
-var booleanProcessor = (_schema, _ctx, json2, _params) => {
-  json2.type = "boolean";
+var booleanProcessor = (_schema, _ctx, json3, _params) => {
+  json3.type = "boolean";
 };
-var bigintProcessor = (schema, ctx, json2, params) => {
-  handleUnrepresentable(schema, ctx, json2, params, "BigInt cannot be represented in JSON Schema");
+var bigintProcessor = (schema, ctx, json3, params) => {
+  handleUnrepresentable(schema, ctx, json3, params, "BigInt cannot be represented in JSON Schema");
 };
-var symbolProcessor = (schema, ctx, json2, params) => {
-  handleUnrepresentable(schema, ctx, json2, params, "Symbols cannot be represented in JSON Schema");
+var symbolProcessor = (schema, ctx, json3, params) => {
+  handleUnrepresentable(schema, ctx, json3, params, "Symbols cannot be represented in JSON Schema");
 };
-var nullProcessor = (_schema, ctx, json2, _params) => {
+var nullProcessor = (_schema, ctx, json3, _params) => {
   if (ctx.target === "openapi-3.0") {
-    json2.type = "string";
-    json2.nullable = true;
-    json2.enum = [null];
+    json3.type = "string";
+    json3.nullable = true;
+    json3.enum = [null];
   } else {
-    json2.type = "null";
+    json3.type = "null";
   }
 };
-var undefinedProcessor = (schema, ctx, json2, params) => {
-  handleUnrepresentable(schema, ctx, json2, params, "Undefined cannot be represented in JSON Schema");
+var undefinedProcessor = (schema, ctx, json3, params) => {
+  handleUnrepresentable(schema, ctx, json3, params, "Undefined cannot be represented in JSON Schema");
 };
-var voidProcessor = (schema, ctx, json2, params) => {
-  handleUnrepresentable(schema, ctx, json2, params, "Void cannot be represented in JSON Schema");
+var voidProcessor = (schema, ctx, json3, params) => {
+  handleUnrepresentable(schema, ctx, json3, params, "Void cannot be represented in JSON Schema");
 };
-var neverProcessor = (_schema, _ctx, json2, _params) => {
-  json2.not = {};
+var neverProcessor = (_schema, _ctx, json3, _params) => {
+  json3.not = {};
 };
 var anyProcessor = (_schema, _ctx, _json, _params) => {
 };
 var unknownProcessor = (_schema, _ctx, _json, _params) => {
 };
-var dateProcessor = (schema, ctx, json2, params) => {
-  handleUnrepresentable(schema, ctx, json2, params, "Date cannot be represented in JSON Schema");
+var dateProcessor = (schema, ctx, json3, params) => {
+  handleUnrepresentable(schema, ctx, json3, params, "Date cannot be represented in JSON Schema");
 };
-var enumProcessor = (schema, _ctx, json2, _params) => {
+var enumProcessor = (schema, _ctx, json3, _params) => {
   const def = schema._zod.def;
   const values2 = getEnumValues(def.entries);
   if (values2.length === 0) {
-    json2.not = {};
+    json3.not = {};
     return;
   }
   if (values2.every((v) => typeof v === "number"))
-    json2.type = "number";
+    json3.type = "number";
   if (values2.every((v) => typeof v === "string"))
-    json2.type = "string";
-  json2.enum = values2;
+    json3.type = "string";
+  json3.enum = values2;
 };
-var literalProcessor = (schema, ctx, json2, params) => {
+var literalProcessor = (schema, ctx, json3, params) => {
   const def = schema._zod.def;
   if (def.values.length === 0) {
-    json2.not = {};
+    json3.not = {};
     return;
   }
   const vals = [];
   for (const val of def.values) {
     if (val === void 0) {
-      if (handleUnrepresentable(schema, ctx, json2, params, "Literal `undefined` cannot be represented in JSON Schema"))
+      if (handleUnrepresentable(schema, ctx, json3, params, "Literal `undefined` cannot be represented in JSON Schema"))
         return;
     } else if (typeof val === "bigint") {
-      if (handleUnrepresentable(schema, ctx, json2, params, "BigInt literals cannot be represented in JSON Schema"))
+      if (handleUnrepresentable(schema, ctx, json3, params, "BigInt literals cannot be represented in JSON Schema"))
         return;
       vals.push(Number(val));
     } else {
@@ -35920,37 +35920,37 @@ var literalProcessor = (schema, ctx, json2, params) => {
   if (vals.length === 0) {
   } else if (vals.length === 1) {
     const val = vals[0];
-    json2.type = val === null ? "null" : typeof val;
+    json3.type = val === null ? "null" : typeof val;
     if (ctx.target === "draft-04" || ctx.target === "openapi-3.0") {
-      json2.enum = [val];
+      json3.enum = [val];
     } else {
-      json2.const = val;
+      json3.const = val;
     }
   } else {
     if (vals.every((v) => typeof v === "number"))
-      json2.type = "number";
+      json3.type = "number";
     if (vals.every((v) => typeof v === "string"))
-      json2.type = "string";
+      json3.type = "string";
     if (vals.every((v) => typeof v === "boolean"))
-      json2.type = "boolean";
+      json3.type = "boolean";
     if (vals.every((v) => v === null))
-      json2.type = "null";
-    json2.enum = vals;
+      json3.type = "null";
+    json3.enum = vals;
   }
 };
-var nanProcessor = (schema, ctx, json2, params) => {
-  handleUnrepresentable(schema, ctx, json2, params, "NaN cannot be represented in JSON Schema");
+var nanProcessor = (schema, ctx, json3, params) => {
+  handleUnrepresentable(schema, ctx, json3, params, "NaN cannot be represented in JSON Schema");
 };
-var templateLiteralProcessor = (schema, _ctx, json2, _params) => {
-  const _json = json2;
+var templateLiteralProcessor = (schema, _ctx, json3, _params) => {
+  const _json = json3;
   const pattern = schema._zod.pattern;
   if (!pattern)
     throw new Error("Pattern not found in template literal");
   _json.type = "string";
   _json.pattern = pattern.source;
 };
-var fileProcessor = (schema, _ctx, json2, _params) => {
-  const _json = json2;
+var fileProcessor = (schema, _ctx, json3, _params) => {
+  const _json = json3;
   _json.type = "string";
   _json.format = "binary";
   _json.contentEncoding = "binary";
@@ -35968,34 +35968,34 @@ var fileProcessor = (schema, _ctx, json2, _params) => {
   else
     _json.anyOf = mime.map((m) => ({ contentMediaType: m }));
 };
-var successProcessor = (_schema, _ctx, json2, _params) => {
-  json2.type = "boolean";
+var successProcessor = (_schema, _ctx, json3, _params) => {
+  json3.type = "boolean";
 };
-var customProcessor = (schema, ctx, json2, params) => {
-  handleUnrepresentable(schema, ctx, json2, params, "Custom types cannot be represented in JSON Schema");
+var customProcessor = (schema, ctx, json3, params) => {
+  handleUnrepresentable(schema, ctx, json3, params, "Custom types cannot be represented in JSON Schema");
 };
-var functionProcessor = (schema, ctx, json2, params) => {
-  handleUnrepresentable(schema, ctx, json2, params, "Function types cannot be represented in JSON Schema");
+var functionProcessor = (schema, ctx, json3, params) => {
+  handleUnrepresentable(schema, ctx, json3, params, "Function types cannot be represented in JSON Schema");
 };
-var transformProcessor = (schema, ctx, json2, params) => {
-  handleUnrepresentable(schema, ctx, json2, params, "Transforms cannot be represented in JSON Schema");
+var transformProcessor = (schema, ctx, json3, params) => {
+  handleUnrepresentable(schema, ctx, json3, params, "Transforms cannot be represented in JSON Schema");
 };
-var mapProcessor = (schema, ctx, json2, params) => {
-  handleUnrepresentable(schema, ctx, json2, params, "Map cannot be represented in JSON Schema");
+var mapProcessor = (schema, ctx, json3, params) => {
+  handleUnrepresentable(schema, ctx, json3, params, "Map cannot be represented in JSON Schema");
 };
-var setProcessor = (schema, ctx, json2, params) => {
-  handleUnrepresentable(schema, ctx, json2, params, "Set cannot be represented in JSON Schema");
+var setProcessor = (schema, ctx, json3, params) => {
+  handleUnrepresentable(schema, ctx, json3, params, "Set cannot be represented in JSON Schema");
 };
 var arrayProcessor = (schema, ctx, _json, params) => {
-  const json2 = _json;
+  const json3 = _json;
   const def = schema._zod.def;
   const { minimum, maximum } = aggregateChecks(schema);
   if (typeof minimum === "number")
-    json2.minItems = minimum;
+    json3.minItems = minimum;
   if (typeof maximum === "number")
-    json2.maxItems = maximum;
-  json2.type = "array";
-  json2.items = processSchema(def.element, ctx, {
+    json3.maxItems = maximum;
+  json3.type = "array";
+  json3.items = processSchema(def.element, ctx, {
     ...params,
     path: [...params.path, "items"]
   });
@@ -36011,17 +36011,17 @@ function inputOptin(schema) {
   return schema._zod.optin;
 }
 var objectProcessor = (schema, ctx, _json, params) => {
-  const json2 = _json;
+  const json3 = _json;
   const def = schema._zod.def;
   const shape = def.shape;
   const symbolKeys = Object.getOwnPropertySymbols(shape);
-  if (symbolKeys.length && handleUnrepresentable(schema, ctx, json2, params, "Symbol keys cannot be represented in JSON Schema")) {
+  if (symbolKeys.length && handleUnrepresentable(schema, ctx, json3, params, "Symbol keys cannot be represented in JSON Schema")) {
     return;
   }
-  json2.type = "object";
-  json2.properties = {};
+  json3.type = "object";
+  json3.properties = {};
   for (const key2 in shape) {
-    assignProp(json2.properties, key2, processSchema(shape[key2], ctx, {
+    assignProp(json3.properties, key2, processSchema(shape[key2], ctx, {
       ...params,
       path: [...params.path, "properties", key2]
     }));
@@ -36034,21 +36034,21 @@ var objectProcessor = (schema, ctx, _json, params) => {
     }
   }
   if (requiredKeys.length > 0) {
-    json2.required = requiredKeys;
+    json3.required = requiredKeys;
   }
   if (def.catchall?._zod.def.type === "never") {
-    json2.additionalProperties = false;
+    json3.additionalProperties = false;
   } else if (!def.catchall) {
     if (ctx.io === "output")
-      json2.additionalProperties = false;
+      json3.additionalProperties = false;
   } else if (def.catchall) {
-    json2.additionalProperties = processSchema(def.catchall, ctx, {
+    json3.additionalProperties = processSchema(def.catchall, ctx, {
       ...params,
       path: [...params.path, "additionalProperties"]
     });
   }
 };
-var unionProcessor = (schema, ctx, json2, params) => {
+var unionProcessor = (schema, ctx, json3, params) => {
   const def = schema._zod.def;
   const isExclusive = def.inclusive === false;
   const options = def.options.map((x, i) => processSchema(x, ctx, {
@@ -36056,12 +36056,12 @@ var unionProcessor = (schema, ctx, json2, params) => {
     path: [...params.path, isExclusive ? "oneOf" : "anyOf", i]
   }));
   if (isExclusive) {
-    json2.oneOf = options;
+    json3.oneOf = options;
   } else {
-    json2.anyOf = options;
+    json3.anyOf = options;
   }
 };
-var intersectionProcessor = (schema, ctx, json2, params) => {
+var intersectionProcessor = (schema, ctx, json3, params) => {
   const def = schema._zod.def;
   const a = processSchema(def.left, ctx, {
     ...params,
@@ -36076,13 +36076,13 @@ var intersectionProcessor = (schema, ctx, json2, params) => {
     ...isSimpleIntersection(a) ? a.allOf : [a],
     ...isSimpleIntersection(b) ? b.allOf : [b]
   ];
-  json2.allOf = allOf;
+  json3.allOf = allOf;
   ctx.intersections.push(allOf);
 };
 var tupleProcessor = (schema, ctx, _json, params) => {
-  const json2 = _json;
+  const json3 = _json;
   const def = schema._zod.def;
-  json2.type = "array";
+  json3.type = "array";
   const prefixPath = ctx.target === "draft-2020-12" ? "prefixItems" : "items";
   const restPath = ctx.target === "draft-2020-12" ? "items" : ctx.target === "openapi-3.0" ? "items" : "additionalItems";
   const prefixItems = def.items.map((x, i) => processSchema(x, ctx, {
@@ -36104,70 +36104,70 @@ var tupleProcessor = (schema, ctx, _json, params) => {
   const maxItems = def.items.length;
   const isClosed = !def.rest;
   if (ctx.target === "draft-2020-12") {
-    json2.prefixItems = prefixItems;
+    json3.prefixItems = prefixItems;
     if (isClosed) {
-      json2.items = false;
+      json3.items = false;
     } else if (rest) {
-      json2.items = rest;
+      json3.items = rest;
     }
     if (minItems > 0)
-      json2.minItems = minItems;
+      json3.minItems = minItems;
     if (isClosed)
-      json2.maxItems = maxItems;
+      json3.maxItems = maxItems;
   } else if (ctx.target === "openapi-3.0") {
-    json2.items = {
+    json3.items = {
       anyOf: prefixItems
     };
     if (rest) {
-      json2.items.anyOf.push(rest);
+      json3.items.anyOf.push(rest);
     }
     if (minItems > 0)
-      json2.minItems = minItems;
+      json3.minItems = minItems;
     if (isClosed)
-      json2.maxItems = maxItems;
+      json3.maxItems = maxItems;
   } else {
-    json2.items = prefixItems;
+    json3.items = prefixItems;
     if (isClosed) {
-      json2.additionalItems = false;
+      json3.additionalItems = false;
     } else if (rest) {
-      json2.additionalItems = rest;
+      json3.additionalItems = rest;
     }
     if (minItems > 0)
-      json2.minItems = minItems;
+      json3.minItems = minItems;
     if (isClosed)
-      json2.maxItems = maxItems;
+      json3.maxItems = maxItems;
   }
   const { minimum, maximum } = aggregateChecks(schema);
   if (typeof minimum === "number")
-    json2.minItems = minimum;
+    json3.minItems = minimum;
   if (typeof maximum === "number")
-    json2.maxItems = maximum;
+    json3.maxItems = maximum;
 };
-function stringifyKeyNames(bySchema, json2, visited) {
-  if (json2.$ref) {
-    if (visited.has(json2))
-      return json2;
-    visited.add(json2);
-    const def = bySchema.get(json2)?.def;
+function stringifyKeyNames(bySchema, json3, visited) {
+  if (json3.$ref) {
+    if (visited.has(json3))
+      return json3;
+    visited.add(json3);
+    const def = bySchema.get(json3)?.def;
     if (!def)
-      return json2;
+      return json3;
     const inlined = stringifyKeyNames(bySchema, def, visited);
-    return inlined === def ? json2 : inlined;
+    return inlined === def ? json3 : inlined;
   }
   for (const keyword of ["anyOf", "oneOf"]) {
-    const branches = json2[keyword];
+    const branches = json3[keyword];
     if (!Array.isArray(branches))
       continue;
     const mapped = branches.map((branch) => stringifyKeyNames(bySchema, branch, visited));
     if (mapped.some((branch, i) => branch !== branches[i]))
-      json2 = { ...json2, [keyword]: mapped };
+      json3 = { ...json3, [keyword]: mapped };
   }
-  const types = Array.isArray(json2.type) ? json2.type : [json2.type];
+  const types = Array.isArray(json3.type) ? json3.type : [json3.type];
   const numericType = !types.includes("string") && types.some((t) => t === "number" || t === "integer");
-  const values2 = json2.enum ?? (json2.const !== void 0 ? [json2.const] : void 0);
+  const values2 = json3.enum ?? (json3.const !== void 0 ? [json3.const] : void 0);
   if (!numericType && !values2?.some((v) => typeof v === "number"))
-    return json2;
-  const { minimum, maximum, exclusiveMinimum, exclusiveMaximum, multipleOf, format, id, ...rest } = json2;
+    return json3;
+  const { minimum, maximum, exclusiveMinimum, exclusiveMaximum, multipleOf, format, id, ...rest } = json3;
   if (rest.enum)
     rest.enum = rest.enum.map((v) => typeof v === "number" ? String(v) : v);
   else if (typeof rest.const === "number")
@@ -36207,9 +36207,9 @@ function rewriteKeyNames(ctx) {
   }
 }
 var recordProcessor = (schema, ctx, _json, params) => {
-  const json2 = _json;
+  const json3 = _json;
   const def = schema._zod.def;
-  json2.type = "object";
+  json3.type = "object";
   const keyType = def.keyType;
   const patterns = aggregateChecks(keyType).patterns;
   if (def.mode === "loose" && patterns && patterns.size > 0) {
@@ -36217,13 +36217,13 @@ var recordProcessor = (schema, ctx, _json, params) => {
       ...params,
       path: [...params.path, "patternProperties", "*"]
     });
-    json2.patternProperties = {};
+    json3.patternProperties = {};
     for (const pattern of patterns) {
-      assignProp(json2.patternProperties, exactPattern(pattern).source, valueSchema);
+      assignProp(json3.patternProperties, exactPattern(pattern).source, valueSchema);
     }
   } else {
     if (ctx.target === "draft-07" || ctx.target === "draft-2020-12") {
-      json2.propertyNames = processSchema(def.keyType, ctx, {
+      json3.propertyNames = processSchema(def.keyType, ctx, {
         ...params,
         path: [...params.path, "propertyNames"]
       });
@@ -36235,7 +36235,7 @@ var recordProcessor = (schema, ctx, _json, params) => {
       }
       pending.push(schema);
     }
-    json2.additionalProperties = processSchema(def.valueType, ctx, {
+    json3.additionalProperties = processSchema(def.valueType, ctx, {
       ...params,
       path: [...params.path, "additionalProperties"]
     });
@@ -36245,19 +36245,19 @@ var recordProcessor = (schema, ctx, _json, params) => {
   if (keyValues && !def.partial && !omittableOnInput) {
     const validKeyValues = [...keyValues].filter((v) => typeof v === "string" || typeof v === "number");
     if (validKeyValues.length > 0) {
-      json2.required = validKeyValues.map(String);
+      json3.required = validKeyValues.map(String);
     }
   }
 };
-var nullableProcessor = (schema, ctx, json2, params) => {
+var nullableProcessor = (schema, ctx, json3, params) => {
   const def = schema._zod.def;
   const inner = processSchema(def.innerType, ctx, params);
   const seen = ctx.seen.get(schema);
   if (ctx.target === "openapi-3.0") {
     seen.ref = def.innerType;
-    json2.nullable = true;
+    json3.nullable = true;
   } else {
-    json2.anyOf = [inner, { type: "null" }];
+    json3.anyOf = [inner, { type: "null" }];
   }
 };
 var nonoptionalProcessor = (schema, ctx, _json, params) => {
@@ -36267,7 +36267,7 @@ var nonoptionalProcessor = (schema, ctx, _json, params) => {
   seen.ref = def.innerType;
 };
 var UNREPRESENTABLE_DEFAULT = /* @__PURE__ */ Symbol();
-function serializeDefaultValue(value, schema, ctx, json2, params) {
+function serializeDefaultValue(value, schema, ctx, json3, params) {
   let unrepresentable = false;
   const serialized = JSON.stringify(value, (_, val) => {
     if (typeof val !== "bigint")
@@ -36277,30 +36277,30 @@ function serializeDefaultValue(value, schema, ctx, json2, params) {
   });
   if (!unrepresentable)
     return JSON.parse(serialized);
-  handleUnrepresentable(schema, ctx, json2, params, "BigInt defaults cannot be represented in JSON Schema");
+  handleUnrepresentable(schema, ctx, json3, params, "BigInt defaults cannot be represented in JSON Schema");
   return UNREPRESENTABLE_DEFAULT;
 }
-var defaultProcessor = (schema, ctx, json2, params) => {
+var defaultProcessor = (schema, ctx, json3, params) => {
   const def = schema._zod.def;
   processSchema(def.innerType, ctx, params);
   const seen = ctx.seen.get(schema);
   seen.ref = def.innerType;
-  const value = serializeDefaultValue(def.defaultValue, schema, ctx, json2, params);
+  const value = serializeDefaultValue(def.defaultValue, schema, ctx, json3, params);
   if (value !== UNREPRESENTABLE_DEFAULT)
-    json2.default = value;
+    json3.default = value;
 };
-var prefaultProcessor = (schema, ctx, json2, params) => {
+var prefaultProcessor = (schema, ctx, json3, params) => {
   const def = schema._zod.def;
   processSchema(def.innerType, ctx, params);
   const seen = ctx.seen.get(schema);
   seen.ref = def.innerType;
   if (ctx.io !== "input")
     return;
-  const value = serializeDefaultValue(def.defaultValue, schema, ctx, json2, params);
+  const value = serializeDefaultValue(def.defaultValue, schema, ctx, json3, params);
   if (value !== UNREPRESENTABLE_DEFAULT)
-    json2._prefault = value;
+    json3._prefault = value;
 };
-var catchProcessor = (schema, ctx, json2, params) => {
+var catchProcessor = (schema, ctx, json3, params) => {
   const def = schema._zod.def;
   processSchema(def.innerType, ctx, params);
   const seen = ctx.seen.get(schema);
@@ -36309,10 +36309,10 @@ var catchProcessor = (schema, ctx, json2, params) => {
   try {
     catchValue = def.catchValue(void 0);
   } catch {
-    handleUnrepresentable(schema, ctx, json2, params, "Dynamic catch values are not supported in JSON Schema");
+    handleUnrepresentable(schema, ctx, json3, params, "Dynamic catch values are not supported in JSON Schema");
     return;
   }
-  json2.default = catchValue;
+  json3.default = catchValue;
 };
 var pipeProcessor = (schema, ctx, _json, params) => {
   const def = schema._zod.def;
@@ -36322,12 +36322,12 @@ var pipeProcessor = (schema, ctx, _json, params) => {
   const seen = ctx.seen.get(schema);
   seen.ref = innerType;
 };
-var readonlyProcessor = (schema, ctx, json2, params) => {
+var readonlyProcessor = (schema, ctx, json3, params) => {
   const def = schema._zod.def;
   processSchema(def.innerType, ctx, params);
   const seen = ctx.seen.get(schema);
   seen.ref = def.innerType;
-  json2.readOnly = true;
+  json3.readOnly = true;
 };
 var promiseProcessor = (schema, ctx, _json, params) => {
   const def = schema._zod.def;
@@ -36969,7 +36969,7 @@ var _ZodString = /* @__PURE__ */ $constructor(
   (inst, def) => {
     $ZodString.init(inst, def);
     ZodType.init(inst, def);
-    inst._zod.processJSONSchema = (ctx, json2, params) => stringProcessor(inst, ctx, json2, params);
+    inst._zod.processJSONSchema = (ctx, json3, params) => stringProcessor(inst, ctx, json3, params);
   },
   /* @__PURE__ */ util_exports.derived({
     format: (inst) => aggregateChecks(inst).format ?? null,
@@ -37328,7 +37328,7 @@ var ZodNumber = /* @__PURE__ */ $constructor(
   (inst, def) => {
     $ZodNumber.init(inst, def);
     ZodType.init(inst, def);
-    inst._zod.processJSONSchema = (ctx, json2, params) => numberProcessor(inst, ctx, json2, params);
+    inst._zod.processJSONSchema = (ctx, json3, params) => numberProcessor(inst, ctx, json3, params);
     inst.isFinite = true;
   },
   /* @__PURE__ */ util_exports.derived({
@@ -37418,7 +37418,7 @@ function uint32(params) {
 var ZodBoolean = /* @__PURE__ */ $constructor("ZodBoolean", (inst, def) => {
   $ZodBoolean.init(inst, def);
   ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => booleanProcessor(inst, ctx, json2, params);
+  inst._zod.processJSONSchema = (ctx, json3, params) => booleanProcessor(inst, ctx, json3, params);
 });
 function boolean3(params) {
   return _boolean(ZodBoolean, params);
@@ -37428,7 +37428,7 @@ var ZodBigInt = /* @__PURE__ */ $constructor(
   (inst, def) => {
     $ZodBigInt.init(inst, def);
     ZodType.init(inst, def);
-    inst._zod.processJSONSchema = (ctx, json2, params) => bigintProcessor(inst, ctx, json2, params);
+    inst._zod.processJSONSchema = (ctx, json3, params) => bigintProcessor(inst, ctx, json3, params);
   },
   /* @__PURE__ */ util_exports.derived({
     minValue: (inst) => aggregateChecks(inst).minimum ?? null,
@@ -37486,7 +37486,7 @@ function uint64(params) {
 var ZodSymbol = /* @__PURE__ */ $constructor("ZodSymbol", (inst, def) => {
   $ZodSymbol.init(inst, def);
   ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => symbolProcessor(inst, ctx, json2, params);
+  inst._zod.processJSONSchema = (ctx, json3, params) => symbolProcessor(inst, ctx, json3, params);
 });
 function symbol(params) {
   return _symbol(ZodSymbol, params);
@@ -37494,7 +37494,7 @@ function symbol(params) {
 var ZodUndefined = /* @__PURE__ */ $constructor("ZodUndefined", (inst, def) => {
   $ZodUndefined.init(inst, def);
   ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => undefinedProcessor(inst, ctx, json2, params);
+  inst._zod.processJSONSchema = (ctx, json3, params) => undefinedProcessor(inst, ctx, json3, params);
 });
 function _undefined3(params) {
   return _undefined2(ZodUndefined, params);
@@ -37502,7 +37502,7 @@ function _undefined3(params) {
 var ZodNull = /* @__PURE__ */ $constructor("ZodNull", (inst, def) => {
   $ZodNull.init(inst, def);
   ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => nullProcessor(inst, ctx, json2, params);
+  inst._zod.processJSONSchema = (ctx, json3, params) => nullProcessor(inst, ctx, json3, params);
 });
 function _null3(params) {
   return _null2(ZodNull, params);
@@ -37510,7 +37510,7 @@ function _null3(params) {
 var ZodAny = /* @__PURE__ */ $constructor("ZodAny", (inst, def) => {
   $ZodAny.init(inst, def);
   ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => anyProcessor(inst, ctx, json2, params);
+  inst._zod.processJSONSchema = (ctx, json3, params) => anyProcessor(inst, ctx, json3, params);
 });
 function any() {
   return _any(ZodAny);
@@ -37518,7 +37518,7 @@ function any() {
 var ZodUnknown = /* @__PURE__ */ $constructor("ZodUnknown", (inst, def) => {
   $ZodUnknown.init(inst, def);
   ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => unknownProcessor(inst, ctx, json2, params);
+  inst._zod.processJSONSchema = (ctx, json3, params) => unknownProcessor(inst, ctx, json3, params);
 });
 function unknown2() {
   return _unknown(ZodUnknown);
@@ -37526,7 +37526,7 @@ function unknown2() {
 var ZodNever = /* @__PURE__ */ $constructor("ZodNever", (inst, def) => {
   $ZodNever.init(inst, def);
   ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => neverProcessor(inst, ctx, json2, params);
+  inst._zod.processJSONSchema = (ctx, json3, params) => neverProcessor(inst, ctx, json3, params);
 });
 function never(params) {
   return _never(ZodNever, params);
@@ -37534,7 +37534,7 @@ function never(params) {
 var ZodVoid = /* @__PURE__ */ $constructor("ZodVoid", (inst, def) => {
   $ZodVoid.init(inst, def);
   ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => voidProcessor(inst, ctx, json2, params);
+  inst._zod.processJSONSchema = (ctx, json3, params) => voidProcessor(inst, ctx, json3, params);
 });
 function _void2(params) {
   return _void(ZodVoid, params);
@@ -37544,7 +37544,7 @@ var ZodDate = /* @__PURE__ */ $constructor(
   (inst, def) => {
     $ZodDate.init(inst, def);
     ZodType.init(inst, def);
-    inst._zod.processJSONSchema = (ctx, json2, params) => dateProcessor(inst, ctx, json2, params);
+    inst._zod.processJSONSchema = (ctx, json3, params) => dateProcessor(inst, ctx, json3, params);
     inst.min = (value, params) => inst.check(_gte(value, params));
     inst.max = (value, params) => inst.check(_lte(value, params));
   },
@@ -37566,7 +37566,7 @@ var ZodArray = /* @__PURE__ */ $constructor("ZodArray", (inst, def) => {
   _ensureDefaultMemoizer();
   $ZodArray.init(inst, def);
   ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => arrayProcessor(inst, ctx, json2, params);
+  inst._zod.processJSONSchema = (ctx, json3, params) => arrayProcessor(inst, ctx, json3, params);
   inst.element = def.element;
 }, {
   min(n, params) {
@@ -37596,7 +37596,7 @@ var ZodObject = /* @__PURE__ */ $constructor("ZodObject", (inst, def) => {
   _ensureDefaultMemoizer();
   $ZodObjectJIT.init(inst, def);
   ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => objectProcessor(inst, ctx, json2, params);
+  inst._zod.processJSONSchema = (ctx, json3, params) => objectProcessor(inst, ctx, json3, params);
   util_exports.installLazyProp(inst, "shape", (self2) => self2._zod.def.shape, false);
 }, {
   keyof() {
@@ -37669,7 +37669,7 @@ function looseObject(shape, params) {
 var ZodUnion = /* @__PURE__ */ $constructor("ZodUnion", (inst, def) => {
   $ZodUnion.init(inst, def);
   ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => unionProcessor(inst, ctx, json2, params);
+  inst._zod.processJSONSchema = (ctx, json3, params) => unionProcessor(inst, ctx, json3, params);
   inst.options = def.options;
 });
 function union(options, params) {
@@ -37682,7 +37682,7 @@ function union(options, params) {
 var ZodXor = /* @__PURE__ */ $constructor("ZodXor", (inst, def) => {
   ZodUnion.init(inst, def);
   $ZodXor.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => unionProcessor(inst, ctx, json2, params);
+  inst._zod.processJSONSchema = (ctx, json3, params) => unionProcessor(inst, ctx, json3, params);
   inst.options = def.options;
 });
 function xor(options, params) {
@@ -37708,7 +37708,7 @@ function discriminatedUnion(discriminator, options, params) {
 var ZodIntersection = /* @__PURE__ */ $constructor("ZodIntersection", (inst, def) => {
   $ZodIntersection.init(inst, def);
   ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => intersectionProcessor(inst, ctx, json2, params);
+  inst._zod.processJSONSchema = (ctx, json3, params) => intersectionProcessor(inst, ctx, json3, params);
 });
 function intersection(left, right) {
   return new ZodIntersection({
@@ -37721,7 +37721,7 @@ var ZodTuple = /* @__PURE__ */ $constructor("ZodTuple", (inst, def) => {
   _ensureDefaultMemoizer();
   $ZodTuple.init(inst, def);
   ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => tupleProcessor(inst, ctx, json2, params);
+  inst._zod.processJSONSchema = (ctx, json3, params) => tupleProcessor(inst, ctx, json3, params);
 }, {
   rest(rest) {
     return this.clone({
@@ -37754,7 +37754,7 @@ var ZodRecord = /* @__PURE__ */ $constructor("ZodRecord", (inst, def) => {
   _ensureDefaultMemoizer();
   $ZodRecord.init(inst, def);
   ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => recordProcessor(inst, ctx, json2, params);
+  inst._zod.processJSONSchema = (ctx, json3, params) => recordProcessor(inst, ctx, json3, params);
   inst.keyType = def.keyType;
   inst.valueType = def.valueType;
 });
@@ -37796,7 +37796,7 @@ var ZodMap = /* @__PURE__ */ $constructor("ZodMap", (inst, def) => {
   _ensureDefaultMemoizer();
   $ZodMap.init(inst, def);
   ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => mapProcessor(inst, ctx, json2, params);
+  inst._zod.processJSONSchema = (ctx, json3, params) => mapProcessor(inst, ctx, json3, params);
   inst.keyType = def.keyType;
   inst.valueType = def.valueType;
   inst.min = (...args) => inst.check(_minSize(...args));
@@ -37816,7 +37816,7 @@ var ZodSet = /* @__PURE__ */ $constructor("ZodSet", (inst, def) => {
   _ensureDefaultMemoizer();
   $ZodSet.init(inst, def);
   ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => setProcessor(inst, ctx, json2, params);
+  inst._zod.processJSONSchema = (ctx, json3, params) => setProcessor(inst, ctx, json3, params);
   inst.min = (...args) => inst.check(_minSize(...args));
   inst.nonempty = (params) => inst.check(_minSize(1, params));
   inst.max = (...args) => inst.check(_maxSize(...args));
@@ -37832,7 +37832,7 @@ function set(valueType, params) {
 var ZodEnum = /* @__PURE__ */ $constructor("ZodEnum", (inst, def) => {
   $ZodEnum.init(inst, def);
   ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => enumProcessor(inst, ctx, json2, params);
+  inst._zod.processJSONSchema = (ctx, json3, params) => enumProcessor(inst, ctx, json3, params);
   inst.enum = def.entries;
   inst.options = [...inst._zod.values];
   const keys2 = new Set(Object.keys(def.entries));
@@ -37885,7 +37885,7 @@ function nativeEnum(entries, params) {
 var ZodLiteral = /* @__PURE__ */ $constructor("ZodLiteral", (inst, def) => {
   $ZodLiteral.init(inst, def);
   ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => literalProcessor(inst, ctx, json2, params);
+  inst._zod.processJSONSchema = (ctx, json3, params) => literalProcessor(inst, ctx, json3, params);
   inst.values = new Set(def.values);
   Object.defineProperty(inst, "value", {
     get() {
@@ -37906,7 +37906,7 @@ function literal(value, params) {
 var ZodFile = /* @__PURE__ */ $constructor("ZodFile", (inst, def) => {
   $ZodFile.init(inst, def);
   ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => fileProcessor(inst, ctx, json2, params);
+  inst._zod.processJSONSchema = (ctx, json3, params) => fileProcessor(inst, ctx, json3, params);
   inst.min = (size, params) => inst.check(_minSize(size, params));
   inst.max = (size, params) => inst.check(_maxSize(size, params));
   inst.mime = (types, params) => inst.check(_mime(Array.isArray(types) ? types : [types], params));
@@ -37918,7 +37918,7 @@ var ZodTransform = /* @__PURE__ */ $constructor("ZodTransform", (inst, def) => {
   _ensureDefaultMemoizer();
   $ZodTransform.init(inst, def);
   ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => transformProcessor(inst, ctx, json2, params);
+  inst._zod.processJSONSchema = (ctx, json3, params) => transformProcessor(inst, ctx, json3, params);
   inst._zod.parse = (payload2, _ctx) => {
     if (_ctx.direction === "backward") {
       throw new $ZodEncodeError(inst.constructor.name);
@@ -37957,7 +37957,7 @@ function transform(fn) {
 var ZodOptional = /* @__PURE__ */ $constructor("ZodOptional", (inst, def) => {
   $ZodOptional.init(inst, def);
   ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => optionalProcessor(inst, ctx, json2, params);
+  inst._zod.processJSONSchema = (ctx, json3, params) => optionalProcessor(inst, ctx, json3, params);
   inst.unwrap = () => inst._zod.def.innerType;
 });
 function optional(innerType) {
@@ -37969,7 +37969,7 @@ function optional(innerType) {
 var ZodExactOptional = /* @__PURE__ */ $constructor("ZodExactOptional", (inst, def) => {
   $ZodExactOptional.init(inst, def);
   ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => optionalProcessor(inst, ctx, json2, params);
+  inst._zod.processJSONSchema = (ctx, json3, params) => optionalProcessor(inst, ctx, json3, params);
   inst.unwrap = () => inst._zod.def.innerType;
 });
 function exactOptional(innerType) {
@@ -37981,7 +37981,7 @@ function exactOptional(innerType) {
 var ZodNullable = /* @__PURE__ */ $constructor("ZodNullable", (inst, def) => {
   $ZodNullable.init(inst, def);
   ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => nullableProcessor(inst, ctx, json2, params);
+  inst._zod.processJSONSchema = (ctx, json3, params) => nullableProcessor(inst, ctx, json3, params);
   inst.unwrap = () => inst._zod.def.innerType;
 });
 function nullable(innerType) {
@@ -37996,7 +37996,7 @@ function nullish2(innerType) {
 var ZodDefault = /* @__PURE__ */ $constructor("ZodDefault", (inst, def) => {
   $ZodDefault.init(inst, def);
   ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => defaultProcessor(inst, ctx, json2, params);
+  inst._zod.processJSONSchema = (ctx, json3, params) => defaultProcessor(inst, ctx, json3, params);
   inst.unwrap = () => inst._zod.def.innerType;
   inst.removeDefault = inst.unwrap;
 });
@@ -38012,7 +38012,7 @@ function _default2(innerType, defaultValue) {
 var ZodPrefault = /* @__PURE__ */ $constructor("ZodPrefault", (inst, def) => {
   $ZodPrefault.init(inst, def);
   ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => prefaultProcessor(inst, ctx, json2, params);
+  inst._zod.processJSONSchema = (ctx, json3, params) => prefaultProcessor(inst, ctx, json3, params);
   inst.unwrap = () => inst._zod.def.innerType;
 });
 function prefault(innerType, defaultValue) {
@@ -38027,7 +38027,7 @@ function prefault(innerType, defaultValue) {
 var ZodNonOptional = /* @__PURE__ */ $constructor("ZodNonOptional", (inst, def) => {
   $ZodNonOptional.init(inst, def);
   ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => nonoptionalProcessor(inst, ctx, json2, params);
+  inst._zod.processJSONSchema = (ctx, json3, params) => nonoptionalProcessor(inst, ctx, json3, params);
   inst.unwrap = () => inst._zod.def.innerType;
 });
 function nonoptional(innerType, params) {
@@ -38040,7 +38040,7 @@ function nonoptional(innerType, params) {
 var ZodSuccess = /* @__PURE__ */ $constructor("ZodSuccess", (inst, def) => {
   $ZodSuccess.init(inst, def);
   ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => successProcessor(inst, ctx, json2, params);
+  inst._zod.processJSONSchema = (ctx, json3, params) => successProcessor(inst, ctx, json3, params);
   inst.unwrap = () => inst._zod.def.innerType;
 });
 function success(innerType) {
@@ -38052,7 +38052,7 @@ function success(innerType) {
 var ZodCatch = /* @__PURE__ */ $constructor("ZodCatch", (inst, def) => {
   $ZodCatch.init(inst, def);
   ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => catchProcessor(inst, ctx, json2, params);
+  inst._zod.processJSONSchema = (ctx, json3, params) => catchProcessor(inst, ctx, json3, params);
   inst.unwrap = () => inst._zod.def.innerType;
   inst.removeCatch = inst.unwrap;
 });
@@ -38066,7 +38066,7 @@ function _catch2(innerType, catchValue) {
 var ZodNaN = /* @__PURE__ */ $constructor("ZodNaN", (inst, def) => {
   $ZodNaN.init(inst, def);
   ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => nanProcessor(inst, ctx, json2, params);
+  inst._zod.processJSONSchema = (ctx, json3, params) => nanProcessor(inst, ctx, json3, params);
 });
 function nan(params) {
   return _nan(ZodNaN, params);
@@ -38074,7 +38074,7 @@ function nan(params) {
 var ZodPipe = /* @__PURE__ */ $constructor("ZodPipe", (inst, def) => {
   $ZodPipe.init(inst, def);
   ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => pipeProcessor(inst, ctx, json2, params);
+  inst._zod.processJSONSchema = (ctx, json3, params) => pipeProcessor(inst, ctx, json3, params);
   inst.in = def.in;
   inst.out = def.out;
 });
@@ -38116,7 +38116,7 @@ var ZodPreprocess = /* @__PURE__ */ $constructor("ZodPreprocess", (inst, def) =>
 var ZodReadonly = /* @__PURE__ */ $constructor("ZodReadonly", (inst, def) => {
   $ZodReadonly.init(inst, def);
   ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => readonlyProcessor(inst, ctx, json2, params);
+  inst._zod.processJSONSchema = (ctx, json3, params) => readonlyProcessor(inst, ctx, json3, params);
   inst.unwrap = () => inst._zod.def.innerType;
 });
 function readonly(innerType) {
@@ -38128,7 +38128,7 @@ function readonly(innerType) {
 var ZodTemplateLiteral = /* @__PURE__ */ $constructor("ZodTemplateLiteral", (inst, def) => {
   $ZodTemplateLiteral.init(inst, def);
   ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => templateLiteralProcessor(inst, ctx, json2, params);
+  inst._zod.processJSONSchema = (ctx, json3, params) => templateLiteralProcessor(inst, ctx, json3, params);
 });
 function templateLiteral(parts, params) {
   return new ZodTemplateLiteral({
@@ -38140,7 +38140,7 @@ function templateLiteral(parts, params) {
 var ZodLazy = /* @__PURE__ */ $constructor("ZodLazy", (inst, def) => {
   $ZodLazy.init(inst, def);
   ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => lazyProcessor(inst, ctx, json2, params);
+  inst._zod.processJSONSchema = (ctx, json3, params) => lazyProcessor(inst, ctx, json3, params);
   inst.unwrap = () => inst._zod.def.getter();
 });
 function lazy(getter) {
@@ -38152,7 +38152,7 @@ function lazy(getter) {
 var ZodPromise = /* @__PURE__ */ $constructor("ZodPromise", (inst, def) => {
   $ZodPromise.init(inst, def);
   ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => promiseProcessor(inst, ctx, json2, params);
+  inst._zod.processJSONSchema = (ctx, json3, params) => promiseProcessor(inst, ctx, json3, params);
   inst.unwrap = () => inst._zod.def.innerType;
 });
 function promise(innerType) {
@@ -38164,7 +38164,7 @@ function promise(innerType) {
 var ZodFunction = /* @__PURE__ */ $constructor("ZodFunction", (inst, def) => {
   $ZodFunction.init(inst, def);
   ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => functionProcessor(inst, ctx, json2, params);
+  inst._zod.processJSONSchema = (ctx, json3, params) => functionProcessor(inst, ctx, json3, params);
 });
 function _function(params) {
   return new ZodFunction({
@@ -38176,7 +38176,7 @@ function _function(params) {
 var ZodCustom = /* @__PURE__ */ $constructor("ZodCustom", (inst, def) => {
   $ZodCustom.init(inst, def);
   ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => customProcessor(inst, ctx, json2, params);
+  inst._zod.processJSONSchema = (ctx, json3, params) => customProcessor(inst, ctx, json3, params);
 });
 function check(fn) {
   const ch = new $ZodCheck({
@@ -39308,6 +39308,14 @@ var SessionFile = external_exports.object({
   summary: external_exports.string().optional()
 });
 
+// src/feedback.ts
+var import_yaml = __toESM(require_dist(), 1);
+import { existsSync as existsSync2, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { basename, join as join2 } from "node:path";
+
+// src/recording.ts
+var MAX_FRAMES = 40;
+
 // src/shared.ts
 import { existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -39330,10 +39338,154 @@ function findProjectRoot(...candidates) {
   );
 }
 
+// src/feedback.ts
+var FEEDBACK_STATUSES = ["open", "processed", "done", "wontfix"];
+var ID = /^FB-\d{3,}$/;
+var PNG = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+var FeedbackFront = external_exports.strictObject({
+  schema: external_exports.literal(1),
+  id: external_exports.string(),
+  status: external_exports.enum(FEEDBACK_STATUSES),
+  note: external_exports.string().optional(),
+  capture: external_exports.enum(["snap", "recording"]),
+  // ms: time since the recording started, for flipbook playback. A snap is one frame at 0.
+  frames: external_exports.array(external_exports.strictObject({ file: external_exports.string(), ms: external_exports.number().int().min(0) })).min(1).max(MAX_FRAMES),
+  // Where it was captured: the Live page, or an evidence image of a run (with the finding it was opened from).
+  source: external_exports.enum(["live", "evidence"]),
+  run: external_exports.string().optional(),
+  evidence: external_exports.string().optional(),
+  finding: external_exports.string().optional(),
+  created: external_exports.string()
+});
+var feedbackDir = (root4) => join2(root4, ".jeyna", "feedback");
+function itemFile(root4, id) {
+  if (!ID.test(id)) throw new Error(`A feedback id looks like FB-001, not ${id || "an empty string"}.`);
+  const path = join2(feedbackDir(root4), `${id}.md`);
+  if (!existsSync2(path)) throw new Error(`No feedback ${id} under .jeyna/feedback/.`);
+  return path;
+}
+function feedbackFile(root4, file2) {
+  if (basename(file2) !== file2 || !/^FB-\d{3,}(-\d+)?\.png$/.test(file2)) throw new Error(`not a feedback capture file: ${file2}`);
+  return join2(feedbackDir(root4), file2);
+}
+function readFeedback(root4) {
+  const dir = feedbackDir(root4);
+  if (!existsSync2(dir)) return [];
+  return readdirSync(dir).filter((f) => /^FB-\d{3,}\.md$/.test(f)).sort((a, b) => num(a) - num(b)).map((file2) => {
+    const source = readFileSync(join2(dir, file2), "utf8");
+    const item = { path: file2, id: file2.slice(0, -3), text: "", source, errors: [] };
+    const m = splitFront(source);
+    if (!m) return { ...item, errors: ["no YAML frontmatter between --- lines"] };
+    item.text = m[2].trim();
+    let raw2;
+    try {
+      raw2 = (0, import_yaml.parse)(m[1]);
+    } catch (e) {
+      return { ...item, errors: [`frontmatter is not valid YAML: ${e.message.split("\n")[0]}`] };
+    }
+    const r = FeedbackFront.safeParse(raw2);
+    if (!r.success) return { ...item, errors: r.error.issues.map((i) => `frontmatter ${i.path.join(".") || "(root)"}: ${i.message}`) };
+    const front = item.front = r.data;
+    if (front.id !== item.id) item.errors.push(`id ${front.id} does not match the file name`);
+    if (front.capture === "snap" && front.frames.length !== 1) item.errors.push("a snap has exactly one frame");
+    if (front.source === "evidence" && !(front.run && front.evidence)) item.errors.push("feedback on evidence names its run and evidence");
+    for (const f of front.frames) if (!existsSync2(join2(dir, f.file))) item.errors.push(`capture ${f.file} does not exist in .jeyna/feedback/`);
+    if (!item.text) item.errors.push("no feedback text");
+    return item;
+  });
+}
+var num = (file2) => Number(/^FB-(\d+)/.exec(file2)?.[1] ?? 0);
+var NewFeedback = external_exports.strictObject({
+  text: external_exports.string().trim().min(1, "write what should change"),
+  capture: external_exports.enum(["snap", "recording"]),
+  // PNG bytes as base64, in order.
+  frames: external_exports.array(external_exports.strictObject({ png: external_exports.string().min(1), ms: external_exports.number().int().min(0) })).min(1).max(MAX_FRAMES),
+  source: external_exports.enum(["live", "evidence"]),
+  run: external_exports.string().optional(),
+  evidence: external_exports.string().optional(),
+  finding: external_exports.string().optional()
+});
+function createFeedback(root4, input2, now = /* @__PURE__ */ new Date()) {
+  const n = NewFeedback.parse(input2);
+  if (n.capture === "snap" && n.frames.length !== 1) throw new Error("a snap has exactly one frame");
+  if (n.source === "evidence") {
+    if (!n.run || !n.evidence) throw new Error("feedback on evidence names its run and evidence");
+    if (basename(n.evidence) !== n.evidence || !existsSync2(join2(runDirOf(root4, n.run), "evidence", n.evidence))) {
+      throw new Error(`No evidence ${n.evidence} in run ${n.run}.`);
+    }
+    if (n.finding && !existsSync2(join2(runDirOf(root4, n.run), "findings", `${basename(n.finding)}.md`))) throw new Error(`No finding ${n.finding} in run ${n.run}.`);
+  } else if (n.run || n.evidence || n.finding) {
+    throw new Error("run, evidence and finding are only for feedback on evidence");
+  }
+  const pngs = n.frames.map((f, i) => {
+    const b = Buffer.from(f.png, "base64");
+    if (!b.subarray(0, 8).equals(PNG)) throw new Error(`frame ${i + 1} is not a PNG`);
+    return b;
+  });
+  const dir = feedbackDir(root4);
+  mkdirSync(dir, { recursive: true });
+  const next = Math.max(0, ...readdirSync(dir).filter((f) => /^FB-\d{3,}\.md$/.test(f)).map(num)) + 1;
+  const id = `FB-${String(next).padStart(3, "0")}`;
+  const frames = pngs.map((b, i) => {
+    const file2 = n.capture === "snap" ? `${id}.png` : `${id}-${String(i + 1).padStart(2, "0")}.png`;
+    writeFileSync(join2(dir, file2), b);
+    return { file: file2, ms: n.frames[i].ms };
+  });
+  const front = {
+    schema: 1,
+    id,
+    status: "open",
+    capture: n.capture,
+    frames,
+    source: n.source,
+    ...n.run && { run: n.run },
+    ...n.evidence && { evidence: n.evidence },
+    ...n.finding && { finding: n.finding },
+    created: now.toISOString()
+  };
+  writeFileSync(join2(dir, `${id}.md`), `---
+${(0, import_yaml.stringify)(front)}---
+
+${n.text.trim()}
+`, { flag: "wx" });
+  return front;
+}
+function updateFeedback(root4, id, change) {
+  const path = itemFile(root4, id);
+  const m = splitFront(readFileSync(path, "utf8"));
+  const r = m ? FeedbackFront.safeParse((0, import_yaml.parse)(m[1])) : void 0;
+  if (!m || !r?.success) throw new Error(`.jeyna/feedback/${id}.md has no readable frontmatter; fix it by hand.`);
+  const front = r.data;
+  let text5 = m[2].trim();
+  if (change.text !== void 0) {
+    if (front.status !== "open") throw new Error(`${id} is ${front.status}; only an open item's text can change. Reopen it first.`);
+    text5 = change.text.trim();
+    if (!text5) throw new Error("write what should change");
+  }
+  const note = change.status ? change.note : front.note;
+  const next = {};
+  for (const [k, v] of Object.entries(front)) {
+    if (k === "note") continue;
+    next[k] = k === "status" ? change.status ?? v : v;
+    if (k === "status" && note) next.note = note;
+  }
+  writeFileSync(path, `---
+${(0, import_yaml.stringify)(next)}---
+
+${text5}
+`);
+  return next;
+}
+function deleteFeedback(root4, id) {
+  itemFile(root4, id);
+  const dir = feedbackDir(root4);
+  for (const f of readdirSync(dir)) if (f === `${id}.md` || new RegExp(`^${id}(-\\d+)?\\.png$`).test(f)) rmSync(join2(dir, f));
+}
+
 // src/validate.ts
-var import_yaml = __toESM(require_dist(), 1);
-import { existsSync as existsSync2, readdirSync, readFileSync } from "node:fs";
-import { join as join2 } from "node:path";
+var import_yaml2 = __toESM(require_dist(), 1);
+import { existsSync as existsSync3, readdirSync as readdirSync2, readFileSync as readFileSync2 } from "node:fs";
+import { join as join3 } from "node:path";
 var SEVERITIES = FindingInput.shape.severity.options;
 var KINDS = FindingInput.shape.kind.options;
 var STATUSES = ["open", "duplicate", "wontfix", "fixed"];
@@ -39358,16 +39510,16 @@ var FindingFront = external_exports.strictObject({
   evidence: external_exports.array(external_exports.string())
 });
 function readFindings(runDir, session) {
-  const dir = join2(runDir, "findings");
-  if (!existsSync2(dir)) return [];
-  return readdirSync(dir).filter((f) => f.endsWith(".md")).sort().map((file2) => {
-    const text5 = readFileSync(join2(dir, file2), "utf8");
+  const dir = join3(runDir, "findings");
+  if (!existsSync3(dir)) return [];
+  return readdirSync2(dir).filter((f) => f.endsWith(".md")).sort().map((file2) => {
+    const text5 = readFileSync2(join3(dir, file2), "utf8");
     const f = { path: `findings/${file2}`, id: file2.slice(0, -3), source: text5, errors: [] };
     const m = splitFront(text5);
     if (!m) return { ...f, errors: ["no YAML frontmatter between --- lines"] };
     let raw2;
     try {
-      raw2 = (0, import_yaml.parse)(m[1]);
+      raw2 = (0, import_yaml2.parse)(m[1]);
     } catch (e) {
       return { ...f, errors: [`frontmatter is not valid YAML: ${e.message.split("\n")[0]}`] };
     }
@@ -39381,17 +39533,17 @@ function readFindings(runDir, session) {
     if (!session.cases.some((c) => c.id === front.case)) f.errors.push(`case ${front.case} is not a case of this run`);
     if (!f.title) f.errors.push("missing the # title line");
     for (const s of SECTIONS) if (!new RegExp(`^## ${s}$`, "m").test(m[2])) f.errors.push(`missing the ## ${s} section`);
-    for (const e of front.evidence) if (!existsSync2(join2(runDir, "evidence", e))) f.errors.push(`evidence ${e} does not exist in evidence/`);
+    for (const e of front.evidence) if (!existsSync3(join3(runDir, "evidence", e))) f.errors.push(`evidence ${e} does not exist in evidence/`);
     if (front.kind === "bug" && !front.evidence.length) f.errors.push("a bug needs evidence");
     if (front.status === "duplicate" && !front.of) f.errors.push("status duplicate needs of: PT-\u2026");
     return f;
   });
 }
 function readSession(runDir) {
-  if (!existsSync2(join2(runDir, "session.json"))) throw new Error(`${runDir} is not a run folder: it has no session.json.`);
+  if (!existsSync3(join3(runDir, "session.json"))) throw new Error(`${runDir} is not a run folder: it has no session.json.`);
   let raw2;
   try {
-    raw2 = JSON.parse(readFileSync(join2(runDir, "session.json"), "utf8"));
+    raw2 = JSON.parse(readFileSync2(join3(runDir, "session.json"), "utf8"));
   } catch (e) {
     throw new Error(`session.json is not valid JSON: ${e.message}`);
   }
@@ -39418,14 +39570,14 @@ function validateRun(runDir) {
     if (!v) errors.push(`session.json: case ${c.id} has no verdict`);
     for (const id of v?.findings ?? []) if (!ids.has(id)) errors.push(`session.json: verdict of ${c.id} lists ${id}, which has no file in findings/`);
   }
-  if (session.status === "done" && !existsSync2(join2(runDir, "report.md"))) errors.push("report.md: missing, but the run is done");
+  if (session.status === "done" && !existsSync3(join3(runDir, "report.md"))) errors.push("report.md: missing, but the run is done");
   return errors;
 }
 function previousRun(runDir, session) {
-  const dir = join2(runDir, "..");
-  return readdirSync(dir).flatMap((d) => {
+  const dir = join3(runDir, "..");
+  return readdirSync2(dir).flatMap((d) => {
     try {
-      return [readSession(join2(dir, d))];
+      return [readSession(join3(dir, d))];
     } catch {
       return [];
     }
@@ -39452,9 +39604,9 @@ function since(session, prev) {
 var log = (...a) => console.error((/* @__PURE__ */ new Date()).toISOString(), ...a);
 var { values } = parseArgs({ options: { project: { type: "string" }, port: { type: "string" } }, strict: false });
 var root3 = findProjectRoot(values.project, process.env.CLAUDE_PROJECT_DIR);
-var jeyna = join3(root3, ".jeyna");
-var playtests = join3(jeyna, "playtests");
-var indexFile = join3(jeyna, "index.json");
+var jeyna = join4(root3, ".jeyna");
+var playtests = join4(jeyna, "playtests");
+var indexFile = join4(jeyna, "index.json");
 var assets = dirname2(fileURLToPath2(import.meta.url));
 var markdown = unified().use(remarkParse);
 var html6 = unified().use(remarkRehype).use(rehypeStringify);
@@ -39464,8 +39616,8 @@ function rewriteUrls(node3, runId) {
   }
   for (const c of node3.children ?? []) rewriteUrls(c, runId);
 }
-function sections(body3, runId) {
-  const tree = markdown.parse(body3);
+function sections(body4, runId) {
+  const tree = markdown.parse(body4);
   rewriteUrls(tree, runId);
   const out = {};
   let name = "";
@@ -39492,7 +39644,7 @@ var toStudioFinding = (runId) => (f) => ({
   sections: f.front ? sections(splitFront(f.source)?.[2] ?? "", runId) : {}
 });
 function scanRun(dir) {
-  const id = basename(dir);
+  const id = basename2(dir);
   let session = null;
   let sessionError;
   try {
@@ -39507,28 +39659,28 @@ function scanRun(dir) {
     ...sessionError && { sessionError },
     errors: validateRun(dir),
     since: session ? since(session, previousRun(dir, session)) ?? null : null,
-    report: existsSync3(join3(dir, "report.md")),
+    report: existsSync4(join4(dir, "report.md")),
     findings
   };
 }
 function readApp() {
   try {
-    const c = Config.parse((0, import_yaml2.parse)(readFileSync2(join3(jeyna, "jeyna.config.yaml"), "utf8")));
+    const c = Config.parse((0, import_yaml3.parse)(readFileSync3(join4(jeyna, "jeyna.config.yaml"), "utf8")));
     return { name: c.app.name, url: c.app.url };
   } catch {
     return null;
   }
 }
 function scan() {
-  const runs = existsSync3(playtests) ? readdirSync2(playtests).filter((d) => statSync(join3(playtests, d)).isDirectory()).map((d) => scanRun(join3(playtests, d))) : [];
+  const runs = existsSync4(playtests) ? readdirSync3(playtests).filter((d) => statSync(join4(playtests, d)).isDirectory()).map((d) => scanRun(join4(playtests, d))) : [];
   runs.sort((a, b) => (b.session?.started ?? "").localeCompare(a.session?.started ?? "") || b.id.localeCompare(a.id));
-  return { schema: 1, generated: (/* @__PURE__ */ new Date()).toISOString(), root: root3, app: readApp(), runs };
+  return { schema: 1, generated: (/* @__PURE__ */ new Date()).toISOString(), root: root3, app: readApp(), runs, feedback: readFeedback(root3) };
 }
 var index2 = scan();
 var payload = JSON.stringify(index2);
 function writeIndex() {
   try {
-    writeFileSync(`${indexFile}.tmp`, payload + "\n");
+    writeFileSync2(`${indexFile}.tmp`, payload + "\n");
     renameSync(`${indexFile}.tmp`, indexFile);
   } catch (e) {
     log("index.json not written:", e.message);
@@ -39536,34 +39688,27 @@ function writeIndex() {
 }
 var clients = /* @__PURE__ */ new Set();
 var timer;
-function changed() {
+function rescan() {
   clearTimeout(timer);
-  timer = setTimeout(() => {
-    index2 = scan();
-    payload = JSON.stringify(index2);
-    writeIndex();
-    for (const res of clients) res.write(`event: index
+  index2 = scan();
+  payload = JSON.stringify(index2);
+  writeIndex();
+  for (const res of clients) res.write(`event: index
 data: ${payload}
 
 `);
-    log(`rescanned: ${index2.runs.length} runs, ${clients.size} clients`);
-  }, 150);
+  log(`rescanned: ${index2.runs.length} runs, ${index2.feedback.length} feedback, ${clients.size} clients`);
+}
+function changed() {
+  clearTimeout(timer);
+  timer = setTimeout(rescan, 150);
 }
 var watcher;
 function startWatch() {
-  if (existsSync3(playtests)) {
-    watcher?.close();
-    watcher = watch(playtests, { recursive: true }, changed);
-    log("watching", playtests);
-  } else {
-    watcher = watch(jeyna, () => {
-      if (existsSync3(playtests)) {
-        startWatch();
-        changed();
-      }
-    });
-    log("waiting for", playtests);
-  }
+  watcher = watch(jeyna, { recursive: true }, (_, file2) => {
+    if (!String(file2 ?? "").startsWith("index.json")) changed();
+  });
+  log("watching", jeyna);
 }
 var TYPES = {
   ".png": "image/png",
@@ -39578,15 +39723,51 @@ var TYPES = {
   ".json": "application/json; charset=utf-8"
 };
 function sendFile(res, path) {
-  if (!existsSync3(path) || !statSync(path).isFile()) return notFound(res);
+  if (!existsSync4(path) || !statSync(path).isFile()) return notFound(res);
   res.writeHead(200, { "content-type": TYPES[extname(path)] ?? "application/octet-stream", "cache-control": "no-cache" });
   createReadStream(path).pipe(res);
 }
 function notFound(res) {
   res.writeHead(404, { "content-type": "text/plain" }).end("not found");
 }
+function fromStudio(req) {
+  const host = req.headers.host ?? "";
+  return /^(localhost|127\.0\.0\.1)(:\d+)?$/.test(host) && req.headers.origin === `http://${host}`;
+}
+var MAX_BODY = 200 * 1024 * 1024;
+async function body3(req) {
+  const chunks = [];
+  let size = 0;
+  for await (const c of req) {
+    size += c.length;
+    if (size > MAX_BODY) throw new Error("request too large");
+    chunks.push(c);
+  }
+  return JSON.parse(Buffer.concat(chunks).toString("utf8"));
+}
+var Change = external_exports.strictObject({ status: external_exports.enum(FEEDBACK_STATUSES).optional(), text: external_exports.string().optional() });
+var json2 = (res, status, data) => res.writeHead(status, { "content-type": TYPES[".json"], "cache-control": "no-cache" }).end(JSON.stringify(data));
+async function feedbackWrite(req, res, id) {
+  if (!fromStudio(req)) return json2(res, 403, { error: "writes come from the studio page only" });
+  if (!/^application\/json\b/.test(req.headers["content-type"] ?? "") && req.method !== "DELETE") return json2(res, 415, { error: "send JSON" });
+  try {
+    let out;
+    if (req.method === "POST" && !id) out = createFeedback(root3, NewFeedback.parse(await body3(req)));
+    else if (req.method === "PATCH" && id) out = updateFeedback(root3, id, Change.parse(await body3(req)));
+    else if (req.method === "DELETE" && id) out = (deleteFeedback(root3, id), { id, deleted: true });
+    else return json2(res, 405, { error: "method not allowed" });
+    rescan();
+    return json2(res, 200, out);
+  } catch (e) {
+    const msg = e instanceof external_exports.ZodError ? e.issues.map((i) => `${i.path.join(".") || "body"}: ${i.message}`).join("; ") : e.message;
+    log("feedback write refused:", msg);
+    return json2(res, 400, { error: msg });
+  }
+}
 function handle2(req, res) {
   const url2 = new URL(req.url ?? "/", "http://localhost");
+  const item = /^\/api\/feedback(?:\/([^/]+))?$/.exec(url2.pathname);
+  if (item) return void feedbackWrite(req, res, item[1] && decodeURIComponent(item[1]));
   if (req.method !== "GET" && req.method !== "HEAD") return res.writeHead(405).end();
   if (url2.pathname === "/api/index") {
     return res.writeHead(200, { "content-type": TYPES[".json"], "cache-control": "no-cache" }).end(payload);
@@ -39609,15 +39790,23 @@ data: ${payload}
   if (evidence) {
     const [run, file2] = [decodeURIComponent(evidence[1]), decodeURIComponent(evidence[2])];
     try {
-      if (basename(file2) !== file2) throw new Error("not a file name");
-      return sendFile(res, join3(runDirOf(root3, run), "evidence", file2));
+      if (basename2(file2) !== file2) throw new Error("not a file name");
+      return sendFile(res, join4(runDirOf(root3, run), "evidence", file2));
     } catch {
       return notFound(res);
     }
   }
-  const asset = basename(url2.pathname);
-  if (["app.js", "app.css", "anchor.svg"].includes(asset)) return sendFile(res, join3(assets, asset));
-  return sendFile(res, join3(assets, "index.html"));
+  const capture = /^\/feedback-files\/([^/]+)$/.exec(url2.pathname);
+  if (capture) {
+    try {
+      return sendFile(res, feedbackFile(root3, decodeURIComponent(capture[1])));
+    } catch {
+      return notFound(res);
+    }
+  }
+  const asset = basename2(url2.pathname);
+  if (["app.js", "app.css", "anchor.svg"].includes(asset)) return sendFile(res, join4(assets, asset));
+  return sendFile(res, join4(assets, "index.html"));
 }
 var port = Number(values.port ?? process.env.JEYNA_STUDIO_PORT ?? 4710);
 var server = createServer(handle2);
@@ -39625,7 +39814,7 @@ server.listen(port, "127.0.0.1", () => {
   const { port: port2 } = server.address();
   writeIndex();
   startWatch();
-  console.log(`Jeyna studio: http://localhost:${port2}/  (watching ${playtests})`);
+  console.log(`Jeyna studio: http://localhost:${port2}/  (watching ${jeyna})`);
 });
 for (const sig of ["SIGINT", "SIGTERM"]) {
   process.on(sig, () => {

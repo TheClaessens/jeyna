@@ -4,6 +4,7 @@ import { basename, join, relative, resolve } from "node:path";
 import { parse, stringify } from "yaml";
 import { z } from "zod";
 import { closeContexts } from "./browser.js";
+import { FEEDBACK_STATUSES, type FeedbackStatus, updateFeedback } from "./feedback.js";
 import { current, endRun, fail, ok, save, type Session } from "./session.js";
 import { runDirOf, splitFront } from "./shared.js";
 import { type Finding, type FindingFront, KINDS, previousRun, readFindings, runs, SEVERITIES, since, STATUSES, validateRun } from "./validate.js";
@@ -170,10 +171,11 @@ export function registerFinishTools(server: McpServer, getContext: () => { root:
     "update_status",
     {
       description:
-        "Change a finding's status (the only mutable field, D11). During a run, mark a cross-scenario duplicate with status duplicate and of: the finding it repeats. wontfix and fixed are for later sessions. Looks in `run` if given, else the current run; with no run running, the one run holding the id. Ids repeat across runs of the same flow, so when several runs hold it, it refuses and lists them: give run.",
+        "Change a finding's status (the only mutable field, D11). During a run, mark a cross-scenario duplicate with status duplicate and of: the finding it repeats. wontfix and fixed are for later sessions. Looks in `run` if given, else the current run; with no run running, the one run holding the id. Ids repeat across runs of the same flow, so when several runs hold it, it refuses and lists them: give run. " +
+        "Also a feedback item's status (FB-001): open, processed (you implemented it; the developer still checks it), done (only on the developer's explicit OK), wontfix (D36).",
       inputSchema: {
-        id: z.string().describe("Finding id, e.g. PT-login-003"),
-        status: z.enum(STATUSES),
+        id: z.string().describe("Finding id, e.g. PT-login-003, or feedback id, e.g. FB-007"),
+        status: z.enum([...new Set([...STATUSES, ...FEEDBACK_STATUSES])] as [string, ...string[]]),
         of: z.string().optional().describe("Required for duplicate: the id of the finding this one repeats"),
         note: z.string().min(1).optional(),
         run: z.string().min(1).optional().describe("Run id holding the finding, e.g. 2026-10-15-login; needed when several runs hold the id"),
@@ -181,6 +183,13 @@ export function registerFinishTools(server: McpServer, getContext: () => { root:
     },
     async ({ id, status, of, note, run }) => {
       try {
+        if (id.startsWith("FB-")) {
+          if (!(FEEDBACK_STATUSES as readonly string[]).includes(status)) throw new Error(`A feedback item's status is one of ${FEEDBACK_STATUSES.join(", ")}, not ${status}.`);
+          if (of || run) throw new Error("of and run are for findings, not feedback.");
+          updateFeedback(getContext().root, id, { status: status as FeedbackStatus, note });
+          return ok({ id, status, path: `.jeyna/feedback/${id}.md` });
+        }
+        if (!(STATUSES as readonly string[]).includes(status)) throw new Error(`A finding's status is one of ${STATUSES.join(", ")}, not ${status}.`);
         if (status === "duplicate" && !of) throw new Error(`A duplicate needs of: the id of the finding ${id} repeats.`);
         if (status !== "duplicate" && of) throw new Error("of is only for status duplicate.");
         const holds = (d: string) => existsSync(join(d, "findings", `${id}.md`));
