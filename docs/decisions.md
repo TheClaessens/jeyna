@@ -908,3 +908,31 @@ The design canvas (boards "Claude Code mod" and "Jeyna the Crab") asks for a thr
 - **Bundle.** The committed `plugin/server/jeyna-mcp.mjs` carries pnpm's `node_modules/.pnpm/...` comment paths: build with pnpm (`pnpm-lock.yaml` in the main checkout), or an npm install rewrites 900 comment lines and `npm run check` fails on the bundle diff.
 - **Live check, done by the developer (2026-10-18, Claude Code 2.1.302).** `node sample-app/server.mjs`, then from `sample-app/` `claude --plugin-dir ../plugin`, then `/jeyna:playtest todos`: the band appeared, filled verdict by verdict, showed the report path at `session_finish` and was gone a minute later. Not looked at on purpose: how each terminal palette draws the hex colours, and line 2 on a narrow terminal (it truncates at the right edge).
 - Numbered D35 at the v0.1.0 merge: the studio branch (D34) merged first, so this decision and every `D34` reference in the mod's files were renumbered (IMPLEMENTER-RULES step 7).
+
+## D36 · 2026-10-20 · Abilities; Feedback, the second ability: captures in the studio, `/jeyna:feedback` in Claude
+
+Settled in a grilling session with the developer before any code. Ships in the next release together; the work may span several PRs: capture first (item format, studio writes, both surfaces), then the skills.
+
+**Abilities**
+- An **ability** is one of Jeyna's features, named with a World of Warcraft flavour later. It does not need a skill of its own. Playtest is the first, Feedback the second. The studio and Jeyna's Watch are surfaces, not abilities.
+
+**The item**
+- One **feedback item** = one capture + the developer's text: `.jeyna/feedback/FB-<nnn>.md` (frontmatter + text) beside its capture files. Ids are numbered across the project, not per run. An item made on evidence carries a back-reference: run, evidence file, and finding when opened from one.
+- Status: `open` → `processed` → `done`, or `wontfix`. `processed` means Claude implemented it and a person still has to check it.
+- Out of v1: several captures per item; drawing (arrows, boxes) on a capture. The crop is the pointer.
+
+**The studio writes, only under `.jeyna/feedback/`** (amends D34's "edits nothing")
+- It creates items, edits an item's text while it is `open`, sets any status, reopens and deletes. The capture of a saved item never changes; another capture is another item. Playtest files stay read-only.
+- Each item and the feedback list show the prompt to give Claude: `/jeyna:feedback FB-<nnn>`, `/jeyna:feedback`.
+
+**Captures**
+- **Snap**: one cropped PNG. **Recording**: ordered PNG frames with their timestamps, sampled every 500 ms, a frame identical to the one before dropped, at most 40 (ponytail: raise the cap if 40 proves coarse). No video file: no codec split between browsers, and Claude reads what the person sees. The studio plays a recording back as a flipbook at its real timing. "Clip" stays D9's word for video and is not used here.
+- On evidence: drag a rectangle over the PNG; a canvas crops it at full resolution. The whole PNG is the "entire screen" case. No recording on evidence: it is static.
+- On **Live**, a new studio page: an iframe of `app.url` from `jeyna.config.yaml`. Its pixels are cross-origin, so capture goes through `getDisplayMedia({preferCurrentTab: true})`, one permission prompt per capture session; snap crops a frame, a recording samples frames of the selected region. Rejected: proxying the app through the sidecar plus DOM-to-image (not real pixels), a Playwright browser in the sidecar streaming frames (a remote desktop to build). Known limits: Safari makes the developer pick the tab; an app that refuses framing shows the hint to open it in its own tab and capture that. The studio never starts the app: when `app.url` does not answer, Live shows the URL and "start your app, then reload".
+
+**In Claude**
+- `/jeyna:feedback` lists `open` and `processed` items (the latter marked "awaiting your check"): id, status, first line of text, where it was captured. No images. The developer picks one id, several ("2, 4, 6"), or a sweep. A sweep loads one item at a time and moves on when the current one is `done` or `wontfix`, or when the developer says "next" or "skip".
+- `/jeyna:feedback FB-<nnn>` loads that item in full: text, the snap or every recording frame with timestamps, and for an evidence item the finding and the full evidence PNG. Then control is the developer's: the skill does not triage or plan; the developer decides whether to just build it or discuss it first.
+- `/jeyna:feedback-next` loads the oldest `open` item.
+- After implementing, the agent sets `processed`, asks the developer to check it, and sets `done` only on their explicit OK. Never `done` on its own. The server cannot tell the agent from the developer, so this is a rule in the skill text; the studio is the other way to set `done`.
+- Status writes go through `update_status`, extended to `FB-` ids (D2: one write path, server-checked).
