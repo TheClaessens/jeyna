@@ -27,11 +27,11 @@ var __export2 = (target, all) => {
   for (var name in all)
     __defProp2(target, name, { get: all[name], enumerable: true });
 };
-var __copyProps2 = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames2(from))
+var __copyProps2 = (to, from2, except, desc) => {
+  if (from2 && typeof from2 === "object" || typeof from2 === "function") {
+    for (let key of __getOwnPropNames2(from2))
       if (!__hasOwnProp2.call(to, key) && key !== except)
-        __defProp2(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc2(from, key)) || desc.enumerable });
+        __defProp2(to, key, { get: () => from2[key], enumerable: !(desc = __getOwnPropDesc2(from2, key)) || desc.enumerable });
   }
   return to;
 };
@@ -633,17 +633,17 @@ var require_codegen = __commonJS2({
       }
     };
     var ForRange = class extends For {
-      constructor(varKind, name, from, to) {
+      constructor(varKind, name, from2, to) {
         super();
         this.varKind = varKind;
         this.name = name;
-        this.from = from;
+        this.from = from2;
         this.to = to;
       }
       render(opts) {
         const varKind = opts.es5 ? scope_1.varKinds.var : this.varKind;
-        const { name, from, to } = this;
-        return `for(${varKind} ${name}=${from}; ${name}<${to}; ${name}++)` + super.render(opts);
+        const { name, from: from2, to } = this;
+        return `for(${varKind} ${name}=${from2}; ${name}<${to}; ${name}++)` + super.render(opts);
       }
       get names() {
         const names = addExprNames(super.names, this.from);
@@ -862,9 +862,9 @@ var require_codegen = __commonJS2({
         return this._for(new ForLoop(iteration), forBody);
       }
       // `for` statement for a range of values
-      forRange(nameOrPrefix, from, to, forBody, varKind = this.opts.es5 ? scope_1.varKinds.var : scope_1.varKinds.let) {
+      forRange(nameOrPrefix, from2, to, forBody, varKind = this.opts.es5 ? scope_1.varKinds.var : scope_1.varKinds.let) {
         const name = this._scope.toName(nameOrPrefix);
-        return this._for(new ForRange(varKind, name, from, to), () => forBody(name));
+        return this._for(new ForRange(varKind, name, from2, to), () => forBody(name));
       }
       // `for-of` statement (in es5 mode replace with a normal for loop)
       forOf(nameOrPrefix, iterable, forBody, varKind = scope_1.varKinds.const) {
@@ -1003,13 +1003,13 @@ var require_codegen = __commonJS2({
       }
     };
     exports2.CodeGen = CodeGen;
-    function addNames(names, from) {
-      for (const n in from)
-        names[n] = (names[n] || 0) + (from[n] || 0);
+    function addNames(names, from2) {
+      for (const n in from2)
+        names[n] = (names[n] || 0) + (from2[n] || 0);
       return names;
     }
-    function addExprNames(names, from) {
-      return from instanceof code_1._CodeOrName ? addNames(names, from.names) : names;
+    function addExprNames(names, from2) {
+      return from2 instanceof code_1._CodeOrName ? addNames(names, from2.names) : names;
     }
     function optimizeExpr(expr2, names, constants) {
       if (expr2 instanceof code_1.Name)
@@ -1036,9 +1036,9 @@ var require_codegen = __commonJS2({
         return e instanceof code_1._Code && e._items.some((c) => c instanceof code_1.Name && names[c.str] === 1 && constants[c.str] !== void 0);
       }
     }
-    function subtractNames(names, from) {
-      for (const n in from)
-        names[n] = (names[n] || 0) - (from[n] || 0);
+    function subtractNames(names, from2) {
+      for (const n in from2)
+        names[n] = (names[n] || 0) - (from2[n] || 0);
     }
     function not(x) {
       return typeof x == "boolean" || typeof x == "number" || x === null ? !x : (0, code_1._)`!${par(x)}`;
@@ -1156,31 +1156,31 @@ var require_util = __commonJS2({
     }
     exports2.eachItem = eachItem;
     function makeMergeEvaluated({ mergeNames, mergeToName, mergeValues: mergeValues3, resultToName }) {
-      return (gen, from, to, toName) => {
-        const res = to === void 0 ? from : to instanceof codegen_1.Name ? (from instanceof codegen_1.Name ? mergeNames(gen, from, to) : mergeToName(gen, from, to), to) : from instanceof codegen_1.Name ? (mergeToName(gen, to, from), from) : mergeValues3(from, to);
+      return (gen, from2, to, toName) => {
+        const res = to === void 0 ? from2 : to instanceof codegen_1.Name ? (from2 instanceof codegen_1.Name ? mergeNames(gen, from2, to) : mergeToName(gen, from2, to), to) : from2 instanceof codegen_1.Name ? (mergeToName(gen, to, from2), from2) : mergeValues3(from2, to);
         return toName === codegen_1.Name && !(res instanceof codegen_1.Name) ? resultToName(gen, res) : res;
       };
     }
     exports2.mergeEvaluated = {
       props: makeMergeEvaluated({
-        mergeNames: (gen, from, to) => gen.if((0, codegen_1._)`${to} !== true && ${from} !== undefined`, () => {
-          gen.if((0, codegen_1._)`${from} === true`, () => gen.assign(to, true), () => gen.assign(to, (0, codegen_1._)`${to} || {}`).code((0, codegen_1._)`Object.assign(${to}, ${from})`));
+        mergeNames: (gen, from2, to) => gen.if((0, codegen_1._)`${to} !== true && ${from2} !== undefined`, () => {
+          gen.if((0, codegen_1._)`${from2} === true`, () => gen.assign(to, true), () => gen.assign(to, (0, codegen_1._)`${to} || {}`).code((0, codegen_1._)`Object.assign(${to}, ${from2})`));
         }),
-        mergeToName: (gen, from, to) => gen.if((0, codegen_1._)`${to} !== true`, () => {
-          if (from === true) {
+        mergeToName: (gen, from2, to) => gen.if((0, codegen_1._)`${to} !== true`, () => {
+          if (from2 === true) {
             gen.assign(to, true);
           } else {
             gen.assign(to, (0, codegen_1._)`${to} || {}`);
-            setEvaluated(gen, to, from);
+            setEvaluated(gen, to, from2);
           }
         }),
-        mergeValues: (from, to) => from === true ? true : { ...from, ...to },
+        mergeValues: (from2, to) => from2 === true ? true : { ...from2, ...to },
         resultToName: evaluatedPropsToName
       }),
       items: makeMergeEvaluated({
-        mergeNames: (gen, from, to) => gen.if((0, codegen_1._)`${to} !== true && ${from} !== undefined`, () => gen.assign(to, (0, codegen_1._)`${from} === true ? true : ${to} > ${from} ? ${to} : ${from}`)),
-        mergeToName: (gen, from, to) => gen.if((0, codegen_1._)`${to} !== true`, () => gen.assign(to, from === true ? true : (0, codegen_1._)`${to} > ${from} ? ${to} : ${from}`)),
-        mergeValues: (from, to) => from === true ? true : Math.max(from, to),
+        mergeNames: (gen, from2, to) => gen.if((0, codegen_1._)`${to} !== true && ${from2} !== undefined`, () => gen.assign(to, (0, codegen_1._)`${from2} === true ? true : ${to} > ${from2} ? ${to} : ${from2}`)),
+        mergeToName: (gen, from2, to) => gen.if((0, codegen_1._)`${to} !== true`, () => gen.assign(to, from2 === true ? true : (0, codegen_1._)`${to} > ${from2} ? ${to} : ${from2}`)),
+        mergeValues: (from2, to) => from2 === true ? true : Math.max(from2, to),
         resultToName: (gen, items) => gen.var("items", items)
       })
     };
@@ -9555,9 +9555,9 @@ var require_stringifyNumber = __commonJS2({
     function stringifyNumber({ format, minFractionDigits, tag, value: value2 }) {
       if (typeof value2 === "bigint")
         return String(value2);
-      const num = typeof value2 === "number" ? value2 : Number(value2);
-      if (!isFinite(num))
-        return isNaN(num) ? ".nan" : num < 0 ? "-.inf" : ".inf";
+      const num2 = typeof value2 === "number" ? value2 : Number(value2);
+      if (!isFinite(num2))
+        return isNaN(num2) ? ".nan" : num2 < 0 ? "-.inf" : ".inf";
       let n = Object.is(value2, -0) ? "-0" : JSON.stringify(value2);
       if (!format && minFractionDigits && (!tag || tag === "tag:yaml.org,2002:float") && /^-?\d/.test(n) && !n.includes("e")) {
         let i = n.indexOf(".");
@@ -9597,8 +9597,8 @@ var require_float = __commonJS2({
       test: /^[-+]?(?:\.[0-9]+|[0-9]+(?:\.[0-9]*)?)[eE][-+]?[0-9]+$/,
       resolve: (str) => parseFloat(str),
       stringify(node2) {
-        const num = Number(node2.value);
-        return isFinite(num) ? num.toExponential() : stringifyNumber.stringifyNumber(node2);
+        const num2 = Number(node2.value);
+        return isFinite(num2) ? num2.toExponential() : stringifyNumber.stringifyNumber(node2);
       }
     };
     var float = {
@@ -10037,8 +10037,8 @@ var require_float2 = __commonJS2({
       test: /^[-+]?(?:[0-9][0-9_]*)?(?:\.[0-9_]*)?[eE][-+]?[0-9]+$/,
       resolve: (str) => parseFloat(str.replace(/_/g, "")),
       stringify(node2) {
-        const num = Number(node2.value);
-        return isFinite(num) ? num.toExponential() : stringifyNumber.stringifyNumber(node2);
+        const num2 = Number(node2.value);
+        return isFinite(num2) ? num2.toExponential() : stringifyNumber.stringifyNumber(node2);
       }
     };
     var float = {
@@ -10240,23 +10240,23 @@ var require_timestamp = __commonJS2({
     function parseSexagesimal(str, asBigInt) {
       const sign = str[0];
       const parts = sign === "-" || sign === "+" ? str.substring(1) : str;
-      const num = (n) => asBigInt ? BigInt(n) : Number(n);
-      const res = parts.replace(/_/g, "").split(":").reduce((res2, p) => res2 * num(60) + num(p), num(0));
-      return sign === "-" ? num(-1) * res : res;
+      const num2 = (n) => asBigInt ? BigInt(n) : Number(n);
+      const res = parts.replace(/_/g, "").split(":").reduce((res2, p) => res2 * num2(60) + num2(p), num2(0));
+      return sign === "-" ? num2(-1) * res : res;
     }
     function stringifySexagesimal(node2) {
       let { value: value2 } = node2;
-      let num = (n) => n;
+      let num2 = (n) => n;
       if (typeof value2 === "bigint")
-        num = (n) => BigInt(n);
+        num2 = (n) => BigInt(n);
       else if (isNaN(value2) || !isFinite(value2))
         return stringifyNumber.stringifyNumber(node2);
       let sign = "";
       if (value2 < 0) {
         sign = "-";
-        value2 *= num(-1);
+        value2 *= num2(-1);
       }
-      const _60 = num(60);
+      const _60 = num2(60);
       const parts = [value2 % _60];
       if (value2 < 60) {
         parts.unshift(0);
@@ -14552,11 +14552,11 @@ var require_bootstrap = __commonJS2({
       for (var name in all)
         __defProp3(target, name, { get: all[name], enumerable: true });
     };
-    var __copyProps3 = (to, from, except, desc) => {
-      if (from && typeof from === "object" || typeof from === "function") {
-        for (let key of __getOwnPropNames3(from))
+    var __copyProps3 = (to, from2, except, desc) => {
+      if (from2 && typeof from2 === "object" || typeof from2 === "function") {
+        for (let key of __getOwnPropNames3(from2))
           if (!__hasOwnProp3.call(to, key) && key !== except)
-            __defProp3(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc3(from, key)) || desc.enumerable });
+            __defProp3(to, key, { get: () => from2[key], enumerable: !(desc = __getOwnPropDesc3(from2, key)) || desc.enumerable });
       }
       return to;
     };
@@ -14712,11 +14712,11 @@ var require_utilsBundle = __commonJS2({
       for (var name in all)
         __defProp3(target, name, { get: all[name], enumerable: true });
     };
-    var __copyProps3 = (to, from, except, desc) => {
-      if (from && typeof from === "object" || typeof from === "function") {
-        for (let key of __getOwnPropNames3(from))
+    var __copyProps3 = (to, from2, except, desc) => {
+      if (from2 && typeof from2 === "object" || typeof from2 === "function") {
+        for (let key of __getOwnPropNames3(from2))
           if (!__hasOwnProp3.call(to, key) && key !== except)
-            __defProp3(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc3(from, key)) || desc.enumerable });
+            __defProp3(to, key, { get: () => from2[key], enumerable: !(desc = __getOwnPropDesc3(from2, key)) || desc.enumerable });
       }
       return to;
     };
@@ -25803,26 +25803,26 @@ var require_utilsBundle = __commonJS2({
                 value2 = value2[0];
                 if (key === "client_max_window_bits") {
                   if (value2 !== true) {
-                    const num = +value2;
-                    if (!Number.isInteger(num) || num < 8 || num > 15) {
+                    const num2 = +value2;
+                    if (!Number.isInteger(num2) || num2 < 8 || num2 > 15) {
                       throw new TypeError(
                         `Invalid value for parameter "${key}": ${value2}`
                       );
                     }
-                    value2 = num;
+                    value2 = num2;
                   } else if (!this._isServer) {
                     throw new TypeError(
                       `Invalid value for parameter "${key}": ${value2}`
                     );
                   }
                 } else if (key === "server_max_window_bits") {
-                  const num = +value2;
-                  if (!Number.isInteger(num) || num < 8 || num > 15) {
+                  const num2 = +value2;
+                  if (!Number.isInteger(num2) || num2 < 8 || num2 > 15) {
                     throw new TypeError(
                       `Invalid value for parameter "${key}": ${value2}`
                     );
                   }
-                  value2 = num;
+                  value2 = num2;
                 } else if (key === "client_no_context_takeover" || key === "server_no_context_takeover") {
                   if (value2 !== true) {
                     throw new TypeError(
@@ -26531,8 +26531,8 @@ var require_utilsBundle = __commonJS2({
               return;
             }
             const buf = this.consume(8);
-            const num = buf.readUInt32BE(0);
-            if (num > Math.pow(2, 53 - 32) - 1) {
+            const num2 = buf.readUInt32BE(0);
+            if (num2 > Math.pow(2, 53 - 32) - 1) {
               const error512 = this.createError(
                 RangeError,
                 "Unsupported WebSocket frame: payload length > 2^53 - 1",
@@ -26543,7 +26543,7 @@ var require_utilsBundle = __commonJS2({
               cb(error512);
               return;
             }
-            this._payloadLength = num * Math.pow(2, 32) + buf.readUInt32BE(4);
+            this._payloadLength = num2 * Math.pow(2, 32) + buf.readUInt32BE(4);
             this.haveLength(cb);
           }
           /**
@@ -31408,9 +31408,9 @@ ${indent2}${end}`;
         function stringifyNumber({ format, minFractionDigits, tag, value: value2 }) {
           if (typeof value2 === "bigint")
             return String(value2);
-          const num = typeof value2 === "number" ? value2 : Number(value2);
-          if (!isFinite(num))
-            return isNaN(num) ? ".nan" : num < 0 ? "-.inf" : ".inf";
+          const num2 = typeof value2 === "number" ? value2 : Number(value2);
+          if (!isFinite(num2))
+            return isNaN(num2) ? ".nan" : num2 < 0 ? "-.inf" : ".inf";
           let n2 = Object.is(value2, -0) ? "-0" : JSON.stringify(value2);
           if (!format && minFractionDigits && (!tag || tag === "tag:yaml.org,2002:float") && /^-?\d/.test(n2) && !n2.includes("e")) {
             let i2 = n2.indexOf(".");
@@ -31448,8 +31448,8 @@ ${indent2}${end}`;
           test: /^[-+]?(?:\.[0-9]+|[0-9]+(?:\.[0-9]*)?)[eE][-+]?[0-9]+$/,
           resolve: (str) => parseFloat(str),
           stringify(node2) {
-            const num = Number(node2.value);
-            return isFinite(num) ? num.toExponential() : stringifyNumber.stringifyNumber(node2);
+            const num2 = Number(node2.value);
+            return isFinite(num2) ? num2.toExponential() : stringifyNumber.stringifyNumber(node2);
           }
         };
         var float = {
@@ -31872,8 +31872,8 @@ ${cn.comment}` : item.comment;
           test: /^[-+]?(?:[0-9][0-9_]*)?(?:\.[0-9_]*)?[eE][-+]?[0-9]+$/,
           resolve: (str) => parseFloat(str.replace(/_/g, "")),
           stringify(node2) {
-            const num = Number(node2.value);
-            return isFinite(num) ? num.toExponential() : stringifyNumber.stringifyNumber(node2);
+            const num2 = Number(node2.value);
+            return isFinite(num2) ? num2.toExponential() : stringifyNumber.stringifyNumber(node2);
           }
         };
         var float = {
@@ -32069,23 +32069,23 @@ ${cn.comment}` : item.comment;
         function parseSexagesimal(str, asBigInt) {
           const sign = str[0];
           const parts = sign === "-" || sign === "+" ? str.substring(1) : str;
-          const num = (n2) => asBigInt ? BigInt(n2) : Number(n2);
-          const res = parts.replace(/_/g, "").split(":").reduce((res2, p) => res2 * num(60) + num(p), num(0));
-          return sign === "-" ? num(-1) * res : res;
+          const num2 = (n2) => asBigInt ? BigInt(n2) : Number(n2);
+          const res = parts.replace(/_/g, "").split(":").reduce((res2, p) => res2 * num2(60) + num2(p), num2(0));
+          return sign === "-" ? num2(-1) * res : res;
         }
         function stringifySexagesimal(node2) {
           let { value: value2 } = node2;
-          let num = (n2) => n2;
+          let num2 = (n2) => n2;
           if (typeof value2 === "bigint")
-            num = (n2) => BigInt(n2);
+            num2 = (n2) => BigInt(n2);
           else if (isNaN(value2) || !isFinite(value2))
             return stringifyNumber.stringifyNumber(node2);
           let sign = "";
           if (value2 < 0) {
             sign = "-";
-            value2 *= num(-1);
+            value2 *= num2(-1);
           }
-          const _60 = num(60);
+          const _60 = num2(60);
           const parts = [value2 % _60];
           if (value2 < 60) {
             parts.unshift(0);
@@ -41535,8 +41535,8 @@ ${end.comment}` : end.comment;
           }
           number(n2) {
             this.num += n2;
-            let number42 = (num) => {
-              let i2 = Number(num);
+            let number42 = (num2) => {
+              let i2 = Number(num2);
               if (i2 > this.choices.length - 1) return this.alert();
               let focused = this.focused;
               let choice = this.choices.find((ch) => i2 === ch.index);
@@ -41562,17 +41562,17 @@ ${end.comment}` : end.comment;
             clearTimeout(this.numberTimeout);
             return new Promise((resolve32) => {
               let len = this.choices.length;
-              let num = this.num;
+              let num2 = this.num;
               let handle = (val = false, res) => {
                 clearTimeout(this.numberTimeout);
-                if (val) res = number42(num);
+                if (val) res = number42(num2);
                 this.num = "";
                 resolve32(res);
               };
-              if (num === "0" || num.length === 1 && Number(num + "0") > len) {
+              if (num2 === "0" || num2.length === 1 && Number(num2 + "0") > len) {
                 return handle(true);
               }
-              if (Number(num) > len) {
+              if (Number(num2) > len) {
                 return handle(false, this.alert());
               }
               this.numberTimeout = setTimeout(() => handle(true), this.delay);
@@ -41814,8 +41814,8 @@ ${end.comment}` : end.comment;
           get visible() {
             return (this.state.visible || this.choices).slice(0, this.limit);
           }
-          set limit(num) {
-            this.state.limit = num;
+          set limit(num2) {
+            this.state.limit = num2;
           }
           get limit() {
             let { state, options: options2, choices } = this;
@@ -42913,16 +42913,16 @@ ${end.comment}` : end.comment;
           }
           up(number42) {
             let step = number42 || this.minor;
-            let num = this.toNumber(this.input);
-            if (num > this.max + step) return this.alert();
-            this.input = `${num + step}`;
+            let num2 = this.toNumber(this.input);
+            if (num2 > this.max + step) return this.alert();
+            this.input = `${num2 + step}`;
             return this.render();
           }
           down(number42) {
             let step = number42 || this.minor;
-            let num = this.toNumber(this.input);
-            if (num < this.min - step) return this.alert();
-            this.input = `${num - step}`;
+            let num2 = this.toNumber(this.input);
+            if (num2 < this.min - step) return this.alert();
+            this.input = `${num2 - step}`;
             return this.render();
           }
           shiftDown() {
@@ -43651,14 +43651,14 @@ ${end.comment}` : end.comment;
             let ln = this.symbols.line.repeat(n2);
             let sp = " ".repeat(n2 + (isHyper ? 0 : 1));
             let dot = (enabled) => (enabled ? this.styles.success("\u25C9") : "\u25EF") + s;
-            let num = i2 + 1 + ".";
+            let num2 = i2 + 1 + ".";
             let color = focused ? this.styles.heading : this.styles.noop;
             let msg = await this.resolve(item.message, this.state, item, i2);
             let indent2 = this.indent(item);
             let scale = indent2 + item.scale.map((e, i3) => dot(i3 === item.scaleIdx)).join(ln);
             let val = (i3) => i3 === item.scaleIdx ? color(i3) : i3;
             let next = indent2 + item.scale.map((e, i3) => val(i3)).join(sp);
-            let line = () => [num, msg].filter(Boolean).join(" ");
+            let line = () => [num2, msg].filter(Boolean).join(" ");
             let lines = () => [line(), scale, next, " "].filter(Boolean).join("\n");
             if (focused) {
               scale = this.styles.cyan(scale);
@@ -44378,9 +44378,9 @@ ${end.comment}` : end.comment;
             throw new Error("input must be buffer, number, or string, received " + typeof input2);
           }
         }
-        function bufferizeInt(num) {
+        function bufferizeInt(num2) {
           const tmp = ensureBuffer(4);
-          tmp.writeInt32BE(num, 0);
+          tmp.writeInt32BE(num2, 0);
           return tmp;
         }
         function _crc32(buf, previous) {
@@ -46447,15 +46447,15 @@ ${end.comment}` : end.comment;
           }
           if (platform2 === "win32") {
             fs7.rename = typeof fs7.rename !== "function" ? fs7.rename : (function(fs$rename) {
-              function rename(from, to, cb) {
+              function rename(from2, to, cb) {
                 var start3 = Date.now();
                 var backoff = 0;
-                fs$rename(from, to, function CB(er) {
+                fs$rename(from2, to, function CB(er) {
                   if (er && (er.code === "EACCES" || er.code === "EPERM" || er.code === "EBUSY") && Date.now() - start3 < 6e4) {
                     setTimeout(function() {
                       fs7.stat(to, function(stater, st) {
                         if (stater && stater.code === "ENOENT")
-                          fs$rename(from, to, CB);
+                          fs$rename(from2, to, CB);
                         else
                           cb(er);
                       });
@@ -47956,17 +47956,17 @@ ${end.comment}` : end.comment;
           }
         };
         var ForRange = class extends For {
-          constructor(varKind, name, from, to) {
+          constructor(varKind, name, from2, to) {
             super();
             this.varKind = varKind;
             this.name = name;
-            this.from = from;
+            this.from = from2;
             this.to = to;
           }
           render(opts) {
             const varKind = opts.es5 ? scope_1.varKinds.var : this.varKind;
-            const { name, from, to } = this;
-            return `for(${varKind} ${name}=${from}; ${name}<${to}; ${name}++)` + super.render(opts);
+            const { name, from: from2, to } = this;
+            return `for(${varKind} ${name}=${from2}; ${name}<${to}; ${name}++)` + super.render(opts);
           }
           get names() {
             const names = addExprNames(super.names, this.from);
@@ -48185,9 +48185,9 @@ ${end.comment}` : end.comment;
             return this._for(new ForLoop(iteration), forBody);
           }
           // `for` statement for a range of values
-          forRange(nameOrPrefix, from, to, forBody, varKind = this.opts.es5 ? scope_1.varKinds.var : scope_1.varKinds.let) {
+          forRange(nameOrPrefix, from2, to, forBody, varKind = this.opts.es5 ? scope_1.varKinds.var : scope_1.varKinds.let) {
             const name = this._scope.toName(nameOrPrefix);
-            return this._for(new ForRange(varKind, name, from, to), () => forBody(name));
+            return this._for(new ForRange(varKind, name, from2, to), () => forBody(name));
           }
           // `for-of` statement (in es5 mode replace with a normal for loop)
           forOf(nameOrPrefix, iterable, forBody, varKind = scope_1.varKinds.const) {
@@ -48326,13 +48326,13 @@ ${end.comment}` : end.comment;
           }
         };
         exports22.CodeGen = CodeGen;
-        function addNames(names, from) {
-          for (const n2 in from)
-            names[n2] = (names[n2] || 0) + (from[n2] || 0);
+        function addNames(names, from2) {
+          for (const n2 in from2)
+            names[n2] = (names[n2] || 0) + (from2[n2] || 0);
           return names;
         }
-        function addExprNames(names, from) {
-          return from instanceof code_1._CodeOrName ? addNames(names, from.names) : names;
+        function addExprNames(names, from2) {
+          return from2 instanceof code_1._CodeOrName ? addNames(names, from2.names) : names;
         }
         function optimizeExpr(expr2, names, constants) {
           if (expr2 instanceof code_1.Name)
@@ -48359,9 +48359,9 @@ ${end.comment}` : end.comment;
             return e instanceof code_1._Code && e._items.some((c3) => c3 instanceof code_1.Name && names[c3.str] === 1 && constants[c3.str] !== void 0);
           }
         }
-        function subtractNames(names, from) {
-          for (const n2 in from)
-            names[n2] = (names[n2] || 0) - (from[n2] || 0);
+        function subtractNames(names, from2) {
+          for (const n2 in from2)
+            names[n2] = (names[n2] || 0) - (from2[n2] || 0);
         }
         function not(x) {
           return typeof x == "boolean" || typeof x == "number" || x === null ? !x : (0, code_1._)`!${par(x)}`;
@@ -48477,31 +48477,31 @@ ${end.comment}` : end.comment;
         }
         exports22.eachItem = eachItem;
         function makeMergeEvaluated({ mergeNames, mergeToName, mergeValues: mergeValues32, resultToName }) {
-          return (gen, from, to, toName) => {
-            const res = to === void 0 ? from : to instanceof codegen_1.Name ? (from instanceof codegen_1.Name ? mergeNames(gen, from, to) : mergeToName(gen, from, to), to) : from instanceof codegen_1.Name ? (mergeToName(gen, to, from), from) : mergeValues32(from, to);
+          return (gen, from2, to, toName) => {
+            const res = to === void 0 ? from2 : to instanceof codegen_1.Name ? (from2 instanceof codegen_1.Name ? mergeNames(gen, from2, to) : mergeToName(gen, from2, to), to) : from2 instanceof codegen_1.Name ? (mergeToName(gen, to, from2), from2) : mergeValues32(from2, to);
             return toName === codegen_1.Name && !(res instanceof codegen_1.Name) ? resultToName(gen, res) : res;
           };
         }
         exports22.mergeEvaluated = {
           props: makeMergeEvaluated({
-            mergeNames: (gen, from, to) => gen.if((0, codegen_1._)`${to} !== true && ${from} !== undefined`, () => {
-              gen.if((0, codegen_1._)`${from} === true`, () => gen.assign(to, true), () => gen.assign(to, (0, codegen_1._)`${to} || {}`).code((0, codegen_1._)`Object.assign(${to}, ${from})`));
+            mergeNames: (gen, from2, to) => gen.if((0, codegen_1._)`${to} !== true && ${from2} !== undefined`, () => {
+              gen.if((0, codegen_1._)`${from2} === true`, () => gen.assign(to, true), () => gen.assign(to, (0, codegen_1._)`${to} || {}`).code((0, codegen_1._)`Object.assign(${to}, ${from2})`));
             }),
-            mergeToName: (gen, from, to) => gen.if((0, codegen_1._)`${to} !== true`, () => {
-              if (from === true) {
+            mergeToName: (gen, from2, to) => gen.if((0, codegen_1._)`${to} !== true`, () => {
+              if (from2 === true) {
                 gen.assign(to, true);
               } else {
                 gen.assign(to, (0, codegen_1._)`${to} || {}`);
-                setEvaluated(gen, to, from);
+                setEvaluated(gen, to, from2);
               }
             }),
-            mergeValues: (from, to) => from === true ? true : { ...from, ...to },
+            mergeValues: (from2, to) => from2 === true ? true : { ...from2, ...to },
             resultToName: evaluatedPropsToName
           }),
           items: makeMergeEvaluated({
-            mergeNames: (gen, from, to) => gen.if((0, codegen_1._)`${to} !== true && ${from} !== undefined`, () => gen.assign(to, (0, codegen_1._)`${from} === true ? true : ${to} > ${from} ? ${to} : ${from}`)),
-            mergeToName: (gen, from, to) => gen.if((0, codegen_1._)`${to} !== true`, () => gen.assign(to, from === true ? true : (0, codegen_1._)`${to} > ${from} ? ${to} : ${from}`)),
-            mergeValues: (from, to) => from === true ? true : Math.max(from, to),
+            mergeNames: (gen, from2, to) => gen.if((0, codegen_1._)`${to} !== true && ${from2} !== undefined`, () => gen.assign(to, (0, codegen_1._)`${from2} === true ? true : ${to} > ${from2} ? ${to} : ${from2}`)),
+            mergeToName: (gen, from2, to) => gen.if((0, codegen_1._)`${to} !== true`, () => gen.assign(to, from2 === true ? true : (0, codegen_1._)`${to} > ${from2} ? ${to} : ${from2}`)),
+            mergeValues: (from2, to) => from2 === true ? true : Math.max(from2, to),
             resultToName: (gen, items) => gen.var("items", items)
           })
         };
@@ -54869,17 +54869,17 @@ ${end.comment}` : end.comment;
           }
         };
         var ForRange = class extends For {
-          constructor(varKind, name, from, to) {
+          constructor(varKind, name, from2, to) {
             super();
             this.varKind = varKind;
             this.name = name;
-            this.from = from;
+            this.from = from2;
             this.to = to;
           }
           render(opts) {
             const varKind = opts.es5 ? scope_1.varKinds.var : this.varKind;
-            const { name, from, to } = this;
-            return `for(${varKind} ${name}=${from}; ${name}<${to}; ${name}++)` + super.render(opts);
+            const { name, from: from2, to } = this;
+            return `for(${varKind} ${name}=${from2}; ${name}<${to}; ${name}++)` + super.render(opts);
           }
           get names() {
             const names = addExprNames(super.names, this.from);
@@ -55098,9 +55098,9 @@ ${end.comment}` : end.comment;
             return this._for(new ForLoop(iteration), forBody);
           }
           // `for` statement for a range of values
-          forRange(nameOrPrefix, from, to, forBody, varKind = this.opts.es5 ? scope_1.varKinds.var : scope_1.varKinds.let) {
+          forRange(nameOrPrefix, from2, to, forBody, varKind = this.opts.es5 ? scope_1.varKinds.var : scope_1.varKinds.let) {
             const name = this._scope.toName(nameOrPrefix);
-            return this._for(new ForRange(varKind, name, from, to), () => forBody(name));
+            return this._for(new ForRange(varKind, name, from2, to), () => forBody(name));
           }
           // `for-of` statement (in es5 mode replace with a normal for loop)
           forOf(nameOrPrefix, iterable, forBody, varKind = scope_1.varKinds.const) {
@@ -55239,13 +55239,13 @@ ${end.comment}` : end.comment;
           }
         };
         exports22.CodeGen = CodeGen;
-        function addNames(names, from) {
-          for (const n2 in from)
-            names[n2] = (names[n2] || 0) + (from[n2] || 0);
+        function addNames(names, from2) {
+          for (const n2 in from2)
+            names[n2] = (names[n2] || 0) + (from2[n2] || 0);
           return names;
         }
-        function addExprNames(names, from) {
-          return from instanceof code_1._CodeOrName ? addNames(names, from.names) : names;
+        function addExprNames(names, from2) {
+          return from2 instanceof code_1._CodeOrName ? addNames(names, from2.names) : names;
         }
         function optimizeExpr(expr2, names, constants) {
           if (expr2 instanceof code_1.Name)
@@ -55272,9 +55272,9 @@ ${end.comment}` : end.comment;
             return e instanceof code_1._Code && e._items.some((c3) => c3 instanceof code_1.Name && names[c3.str] === 1 && constants[c3.str] !== void 0);
           }
         }
-        function subtractNames(names, from) {
-          for (const n2 in from)
-            names[n2] = (names[n2] || 0) - (from[n2] || 0);
+        function subtractNames(names, from2) {
+          for (const n2 in from2)
+            names[n2] = (names[n2] || 0) - (from2[n2] || 0);
         }
         function not(x) {
           return typeof x == "boolean" || typeof x == "number" || x === null ? !x : (0, code_1._)`!${par(x)}`;
@@ -55390,31 +55390,31 @@ ${end.comment}` : end.comment;
         }
         exports22.eachItem = eachItem;
         function makeMergeEvaluated({ mergeNames, mergeToName, mergeValues: mergeValues32, resultToName }) {
-          return (gen, from, to, toName) => {
-            const res = to === void 0 ? from : to instanceof codegen_1.Name ? (from instanceof codegen_1.Name ? mergeNames(gen, from, to) : mergeToName(gen, from, to), to) : from instanceof codegen_1.Name ? (mergeToName(gen, to, from), from) : mergeValues32(from, to);
+          return (gen, from2, to, toName) => {
+            const res = to === void 0 ? from2 : to instanceof codegen_1.Name ? (from2 instanceof codegen_1.Name ? mergeNames(gen, from2, to) : mergeToName(gen, from2, to), to) : from2 instanceof codegen_1.Name ? (mergeToName(gen, to, from2), from2) : mergeValues32(from2, to);
             return toName === codegen_1.Name && !(res instanceof codegen_1.Name) ? resultToName(gen, res) : res;
           };
         }
         exports22.mergeEvaluated = {
           props: makeMergeEvaluated({
-            mergeNames: (gen, from, to) => gen.if((0, codegen_1._)`${to} !== true && ${from} !== undefined`, () => {
-              gen.if((0, codegen_1._)`${from} === true`, () => gen.assign(to, true), () => gen.assign(to, (0, codegen_1._)`${to} || {}`).code((0, codegen_1._)`Object.assign(${to}, ${from})`));
+            mergeNames: (gen, from2, to) => gen.if((0, codegen_1._)`${to} !== true && ${from2} !== undefined`, () => {
+              gen.if((0, codegen_1._)`${from2} === true`, () => gen.assign(to, true), () => gen.assign(to, (0, codegen_1._)`${to} || {}`).code((0, codegen_1._)`Object.assign(${to}, ${from2})`));
             }),
-            mergeToName: (gen, from, to) => gen.if((0, codegen_1._)`${to} !== true`, () => {
-              if (from === true) {
+            mergeToName: (gen, from2, to) => gen.if((0, codegen_1._)`${to} !== true`, () => {
+              if (from2 === true) {
                 gen.assign(to, true);
               } else {
                 gen.assign(to, (0, codegen_1._)`${to} || {}`);
-                setEvaluated(gen, to, from);
+                setEvaluated(gen, to, from2);
               }
             }),
-            mergeValues: (from, to) => from === true ? true : { ...from, ...to },
+            mergeValues: (from2, to) => from2 === true ? true : { ...from2, ...to },
             resultToName: evaluatedPropsToName
           }),
           items: makeMergeEvaluated({
-            mergeNames: (gen, from, to) => gen.if((0, codegen_1._)`${to} !== true && ${from} !== undefined`, () => gen.assign(to, (0, codegen_1._)`${from} === true ? true : ${to} > ${from} ? ${to} : ${from}`)),
-            mergeToName: (gen, from, to) => gen.if((0, codegen_1._)`${to} !== true`, () => gen.assign(to, from === true ? true : (0, codegen_1._)`${to} > ${from} ? ${to} : ${from}`)),
-            mergeValues: (from, to) => from === true ? true : Math.max(from, to),
+            mergeNames: (gen, from2, to) => gen.if((0, codegen_1._)`${to} !== true && ${from2} !== undefined`, () => gen.assign(to, (0, codegen_1._)`${from2} === true ? true : ${to} > ${from2} ? ${to} : ${from2}`)),
+            mergeToName: (gen, from2, to) => gen.if((0, codegen_1._)`${to} !== true`, () => gen.assign(to, from2 === true ? true : (0, codegen_1._)`${to} > ${from2} ? ${to} : ${from2}`)),
+            mergeValues: (from2, to) => from2 === true ? true : Math.max(from2, to),
             resultToName: (gen, items) => gen.var("items", items)
           })
         };
@@ -99473,11 +99473,11 @@ var require_coreBundle = __commonJS2({
       for (var name in all)
         __defProp(target, name, { get: all[name], enumerable: true });
     };
-    var __copyProps = (to, from, except, desc) => {
-      if (from && typeof from === "object" || typeof from === "function") {
-        for (let key of __getOwnPropNames(from))
+    var __copyProps = (to, from2, except, desc) => {
+      if (from2 && typeof from2 === "object" || typeof from2 === "function") {
+        for (let key of __getOwnPropNames(from2))
           if (!__hasOwnProp.call(to, key) && key !== except)
-            __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+            __defProp(to, key, { get: () => from2[key], enumerable: !(desc = __getOwnPropDesc(from2, key)) || desc.enumerable });
       }
       return to;
     };
@@ -99695,7 +99695,7 @@ var require_coreBundle = __commonJS2({
         normalized: normalizeWhitespace(value2)
       };
     }
-    function findNewNode(from, to) {
+    function findNewNode(from2, to) {
       function fillMap(root, map2, position) {
         let size = 1;
         let childPosition = position + size;
@@ -99722,8 +99722,8 @@ var require_coreBundle = __commonJS2({
         return size;
       }
       const fromMap = /* @__PURE__ */ new Map();
-      if (from)
-        fillMap(from, fromMap, 0);
+      if (from2)
+        fillMap(from2, fromMap, 0);
       const toMap = /* @__PURE__ */ new Map();
       fillMap(to, toMap, 0);
       const result2 = [];
@@ -100439,11 +100439,11 @@ ${escaped2}
         for (let x = 0; x < size.width; x++) {
           const to = (y * size.width + x) * 4;
           if (y < image.height && x < image.width) {
-            const from = (y * image.width + x) * 4;
-            buffer[to] = image.data[from];
-            buffer[to + 1] = image.data[from + 1];
-            buffer[to + 2] = image.data[from + 2];
-            buffer[to + 3] = image.data[from + 3];
+            const from2 = (y * image.width + x) * 4;
+            buffer[to] = image.data[from2];
+            buffer[to + 1] = image.data[from2 + 1];
+            buffer[to + 2] = image.data[from2 + 2];
+            buffer[to + 3] = image.data[from2 + 3];
           } else {
             buffer[to] = 0;
             buffer[to + 1] = 0;
@@ -100777,22 +100777,22 @@ ${escaped2}
           return -1;
         return str[i2];
       };
-      const next = function(num) {
-        if (num === void 0)
-          num = 1;
-        if (num > 3)
+      const next = function(num2) {
+        if (num2 === void 0)
+          num2 = 1;
+        if (num2 > 3)
           throw "Spec Error: no more than three codepoints of lookahead.";
-        return codepoint(i + num);
+        return codepoint(i + num2);
       };
-      const consume = function(num) {
-        if (num === void 0)
-          num = 1;
-        i += num;
+      const consume = function(num2) {
+        if (num2 === void 0)
+          num2 = 1;
+        i += num2;
         code = codepoint(i);
         if (newline(code))
           incrLineno();
         else
-          column += num;
+          column += num2;
         return true;
       };
       const reconsume = function() {
@@ -100968,25 +100968,25 @@ ${escaped2}
         }
       };
       const consumeANumericToken = function() {
-        const num = consumeANumber();
+        const num2 = consumeANumber();
         if (wouldStartAnIdentifier(next(1), next(2), next(3))) {
           const token = new DimensionToken();
-          token.value = num.value;
-          token.repr = num.repr;
-          token.type = num.type;
+          token.value = num2.value;
+          token.repr = num2.repr;
+          token.type = num2.type;
           token.unit = consumeAName();
           return token;
         } else if (next() === 37) {
           consume();
           const token = new PercentageToken();
-          token.value = num.value;
-          token.repr = num.repr;
+          token.value = num2.value;
+          token.repr = num2.repr;
           return token;
         } else {
           const token = new NumberToken();
-          token.value = num.value;
-          token.repr = num.repr;
-          token.type = num.type;
+          token.value = num2.value;
+          token.repr = num2.repr;
+          token.type = num2.type;
           return token;
         }
       };
@@ -101315,8 +101315,8 @@ ${escaped2}
     var init_cssTokenizer = __esm({
       "packages/isomorphic/cssTokenizer.ts"() {
         "use strict";
-        between = function(num, first, last) {
-          return num >= first && num <= last;
+        between = function(num2, first, last) {
+          return num2 >= first && num2 <= last;
         };
         maximumallowedcodepoint = 1114111;
         InvalidCharacterError = class extends Error {
@@ -108500,8 +108500,8 @@ ${escaped2}
       }
       return resolved === "/";
     }
-    async function copyFileAndMakeWritable(from, to) {
-      await import_fs3.default.promises.copyFile(from, to);
+    async function copyFileAndMakeWritable(from2, to) {
+      await import_fs3.default.promises.copyFile(from2, to);
       await import_fs3.default.promises.chmod(to, 436);
     }
     function addSuffixToFilePath(filePath, suffix) {
@@ -109713,10 +109713,10 @@ ${lines.join("\n")}`;
             this._buffers.delete(file2);
             this._appendOperation({ op: "appendFile", file: file2, content });
           }
-          copyFile(from, to) {
-            this._flushFile(from);
+          copyFile(from2, to) {
+            this._flushFile(from2);
             this._buffers.delete(to);
-            this._appendOperation({ op: "copyFile", from, to });
+            this._appendOperation({ op: "copyFile", from: from2, to });
           }
           async sync() {
             for (const file2 of this._buffers.keys())
@@ -140542,8 +140542,8 @@ ${Buffer.concat(chunks)}` : errorPrefix;
         };
       }
     });
-    function copyTestHooks(from, to) {
-      for (const [key, value2] of Object.entries(from)) {
+    function copyTestHooks(from2, to) {
+      for (const [key, value2] of Object.entries(from2)) {
         if (key.startsWith("__testHook"))
           to[key] = value2;
       }
@@ -164190,11 +164190,11 @@ ${value2}`;
           async tap(point) {
             await this._device._channel.inputTap({ point }, kNoTimeout);
           }
-          async swipe(from, segments, steps) {
-            await this._device._channel.inputSwipe({ segments: [from, ...segments], steps }, kNoTimeout);
+          async swipe(from2, segments, steps) {
+            await this._device._channel.inputSwipe({ segments: [from2, ...segments], steps }, kNoTimeout);
           }
-          async drag(from, to, steps) {
-            await this._device._channel.inputDrag({ from, to, steps }, kNoTimeout);
+          async drag(from2, to, steps) {
+            await this._device._channel.inputDrag({ from: from2, to, steps }, kNoTimeout);
           }
         };
         AndroidWebView = class extends EventEmitter2 {
@@ -173889,9 +173889,9 @@ to start the browser session.`);
       const trimmed = value2.trim();
       if (trimmed === "")
         return trimmed;
-      const num = Number(trimmed);
-      if (!isNaN(num))
-        return num;
+      const num2 = Number(trimmed);
+      if (!isNaN(num2))
+        return num2;
       return value2;
     }
     function setNestedValue(obj, dotPath, value2) {
@@ -207227,14 +207227,14 @@ function runDirOf(root, run) {
   return dir;
 }
 function findProjectRoot(...candidates) {
-  const from = process.cwd();
+  const from2 = process.cwd();
   for (const c of candidates) if (typeof c === "string" && c !== "" && !c.includes("${")) return resolve(c);
-  for (let dir = from; ; dir = dirname(dir)) {
+  for (let dir = from2; ; dir = dirname(dir)) {
     if (existsSync2(join2(dir, ".jeyna"))) return dir;
     if (dirname(dir) === dir) break;
   }
   throw new Error(
-    "Jeyna could not find the project root: no --project argument, no CLAUDE_PROJECT_DIR, and no .jeyna/ folder above " + from + ". Start Claude Code in your project folder."
+    "Jeyna could not find the project root: no --project argument, no CLAUDE_PROJECT_DIR, and no .jeyna/ folder above " + from2 + ". Start Claude Code in your project folder."
   );
 }
 
@@ -207965,6 +207965,33 @@ function itemFile(root, id) {
   if (!existsSync6(path)) throw new Error(`No feedback ${id} under .jeyna/feedback/.`);
   return path;
 }
+function readFeedback(root) {
+  const dir = feedbackDir(root);
+  if (!existsSync6(dir)) return [];
+  return readdirSync4(dir).filter((f) => /^FB-\d{3,}\.md$/.test(f)).sort((a, b) => num(a) - num(b)).map((file2) => {
+    const source14 = readFileSync4(join7(dir, file2), "utf8");
+    const item = { path: file2, id: file2.slice(0, -3), text: "", source: source14, errors: [] };
+    const m = splitFront(source14);
+    if (!m) return { ...item, errors: ["no YAML frontmatter between --- lines"] };
+    item.text = m[2].trim();
+    let raw;
+    try {
+      raw = (0, import_yaml3.parse)(m[1]);
+    } catch (e) {
+      return { ...item, errors: [`frontmatter is not valid YAML: ${e.message.split("\n")[0]}`] };
+    }
+    const r = FeedbackFront.safeParse(raw);
+    if (!r.success) return { ...item, errors: r.error.issues.map((i) => `frontmatter ${i.path.join(".") || "(root)"}: ${i.message}`) };
+    const front = item.front = r.data;
+    if (front.id !== item.id) item.errors.push(`id ${front.id} does not match the file name`);
+    if (front.capture === "snap" && front.frames.length !== 1) item.errors.push("a snap has exactly one frame");
+    if (front.source === "evidence" && !(front.run && front.evidence)) item.errors.push("feedback on evidence names its run and evidence");
+    for (const f of front.frames) if (!existsSync6(join7(dir, f.file))) item.errors.push(`capture ${f.file} does not exist in .jeyna/feedback/`);
+    if (!item.text) item.errors.push("no feedback text");
+    return item;
+  });
+}
+var num = (file2) => Number(/^FB-(\d+)/.exec(file2)?.[1] ?? 0);
 var NewFeedback = external_exports.strictObject({
   text: external_exports.string().trim().min(1, "write what should change"),
   capture: external_exports.enum(["snap", "recording"]),
@@ -208334,7 +208361,63 @@ ${m[2]}`);
       }
     }
   );
+  server3.registerTool(
+    "get_feedback",
+    {
+      description: "The developer's feedback from Jeyna studio (D36). No arguments: the items still to do, oldest first (open, and processed ones awaiting the developer's check), one line each, no images. id: that item in full: its text, every capture frame as an image (a recording's frames in order, with their time), and for feedback on evidence the finding's file and the whole evidence image. next: the same for the oldest open item.",
+      inputSchema: {
+        id: external_exports.string().optional().describe("Feedback id, e.g. FB-007"),
+        next: external_exports.boolean().optional().describe("Load the oldest open item")
+      },
+      annotations: { readOnlyHint: true }
+    },
+    async ({ id, next }) => {
+      try {
+        if (id && next) throw new Error("Give id or next, not both.");
+        const root = getContext2().root;
+        const items = readFeedback(root);
+        if (!id && !next) {
+          return ok({
+            todo: items.filter((i) => i.front?.status === "open" || i.front?.status === "processed").map((i) => ({
+              id: i.id,
+              status: i.front.status,
+              title: i.text.split("\n")[0],
+              capture: i.front.capture,
+              frames: i.front.frames.length,
+              from: from(i)
+            })),
+            broken: items.filter((i) => !i.front).map((i) => ({ id: i.id, errors: i.errors }))
+          });
+        }
+        const item = next ? items.find((i) => i.front?.status === "open") : items.find((i) => i.id === id);
+        if (!item) throw new Error(next ? "No open feedback under .jeyna/feedback/." : `No feedback ${id} under .jeyna/feedback/.`);
+        const fr = item.front;
+        if (!fr) throw new Error(`.jeyna/feedback/${item.path} does not parse: ${item.errors.join("; ")}. The developer fixes or deletes it in the studio.`);
+        const png = (path) => ({ type: "image", data: readFileSync6(path).toString("base64"), mimeType: "image/png" });
+        const content = [
+          { type: "text", text: JSON.stringify({ id: item.id, status: fr.status, ...fr.note && { note: fr.note }, capture: fr.capture, from: from(item), created: fr.created, text: item.text, path: `.jeyna/feedback/${item.path}`, ...item.errors.length && { errors: item.errors } }) }
+        ];
+        fr.frames.forEach((f, i) => {
+          if (fr.capture === "recording") content.push({ type: "text", text: `Frame ${i + 1} of ${fr.frames.length} at ${(f.ms / 1e3).toFixed(1)} s` });
+          if (existsSync8(join9(feedbackDir(root), f.file))) content.push(png(join9(feedbackDir(root), f.file)));
+        });
+        if (fr.source === "evidence") {
+          const run = runDirOf(root, fr.run);
+          const finding = fr.finding && join9(run, "findings", `${basename3(fr.finding)}.md`);
+          if (finding && existsSync8(finding)) content.push({ type: "text", text: `The finding this was given on, ${fr.finding} (run ${fr.run}):
+
+${readFileSync6(finding, "utf8")}` });
+          const evidence = join9(run, "evidence", basename3(fr.evidence));
+          if (existsSync8(evidence)) content.push({ type: "text", text: `The whole evidence image ${fr.evidence}; the capture above is cropped from it:` }, png(evidence));
+        }
+        return { content };
+      } catch (e) {
+        return fail(e);
+      }
+    }
+  );
 }
+var from = (i) => i.front?.source === "evidence" ? `${i.front.finding ?? i.front.run} \xB7 ${i.front.evidence}` : "Live";
 
 // src/server.ts
 var log3 = (...a) => console.error((/* @__PURE__ */ new Date()).toISOString(), ...a);

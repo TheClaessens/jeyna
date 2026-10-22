@@ -6,6 +6,7 @@ import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync,
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 import { afterEach, beforeAll, expect, test } from "vitest";
+import { createFeedback } from "./feedback.js";
 
 let bundle: string;
 const clients: Client[] = [];
@@ -259,4 +260,40 @@ test("update_status sets a feedback item's status; finding-only statuses and arg
   expect(text(await call("update_status", { id: "PT-login-001", status: "processed" }))).toBe("A finding's status is one of open, duplicate, wontfix, fixed, not processed.");
   expect((await call("update_status", { id: "FB-001", status: "done", run: "x" })).isError).toBe(true);
   expect(text(await call("update_status", { id: "FB-002", status: "done" }))).toBe("No feedback FB-002 under .jeyna/feedback/.");
+});
+
+test("get_feedback lists what is to do without images, loads one item with its frames, and next takes the oldest open one (D36)", async () => {
+  const { root, call, text, runDir } = await started();
+  const png = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
+  const finding = JSON.parse(text(await call("record_finding", { case: "t1-390x844", finding: A11Y }))).id;
+  writeFileSync(join(runDir, "evidence", "t1-390x844-1-login.png"), Buffer.from(png, "base64"));
+  const run = basename(runDir);
+  createFeedback(root, { text: "Done already", capture: "snap", frames: [{ png, ms: 0 }], source: "live" });
+  createFeedback(root, { text: "Label above the field\nlike the email one", capture: "snap", frames: [{ png, ms: 0 }], source: "evidence", run, evidence: "t1-390x844-1-login.png", finding });
+  createFeedback(root, { text: "Spinner flickers", capture: "recording", frames: [{ png, ms: 0 }, { png, ms: 1500 }], source: "live" });
+  await call("update_status", { id: "FB-001", status: "done" });
+  await call("update_status", { id: "FB-002", status: "processed" });
+
+  const list = await call("get_feedback");
+  expect(list.content).toHaveLength(1);
+  expect(JSON.parse(text(list))).toEqual({
+    todo: [
+      { id: "FB-002", status: "processed", title: "Label above the field", capture: "snap", frames: 1, from: `${finding} · t1-390x844-1-login.png` },
+      { id: "FB-003", status: "open", title: "Spinner flickers", capture: "recording", frames: 2, from: "Live" },
+    ],
+    broken: [],
+  });
+
+  const one = (await call("get_feedback", { id: "FB-002" })) as unknown as { content: { type: string; text?: string }[] };
+  expect(one.content.map((c) => c.type)).toEqual(["text", "image", "text", "text", "image"]);
+  expect(JSON.parse(one.content[0].text!)).toMatchObject({ id: "FB-002", status: "processed", text: "Label above the field\nlike the email one", path: ".jeyna/feedback/FB-002.md" });
+  expect(one.content[2].text).toContain(A11Y.actual);
+
+  const next = (await call("get_feedback", { next: true })) as unknown as { content: { type: string; text?: string }[] };
+  expect(JSON.parse(next.content[0].text!).id).toBe("FB-003");
+  expect(next.content.map((c) => c.text ?? c.type)).toEqual([next.content[0].text, "Frame 1 of 2 at 0.0 s", "image", "Frame 2 of 2 at 1.5 s", "image"]);
+
+  expect(text(await call("get_feedback", { id: "FB-009" }))).toBe("No feedback FB-009 under .jeyna/feedback/.");
+  await call("update_status", { id: "FB-003", status: "wontfix" });
+  expect(text(await call("get_feedback", { next: true }))).toBe("No open feedback under .jeyna/feedback/.");
 });

@@ -4,7 +4,7 @@ import { basename, join, relative, resolve } from "node:path";
 import { parse, stringify } from "yaml";
 import { z } from "zod";
 import { closeContexts } from "./browser.js";
-import { FEEDBACK_STATUSES, type FeedbackStatus, updateFeedback } from "./feedback.js";
+import { FEEDBACK_STATUSES, type FeedbackItem, feedbackDir, type FeedbackStatus, readFeedback, updateFeedback } from "./feedback.js";
 import { current, endRun, fail, ok, save, type Session } from "./session.js";
 import { runDirOf, splitFront } from "./shared.js";
 import { type Finding, type FindingFront, KINDS, previousRun, readFindings, runs, SEVERITIES, since, STATUSES, validateRun } from "./validate.js";
@@ -228,4 +228,57 @@ export function registerFinishTools(server: McpServer, getContext: () => { root:
       }
     },
   );
+
+  server.registerTool(
+    "get_feedback",
+    {
+      description:
+        "The developer's feedback from Jeyna studio (D36). No arguments: the items still to do, oldest first (open, and processed ones awaiting the developer's check), one line each, no images. " +
+        "id: that item in full: its text, every capture frame as an image (a recording's frames in order, with their time), and for feedback on evidence the finding's file and the whole evidence image. next: the same for the oldest open item.",
+      inputSchema: {
+        id: z.string().optional().describe("Feedback id, e.g. FB-007"),
+        next: z.boolean().optional().describe("Load the oldest open item"),
+      },
+      annotations: { readOnlyHint: true },
+    },
+    async ({ id, next }) => {
+      try {
+        if (id && next) throw new Error("Give id or next, not both.");
+        const root = getContext().root;
+        const items = readFeedback(root);
+        if (!id && !next) {
+          return ok({
+            todo: items.filter((i) => i.front?.status === "open" || i.front?.status === "processed").map((i) => ({
+              id: i.id, status: i.front!.status, title: i.text.split("\n")[0], capture: i.front!.capture, frames: i.front!.frames.length, from: from(i),
+            })),
+            broken: items.filter((i) => !i.front).map((i) => ({ id: i.id, errors: i.errors })),
+          });
+        }
+        const item = next ? items.find((i) => i.front?.status === "open") : items.find((i) => i.id === id);
+        if (!item) throw new Error(next ? "No open feedback under .jeyna/feedback/." : `No feedback ${id} under .jeyna/feedback/.`);
+        const fr = item.front;
+        if (!fr) throw new Error(`.jeyna/feedback/${item.path} does not parse: ${item.errors.join("; ")}. The developer fixes or deletes it in the studio.`);
+        const png = (path: string) => ({ type: "image" as const, data: readFileSync(path).toString("base64"), mimeType: "image/png" });
+        const content: ({ type: "text"; text: string } | ReturnType<typeof png>)[] = [
+          { type: "text", text: JSON.stringify({ id: item.id, status: fr.status, ...(fr.note && { note: fr.note }), capture: fr.capture, from: from(item), created: fr.created, text: item.text, path: `.jeyna/feedback/${item.path}`, ...(item.errors.length && { errors: item.errors }) }) },
+        ];
+        fr.frames.forEach((f, i) => {
+          if (fr.capture === "recording") content.push({ type: "text", text: `Frame ${i + 1} of ${fr.frames.length} at ${(f.ms / 1000).toFixed(1)} s` });
+          if (existsSync(join(feedbackDir(root), f.file))) content.push(png(join(feedbackDir(root), f.file)));
+        });
+        if (fr.source === "evidence") {
+          const run = runDirOf(root, fr.run!);
+          const finding = fr.finding && join(run, "findings", `${basename(fr.finding)}.md`);
+          if (finding && existsSync(finding)) content.push({ type: "text", text: `The finding this was given on, ${fr.finding} (run ${fr.run}):\n\n${readFileSync(finding, "utf8")}` });
+          const evidence = join(run, "evidence", basename(fr.evidence!));
+          if (existsSync(evidence)) content.push({ type: "text", text: `The whole evidence image ${fr.evidence}; the capture above is cropped from it:` }, png(evidence));
+        }
+        return { content };
+      } catch (e) {
+        return fail(e);
+      }
+    },
+  );
 }
+
+const from = (i: FeedbackItem) => (i.front?.source === "evidence" ? `${i.front.finding ?? i.front.run} · ${i.front.evidence}` : "Live");
