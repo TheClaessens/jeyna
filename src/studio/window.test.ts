@@ -131,6 +131,25 @@ test("⌥⇧R records an area while the app is used, across a navigation; ⌥⇧
   expect(bytes.size).toBeGreaterThan(1); // the typing is in the frames
 }, 60_000);
 
+test("reviewing a whole-window recording keeps the text panel in view (D37)", async () => {
+  await page.goto(app.url);
+  await page.waitForFunction(() => !!document.querySelector("jeyna-capture"));
+  await page.keyboard.press("Alt+Shift+KeyR");
+  await overlayUp();
+  await page.keyboard.press("a"); // the whole window: the timer docks on the bottom edge and the region gives way
+  await page.keyboard.press("Enter");
+  await expect.poll(() => live.state().recording).toBe(true);
+  await page.waitForTimeout(800);
+  await page.keyboard.press("Alt+Shift+KeyR");
+  await overlayUp();
+  // Nothing fits beside a region that fills the window, so the panel docks in a corner, whole: 200 CSS px up from the
+  // bottom left is inside it, white, not the shaded frame. Placed with the size it had before its dialog opened (none),
+  // it sat just under the region and ran off the bottom.
+  expect(await pixel(await page.screenshot({ type: "png" }), 40, (600 - 200) * 2)).toEqual([255, 255, 255, 255]);
+  await page.keyboard.press("Escape"); // nothing written: the recording is let go
+  await expect.poll(() => live.state().capturing).toBe(false);
+}, 60_000);
+
 test("only the app's main frame may call the bridge: not a frame inside it, not another origin (D37)", async () => {
   await page.evaluate((src) => new Promise((r) => document.body.append(Object.assign(document.createElement("iframe"), { src, onload: r }))), page.url());
   const inner = page.frames()[1];

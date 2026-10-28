@@ -3,7 +3,7 @@
 // and hands the host the selection in the image's own pixels; the host crops and saves, and brings overlay.css.
 import { type KeyboardEvent, type PointerEvent, type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { FRAME_MS, MAX_FRAMES } from "../../recording.js";
-import { fromPoints, type Handle, MIN, move, placePanel, type Rect, resize, toImage } from "./geometry.js";
+import { fromPoints, type Handle, MIN, move, placePanel, type Rect, resize, type Size, toImage } from "./geometry.js";
 
 const HANDLES: Handle[] = ["nw", "n", "ne", "e", "se", "s", "sw", "w"];
 const CLICK = 4; // display px a pointer may travel and still be a click
@@ -44,6 +44,7 @@ export function Overlay({ image, ratio, title, whole, limit, initial, initialTex
   const [sel, setSel] = useState<Rect | null>(initial ?? null);
   const [drag, setDrag] = useState<Drag | null>(null);
   const [place, setPlace] = useState<{ x: number; y: number; docked: boolean } | null>(null);
+  const [panelSize, setPanelSize] = useState<Size | null>(null);
   const [panelAt, setPanelAt] = useState<{ x: number; y: number } | null>(null); // where the developer dragged a docked panel
   const [grip, setGrip] = useState<{ x: number; y: number } | null>(null);
   const [text, setText] = useState(initialText);
@@ -55,13 +56,28 @@ export function Overlay({ image, ratio, title, whole, limit, initial, initialTex
 
   useEffect(() => root.current?.focus(), []);
 
-  // The panel is placed once a selection settles (not during a drag, which would make it jitter).
+  // The panel's real size: none while its dialog is still closed (a selection given up front is there before the
+  // dialog opens), and it grows when a warning or an error shows. Placing it with a stale size put it out of view.
+  const hasPanel = !!sel;
   useLayoutEffect(() => {
-    if (!sel || drag || !panel.current) return;
-    const s = stage.current!.getBoundingClientRect();
     const p = panel.current;
-    setPlace(placePanel({ x: s.left + sel.x, y: s.top + sel.y, w: sel.w, h: sel.h }, { w: p.offsetWidth, h: p.offsetHeight }, { w: innerWidth, h: innerHeight }));
-  }, [sel, drag]);
+    if (!p) return setPanelSize(null);
+    const measure = () => {
+      const [w, h] = [p.offsetWidth, p.offsetHeight];
+      setPanelSize((old) => (!w || !h ? null : old?.w === w && old.h === h ? old : { w, h }));
+    };
+    measure(); // now, when the panel already shows: the textarea is focused before the next key arrives
+    const ro = new ResizeObserver(measure); // and whenever it changes: its dialog opening, a warning showing
+    ro.observe(p);
+    return () => ro.disconnect();
+  }, [hasPanel]);
+  // The panel is placed once a selection settles (not during a drag, which would make it jitter), and again when its
+  // size changes.
+  useLayoutEffect(() => {
+    if (!sel || drag || !panelSize) return;
+    const s = stage.current!.getBoundingClientRect();
+    setPlace(placePanel({ x: s.left + sel.x, y: s.top + sel.y, w: sel.w, h: sel.h }, panelSize, { w: innerWidth, h: innerHeight }));
+  }, [sel, drag, panelSize]);
   // The textarea takes focus when the panel first shows; dragging the selection afterwards never takes it away.
   const shown = !!place;
   useEffect(() => {

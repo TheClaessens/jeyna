@@ -31,7 +31,7 @@
 .jo-size { position: absolute; left: -2px; bottom: calc(100% + 4px); padding: 2px 6px; background: var(--tide); color: #fff; border-radius: 4px; font: 12px/1.4 ui-monospace, monospace; white-space: nowrap; }
 .jo-size.inside { bottom: auto; top: 4px; left: 4px; }
 
-.jo-panel { position: fixed; z-index: 3; width: 320px; display: flex; flex-direction: column; gap: 10px; padding: 14px; background: #fff;
+.jo-panel { position: fixed; z-index: 3; width: 320px; max-height: calc(100vh - 24px); overflow: auto; display: flex; flex-direction: column; gap: 10px; padding: 14px; background: #fff;
   border: 1px solid var(--hair); border-radius: 10px; }
 .jo-panel.docked { outline: 1px solid var(--tide); }
 .jo-panel.docked header { cursor: grab; }
