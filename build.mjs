@@ -1,7 +1,13 @@
 // Bundles src/server.ts into the committed plugin/server/jeyna-mcp.mjs (D13, probe P1), and the studio
 // (sidecar + UI) into plugin/studio/ (D34). Developers run neither npm nor a build: the plugin ships the output.
 import { build } from "esbuild";
-import { cpSync, mkdirSync } from "node:fs";
+import { cpSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+
+// esbuild writes each bundled module's path into the bundle, and pnpm nests packages under
+// node_modules/.pnpm/<name>@<version>/node_modules/: fold that to npm's node_modules/ so the committed
+// bundles are the same from either install (D35).
+const npmPaths = (f) =>
+  writeFileSync(f, readFileSync(f, "utf8").replaceAll(/node_modules\/\.pnpm\/[^/]+\/node_modules\//g, "node_modules/"));
 
 await build({
   entryPoints: ["src/server.ts"],
@@ -25,6 +31,7 @@ await build({
   },
   logLevel: "warning",
 });
+npmPaths("plugin/server/jeyna-mcp.mjs");
 
 mkdirSync("plugin/server/pw", { recursive: true });
 for (const f of ["package.json", "browsers.json"]) cpSync(`node_modules/playwright-core/${f}`, `plugin/server/pw/${f}`);
@@ -40,6 +47,7 @@ await build({
   banner: { js: "import { createRequire as __cr } from 'node:module'; const require = __cr(import.meta.url);" },
   logLevel: "warning",
 });
+npmPaths("plugin/studio/jeyna-studio.mjs");
 await build({
   entryPoints: { app: "src/studio/app/main.tsx" },
   outdir: "plugin/studio",
