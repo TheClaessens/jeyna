@@ -300,3 +300,12 @@ main.live iframe { flex: 1 1 auto; width: 100%; min-height: 480px; border: 0; ba
 .tools code.prompt { flex: none; text-align: left; color: var(--navy); }
 main.feedback > .seg { align-self: flex-start; flex-wrap: wrap; }
 .evidence > img { align-self: flex-start; }
+
+/* Feedback on evidence (D37): the overlay full window, over a dark backdrop; the toast a save leaves. */
+dialog.lightbox { width: 100vw; height: 100vh; max-width: none; max-height: none; margin: 0; padding: 0; border: 0; background: var(--navy); }
+dialog.lightbox::backdrop { background: transparent; }
+dialog.lightbox .jo { padding-top: 48px; }
+.toast { position: fixed; right: 16px; bottom: 16px; z-index: 10; display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 14px; background: var(--surface); border: 1px solid var(--hair-strong); border-radius: 10px; }
+.toast code { font-family: var(--mono); font-size: 13px; }
+@media (prefers-reduced-motion: no-preference) { .toast { animation: toast-in .15s ease-out; } }
+@keyframes toast-in { from { transform: translateY(8px); opacity: 0; } }

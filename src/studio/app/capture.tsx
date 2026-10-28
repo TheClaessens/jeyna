@@ -1,8 +1,11 @@
-// Capturing feedback (D36): the editor that crops one frame (a snap) or every frame of a recording to one rectangle,
-// takes the developer's text and saves the item through the sidecar; and the flipbook that plays a recording back.
+// Capturing feedback (D36, D37): the full-window lightbox that captures feedback on an evidence image with the overlay;
+// the editor that crops one frame (a snap) or every frame of a Live recording to one rectangle; the toast a save leaves;
+// and the flipbook that plays a recording back.
 import { Link } from "@tanstack/react-router";
 import { type PointerEvent, useEffect, useRef, useState } from "react";
 import type { NewFeedback } from "../../feedback.js";
+import { cropPng, Overlay } from "../overlay/Overlay.js";
+import { evidenceUrl } from "./run.js";
 import { CopyButton, CopyIcon } from "./ui.js";
 
 // One frame to crop: an evidence <img> or a canvas grabbed from the screen share, at its natural size.
@@ -25,12 +28,56 @@ export async function feedbackApi(method: "POST" | "PATCH" | "DELETE", id: strin
   return out;
 }
 
-function crop(f: Frame, r: Rect): string {
-  const c = document.createElement("canvas");
-  c.width = Math.round(r.w);
-  c.height = Math.round(r.h);
-  c.getContext("2d")!.drawImage(f.src, r.x, r.y, r.w, r.h, 0, 0, c.width, c.height);
-  return c.toDataURL("image/png").slice("data:image/png;base64,".length);
+const round = (r: Rect): Rect => ({ x: Math.round(r.x), y: Math.round(r.y), w: Math.round(r.w), h: Math.round(r.h) });
+
+// Feedback on an evidence image: the image at 100 % (fitted when larger than the window) under the overlay, in a modal
+// dialog so the finding page behind takes no keys. The back-reference is fixed when it opens.
+export function EvidenceLightbox({ run, evidence, finding, onClose, onSaved }: { run: string; evidence: string; finding: string; onClose: () => void; onSaved: (id: string) => void }) {
+  const dialog = useRef<HTMLDialogElement>(null);
+  const [img, setImg] = useState<HTMLImageElement>();
+  useEffect(() => {
+    dialog.current?.showModal();
+    const i = new Image(); // same-origin, so the crop canvas is not tainted
+    i.src = evidenceUrl(run, evidence);
+    i.decode().then(() => setImg(i), () => dialog.current?.close());
+  }, [run, evidence]);
+  // Room around the image for the hint bar (top) and a margin; never enlarged past 100 %.
+  const ratio = img ? Math.max(1, img.naturalWidth / (innerWidth - 48), img.naturalHeight / (innerHeight - 120)) : 1;
+  const save = async (text: string, r: Rect) => {
+    const out = await feedbackApi("POST", undefined, { text, capture: "snap", frames: [{ png: cropPng(img!, r), ms: 0 }], source: "evidence", run, evidence, finding });
+    onSaved(out.id);
+    dialog.current?.close();
+  };
+  return (
+    <dialog ref={dialog} className="lightbox" aria-label={`Feedback on ${evidence}`} onCancel={(e) => e.preventDefault()} onClose={onClose}>
+      {img && (
+        <Overlay
+          image={{ src: img.src, w: img.naturalWidth, h: img.naturalHeight }}
+          ratio={ratio}
+          title={`${evidence} · ${img.naturalWidth} × ${img.naturalHeight}${ratio > 1 ? ` · ${Math.round(100 / ratio)} %` : ""}`}
+          whole="image"
+          onSave={save}
+          onCancel={() => dialog.current?.close()}
+        />
+      )}
+    </dialog>
+  );
+}
+
+// What a save leaves behind: the id and the prompt to give Claude, for a few seconds.
+export function SavedToast({ id, onDone }: { id: string; onDone: () => void }) {
+  useEffect(() => {
+    const t = setTimeout(onDone, 8000);
+    return () => clearTimeout(t);
+  }, [id, onDone]);
+  return (
+    <div className="toast" role="status">
+      <span>Saved <Link to="/feedback/$feedbackId" params={{ feedbackId: id }}>{id}</Link></span>
+      <code>{prompt(id)}</code>
+      <CopyButton text={prompt(id)} label="Copy prompt" icon={<CopyIcon />} />
+      <button type="button" className="btn icon" aria-label="Dismiss" onClick={onDone}>×</button>
+    </div>
+  );
 }
 
 export function CaptureEditor({ frames, initial, origin, onClose }: { frames: Frame[]; initial?: Rect | null; origin: Origin; onClose: () => void }) {
@@ -80,7 +127,7 @@ export function CaptureEditor({ frames, initial, origin, onClose }: { frames: Fr
     try {
       const r = rect ?? { x: 0, y: 0, w: first.w, h: first.h };
       const capture = frames.length > 1 ? "recording" : "snap";
-      const out = await feedbackApi("POST", undefined, { text, capture, frames: frames.map((f) => ({ png: crop(f, r), ms: Math.round(f.ms) })), ...origin });
+      const out = await feedbackApi("POST", undefined, { text, capture, frames: frames.map((f) => ({ png: cropPng(f.src, round(r)), ms: Math.round(f.ms) })), ...origin });
       setSaved(out.id);
     } catch (e) {
       setError((e as Error).message);

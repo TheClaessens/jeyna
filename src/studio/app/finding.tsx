@@ -1,11 +1,11 @@
 // Studio · Finding: chips row, Steps / Expected / Actual, evidence at natural size, Suggested next step, the duplicates
 // of this finding, the source (frontmatter, or the whole file), Copy path and Copy id, j / k / esc. Give feedback on an
-// evidence image crops it into a feedback item (D36).
+// evidence image opens it full size to select a region and write what should change (D36, D37).
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import * as m from "../model.js";
 import type { StudioFinding, StudioIndex, StudioRun } from "../types.js";
-import { CaptureEditor, type Frame } from "./capture.js";
+import { EvidenceLightbox, SavedToast } from "./capture.js";
 import { Attention, evidenceUrl, filePath } from "./run.js";
 import { Arrow, Card, CopyButton, CopyIcon, Glyph, IdIcon, KindChip, Severity, StatusChip } from "./ui.js";
 
@@ -19,14 +19,9 @@ export function FindingScreen({ index, run, finding }: { index: StudioIndex; run
   const search = useSearch({ strict: false }) as Search;
   const navigate = useNavigate();
   const [whole, setWhole] = useState(false);
-  const [editor, setEditor] = useState<{ evidence: string; frame: Frame }>();
-  // The evidence image itself, same-origin, so the crop canvas is not tainted.
-  const giveFeedback = async (evidence: string) => {
-    const img = new Image();
-    img.src = evidenceUrl(run.id, evidence);
-    await img.decode();
-    setEditor({ evidence, frame: { src: img, w: img.naturalWidth, h: img.naturalHeight, ms: 0 } });
-  };
+  // Fixed when opened, so the item names this finding even if the page behind changes.
+  const [lightbox, setLightbox] = useState<{ run: string; evidence: string; finding: string }>();
+  const [saved, setSaved] = useState<string>();
   const { view, ...filters } = search;
 
   // Position among the rows the run screen shows with the same filters; a folded duplicate steps from its parent.
@@ -42,7 +37,7 @@ export function FindingScreen({ index, run, finding }: { index: StudioIndex; run
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement | null;
-      if (e.metaKey || e.ctrlKey || e.altKey || t?.tagName === "INPUT" || t?.tagName === "TEXTAREA") return;
+      if (e.metaKey || e.ctrlKey || e.altKey || t?.tagName === "INPUT" || t?.tagName === "TEXTAREA" || document.querySelector("dialog[open]")) return;
       if (e.key === "j" && next) go(next.finding.id);
       else if (e.key === "k" && prev) go(prev.finding.id);
       else if (e.key === "Escape") back();
@@ -149,7 +144,7 @@ export function FindingScreen({ index, run, finding }: { index: StudioIndex; run
                     <a href={evidenceUrl(run.id, e)} target="_blank" rel="noreferrer"><img src={evidenceUrl(run.id, e)} alt={e} /></a>
                     <figcaption>
                       <span>{e}</span><span className="dot">·</span><span className="vp">{fr.viewport}</span>
-                      <button type="button" className="btn sm" onClick={() => giveFeedback(e)}>Give feedback</button>
+                      <button type="button" className="btn sm" onClick={() => setLightbox({ run: run.id, evidence: e, finding: finding.id })}>Give feedback</button>
                     </figcaption>
                   </figure>
                 ))
@@ -185,9 +180,8 @@ export function FindingScreen({ index, run, finding }: { index: StudioIndex; run
           </>
         )}
 
-        {editor && (
-          <CaptureEditor frames={[editor.frame]} origin={{ source: "evidence", run: run.id, evidence: editor.evidence, finding: finding.id }} onClose={() => setEditor(undefined)} />
-        )}
+        {lightbox && <EvidenceLightbox {...lightbox} onClose={() => setLightbox(undefined)} onSaved={setSaved} />}
+        {saved && <SavedToast id={saved} onDone={() => setSaved(undefined)} />}
 
         <footer className="foot-keys">
           <span><kbd>j</kbd> / <kbd>k</kbd> next and previous finding</span>
