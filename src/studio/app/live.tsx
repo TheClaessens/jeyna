@@ -5,16 +5,11 @@ import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import * as m from "../model.js";
 import type { StudioIndex } from "../types.js";
+import { DraftLightbox, SavedToast, windowApi } from "./capture.js";
 import { Card } from "./ui.js";
 
 const mac = /Mac|iPhone|iPad/.test(navigator.platform);
 const key = (k: string) => (mac ? `⌥⇧${k}` : `Alt+Shift+${k}`);
-
-async function windowApi(action: "open" | "close" | "stop") {
-  const res = await fetch("/api/window", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action }) });
-  const out = await res.json();
-  if (!res.ok) throw new Error(out.error ?? res.statusText);
-}
 
 export function LiveScreen({ index }: { index: StudioIndex }) {
   const app = index.app;
@@ -22,6 +17,8 @@ export function LiveScreen({ index }: { index: StudioIndex }) {
   const [up, setUp] = useState<boolean | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [finishing, setFinishing] = useState(false);
+  const [saved, setSaved] = useState<string>();
 
   // Does anything answer at app.url? An opaque response is enough; only a network error means it is down.
   const probe = () => {
@@ -31,11 +28,11 @@ export function LiveScreen({ index }: { index: StudioIndex }) {
   };
   useEffect(probe, [app?.url]);
 
-  const act = (action: "open" | "close" | "stop") => async () => {
+  const act = (action: "open" | "close" | "stop" | "discard-draft") => async () => {
     setBusy(true);
     setError("");
     try {
-      await windowApi(action);
+      await windowApi({ action });
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -54,6 +51,22 @@ export function LiveScreen({ index }: { index: StudioIndex }) {
           <div className="title"><h1>Live</h1></div>
           <p className="summary">Use {app.name} in its own Chrome window and snap or record feedback right where you see it. It lands in <Link to="/feedback">Feedback</Link>.</p>
         </section>
+
+        {w.draft && (
+          <Card className="launcher draft">
+            <div className="row">
+              <span>
+                The app window closed with unsaved feedback: {w.draft.capture === "snap" ? "a snap" : `a recording of ${w.draft.frames} frames`}
+                {w.draft.text.trim() && <>, “<b>{w.draft.text.trim().split("\n")[0]}</b>”</>}.
+              </span>
+              <span className="grow" />
+              <button type="button" className="btn primary" onClick={() => setFinishing(true)}>Finish it here</button>
+              <button type="button" className="btn" onClick={act("discard-draft")} disabled={busy}>Discard</button>
+            </div>
+          </Card>
+        )}
+        {finishing && w.draft && <DraftLightbox draft={w.draft} onClose={() => setFinishing(false)} onSaved={setSaved} />}
+        {saved && <SavedToast id={saved} onDone={() => setSaved(undefined)} />}
 
         <Card className="launcher">
           {w.open ? (

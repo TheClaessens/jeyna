@@ -19,15 +19,17 @@ export function cropPng(src: CanvasImageSource, r: Rect): string {
 
 type Drag = { kind: "new" | "move" | Handle; from: { x: number; y: number }; orig: Rect | null; moved: boolean };
 
-export function Overlay({ image, ratio, title, whole, limit, initial, layer, extra, onStart, onSave, onCancel }: {
+export function Overlay({ image, ratio, title, whole, limit, initial, initialText = "", layer, extra, onStart, onText, onSave, onCancel }: {
   image: { src: string; w: number; h: number }; // the image at its own pixels
   ratio: number; // image px per display px
   title: string;
   whole: "image" | "window" | "recording"; // what a click or A selects
   limit?: Rect; // display px the selection stays in, and what "whole" means; a recording's region. Default: the image.
   initial?: Rect; // a preselected region
+  initialText?: string; // a draft brought back
   layer?: ReactNode; // drawn over the image, under the shade: a recording's frame, in place
   extra?: ReactNode; // at the top of the panel: a recording's scrubber
+  onText?: (text: string) => void; // every change, so the host can keep the draft
   onStart?: (sel: Rect) => void; // choosing a region to record: no text, Start recording instead of Save
   onSave: (text: string, crop: Rect, sel: Rect) => Promise<void>; // crop in image px, sel in display px; a rejection's message shows in the panel
   onCancel: () => void;
@@ -44,7 +46,7 @@ export function Overlay({ image, ratio, title, whole, limit, initial, layer, ext
   const [place, setPlace] = useState<{ x: number; y: number; docked: boolean } | null>(null);
   const [panelAt, setPanelAt] = useState<{ x: number; y: number } | null>(null); // where the developer dragged a docked panel
   const [grip, setGrip] = useState<{ x: number; y: number } | null>(null);
-  const [text, setText] = useState("");
+  const [text, setText] = useState(initialText);
   const [confirming, setConfirming] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -218,7 +220,7 @@ export function Overlay({ image, ratio, title, whole, limit, initial, layer, ext
             <>
               <label>
                 <span>What should change?</span>
-                <textarea ref={textarea} value={text} rows={4} placeholder="First line is the title in the list." onChange={(e) => (setText(e.target.value), setConfirming(false))} />
+                <textarea ref={textarea} value={text} rows={4} placeholder="First line is the title in the list." onChange={(e) => (setText(e.target.value), onText?.(e.target.value), setConfirming(false))} />
               </label>
               {confirming && <p className="jo-warn" role="alert">Discard this feedback? Esc or Cancel again to discard; keep typing to keep it.</p>}
               {error && <p className="jo-error" role="alert">{error}</p>}

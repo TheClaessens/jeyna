@@ -115,7 +115,7 @@ function scan(): StudioIndex {
 }
 
 // --- The Live window (D37), made on first open for the app.url of that moment.
-const CLOSED = { open: false, url: null, openedAt: null, capturing: false, recording: false };
+const CLOSED = { open: false, url: null, openedAt: null, capturing: false, recording: false, draft: null };
 let live: ReturnType<typeof liveWindow> | undefined;
 let liveFor = "";
 function windowFor(app: string) {
@@ -203,23 +203,33 @@ async function body(req: IncomingMessage): Promise<unknown> {
 
 const Change = z.strictObject({ status: z.enum(FEEDBACK_STATUSES).optional(), text: z.string().optional() });
 
-const WindowAction = z.strictObject({ action: z.enum(["open", "close", "stop"]) });
+const WindowAction = z.discriminatedUnion("action", [
+  z.strictObject({ action: z.enum(["open", "close", "stop", "discard-draft"]) }),
+  z.strictObject({ action: z.literal("save-draft"), text: z.string(), pngs: z.array(z.string()).optional() }),
+]);
 
-// Open (or bring to the front) and close the Live window, and stop its recording, from the studio page only.
+// Open (or bring to the front) and close the Live window, stop its recording, and finish or let go of the unsaved
+// feedback a closed window left, from the studio page only.
 async function windowAction(req: IncomingMessage, res: ServerResponse) {
   if (!fromStudio(req)) return json(res, 403, { error: "the window opens from the studio page only" });
   if (req.method !== "POST") return json(res, 405, { error: "method not allowed" });
   try {
-    const { action } = WindowAction.parse(await body(req));
+    const a = WindowAction.parse(await body(req));
     const app = readApp();
     if (!app) throw new Error("No app.url: .jeyna/jeyna.config.yaml is missing or does not parse.");
-    if (action === "open") await windowFor(app.url).open();
-    else if (action === "stop") live?.stop();
-    else await live?.close();
+    let saved: string | undefined;
+    if (a.action === "open") await windowFor(app.url).open();
+    else if (a.action === "stop") live?.stop();
+    else if (a.action === "close") await live?.close();
+    else if (a.action === "discard-draft") live?.discardDraft();
+    else if (a.action === "save-draft") {
+      if (!live) throw new Error("No unsaved feedback from the app window.");
+      saved = live.saveDraft(a.text, a.pngs).id;
+    }
     rescan();
-    return json(res, 200, { window: live?.state() ?? CLOSED });
+    return json(res, 200, { window: live?.state() ?? CLOSED, ...(saved && { id: saved }) });
   } catch (e) {
-    const msg = e instanceof z.ZodError ? "send { action: open | close | stop }" : (e as Error).message.split("\n")[0];
+    const msg = e instanceof z.ZodError ? "send { action: open | close | stop | discard-draft }, or { action: save-draft, text, pngs? }" : (e as Error).message.split("\n")[0];
     log("window action refused:", msg);
     return json(res, 400, { error: msg });
   }
@@ -251,6 +261,12 @@ function handle(req: IncomingMessage, res: ServerResponse) {
   const item = /^\/api\/feedback(?:\/([^/]+))?$/.exec(url.pathname);
   if (item) return void feedbackWrite(req, res, item[1] && decodeURIComponent(item[1]));
   if (url.pathname === "/api/window") return void windowAction(req, res);
+  const draft = /^\/api\/window\/draft\/(\d+)\.png$/.exec(url.pathname);
+  if (draft) {
+    const png = live?.draftFrame(Number(draft[1]));
+    if (!png) return notFound(res);
+    return res.writeHead(200, { "content-type": TYPES[".png"], "cache-control": "no-cache" }).end(png);
+  }
   if (req.method !== "GET" && req.method !== "HEAD") return res.writeHead(405).end();
   if (url.pathname === "/api/index") {
     return res.writeHead(200, { "content-type": TYPES[".json"], "cache-control": "no-cache" }).end(payload);

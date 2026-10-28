@@ -198,13 +198,16 @@ test("feedback: the studio page creates, edits and deletes items; the index carr
   expect((await index()).feedback).toEqual([]);
 });
 
-test("the Live window opens and closes from the studio page only; the index says whether it is open (D37)", async () => {
+test("the Live window opens and closes from the studio page only; the index says whether it is open; no draft, nothing to finish (D37)", async () => {
   const post = (data: unknown, origin = url) =>
     fetch(`${url}/api/window`, { method: "POST", headers: { origin, "content-type": "application/json" }, body: JSON.stringify(data) });
-  expect((await index()).window).toEqual({ open: false, url: null, openedAt: null, capturing: false, recording: false });
+  expect((await index()).window).toEqual({ open: false, url: null, openedAt: null, capturing: false, recording: false, draft: null });
   expect((await post({ action: "open" }, "http://evil.example")).status).toBe(403);
   const bad = await post({ action: "launch" });
-  expect([bad.status, (await bad.json()).error]).toEqual([400, "send { action: open | close | stop }"]);
+  expect([bad.status, (await bad.json()).error]).toEqual([400, "send { action: open | close | stop | discard-draft }, or { action: save-draft, text, pngs? }"]);
+  const none = await post({ action: "save-draft", text: "x" });
+  expect([none.status, (await none.json()).error]).toEqual([400, "No unsaved feedback from the app window."]);
+  expect((await fetch(`${url}/api/window/draft/0.png`)).status).toBe(404);
   const closed = await post({ action: "close" });
   expect([closed.status, (await closed.json()).window.open]).toEqual([200, false]);
 });

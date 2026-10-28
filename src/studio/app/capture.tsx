@@ -1,9 +1,11 @@
-// Capturing feedback (D36, D37): the full-window lightbox that captures feedback on an evidence image with the overlay,
-// the toast a save leaves, and the flipbook that plays a recording back. Live captures happen in the Live window.
+// Capturing feedback (D36, D37): the full-window lightboxes that capture feedback with the overlay, on an evidence image
+// or on what a closed Live window left unsaved; the toast a save leaves; and the flipbook that plays a recording back.
+// Live captures happen in the Live window.
 import { Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import type { Rect } from "../overlay/geometry.js";
 import { cropPng, Overlay } from "../overlay/Overlay.js";
+import type { WindowState } from "../window.js";
 import { evidenceUrl } from "./run.js";
 import { CopyButton, CopyIcon } from "./ui.js";
 
@@ -22,6 +24,23 @@ export async function feedbackApi(method: "POST" | "PATCH" | "DELETE", id: strin
   return out;
 }
 
+// The Live window, through the sidecar: open, close, stop a recording, finish or let go of a draft.
+export async function windowApi(body: { action: string; text?: string; pngs?: string[] }): Promise<{ id?: string }> {
+  const res = await fetch("/api/window", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+  const out = await res.json();
+  if (!res.ok) throw new Error(out.error ?? res.statusText);
+  return out;
+}
+
+// Room around an image for the hint bar (top) and a margin; never enlarged past 100 %.
+const fit = (w: number, h: number) => Math.max(1, w / (innerWidth - 48), h / (innerHeight - 120));
+const decoded = async (src: string) => {
+  const i = new Image();
+  i.src = src;
+  await i.decode();
+  return i;
+};
+
 // Feedback on an evidence image: the image at 100 % (fitted when larger than the window) under the overlay, in a modal
 // dialog so the finding page behind takes no keys. The back-reference is fixed when it opens.
 export function EvidenceLightbox({ run, evidence, finding, onClose, onSaved }: { run: string; evidence: string; finding: string; onClose: () => void; onSaved: (id: string) => void }) {
@@ -33,8 +52,7 @@ export function EvidenceLightbox({ run, evidence, finding, onClose, onSaved }: {
     i.src = evidenceUrl(run, evidence);
     i.decode().then(() => setImg(i), () => dialog.current?.close());
   }, [run, evidence]);
-  // Room around the image for the hint bar (top) and a margin; never enlarged past 100 %.
-  const ratio = img ? Math.max(1, img.naturalWidth / (innerWidth - 48), img.naturalHeight / (innerHeight - 120)) : 1;
+  const ratio = img ? fit(img.naturalWidth, img.naturalHeight) : 1;
   const save = async (text: string, r: Rect) => {
     const out = await feedbackApi("POST", undefined, { text, capture: "snap", frames: [{ png: cropPng(img!, r), ms: 0 }], source: "evidence", run, evidence, finding });
     onSaved(out.id);
@@ -48,6 +66,51 @@ export function EvidenceLightbox({ run, evidence, finding, onClose, onSaved }: {
           ratio={ratio}
           title={`${evidence} · ${img.naturalWidth} × ${img.naturalHeight}${ratio > 1 ? ` · ${Math.round(100 / ratio)} %` : ""}`}
           whole="image"
+          onSave={save}
+          onCancel={() => dialog.current?.close()}
+        />
+      )}
+    </dialog>
+  );
+}
+
+// What a closed Live window left unsaved, finished here: its frozen frame, or its recording with a scrubber, under the
+// overlay with the text it had. Cancel keeps the draft on offer; the Live page's Discard lets it go.
+export function DraftLightbox({ draft, onClose, onSaved }: { draft: NonNullable<WindowState["draft"]>; onClose: () => void; onSaved: (id: string) => void }) {
+  const dialog = useRef<HTMLDialogElement>(null);
+  const [imgs, setImgs] = useState<HTMLImageElement[]>();
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    dialog.current?.showModal();
+    Promise.all(Array.from({ length: draft.frames }, (_, n) => decoded(`/api/window/draft/${n}.png`))).then(setImgs, () => dialog.current?.close());
+  }, [draft.frames]);
+  const first = imgs?.[0];
+  const ratio = first ? fit(first.naturalWidth, first.naturalHeight) : 1;
+  const save = async (text: string, r: Rect) => {
+    const whole = r.x === 0 && r.y === 0 && r.w === first!.naturalWidth && r.h === first!.naturalHeight;
+    const out = await windowApi({ action: "save-draft", text, ...(!whole && { pngs: imgs!.map((img) => cropPng(img, r)) }) });
+    onSaved(out.id!);
+    dialog.current?.close();
+  };
+  const recording = draft.capture === "recording" && imgs;
+  return (
+    <dialog ref={dialog} className="lightbox" aria-label="Unsaved feedback" onCancel={(e) => e.preventDefault()} onClose={onClose}>
+      {first && (
+        <Overlay
+          image={{ src: first.src, w: first.naturalWidth, h: first.naturalHeight }}
+          ratio={ratio}
+          title={`Unsaved ${draft.capture === "snap" ? "snap" : `recording · ${draft.frames} frames`} · ${first.naturalWidth} × ${first.naturalHeight}`}
+          whole={draft.capture === "snap" ? "image" : "recording"}
+          initialText={draft.text}
+          layer={recording && <img className="jo-layer" src={imgs[i].src} alt="" style={{ left: 0, top: 0, width: first.naturalWidth / ratio, height: first.naturalHeight / ratio }} />}
+          extra={
+            recording && (
+              <div className="jo-scrub">
+                <input type="range" min={0} max={imgs.length - 1} value={i} onChange={(e) => setI(Number(e.target.value))} aria-label="Frame" />
+                <span>{i + 1} / {imgs.length}</span>
+              </div>
+            )
+          }
           onSave={save}
           onCancel={() => dialog.current?.close()}
         />

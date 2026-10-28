@@ -202798,20 +202798,38 @@ var Msg = external_exports.discriminatedUnion("type", [
   external_exports.strictObject({ type: external_exports.literal("review") }),
   // png: the snap, cropped. pngs: a recording's frames cropped tighter; left out, the frames are saved as taken.
   external_exports.strictObject({ type: external_exports.literal("save"), text: external_exports.string(), png: external_exports.string().optional(), pngs: external_exports.array(external_exports.string()).optional() }),
-  external_exports.strictObject({ type: external_exports.literal("cancel") })
+  external_exports.strictObject({ type: external_exports.literal("cancel") }),
+  external_exports.strictObject({ type: external_exports.literal("draft"), text: external_exports.string() })
+  // the text as it is typed, kept here
 ]);
 var size = (png) => ({ w: png.readUInt32BE(16), h: png.readUInt32BE(20) });
 function liveWindow(o) {
   const origin = new URL(o.app).origin;
   let ctx = null;
-  let state = { open: false, url: null, openedAt: null, capturing: false, recording: false };
+  let state = { open: false, url: null, openedAt: null, capturing: false, recording: false, draft: null };
   const frozen = /* @__PURE__ */ new Map();
   let rec = null;
   let lastRegion = null;
+  let draft = null;
   const set2 = (next) => {
-    state = { ...state, ...next, capturing: frozen.size > 0 || !!rec?.reviewing, recording: !!rec && !rec.reviewing };
+    state = {
+      ...state,
+      ...next,
+      capturing: frozen.size > 0 || !!rec?.reviewing,
+      recording: !!rec && !rec.reviewing,
+      draft: draft && { capture: draft.capture, text: draft.text, frames: draft.frames.length }
+    };
     o.onChange();
   };
+  function keep(p2) {
+    const f = frozen.get(p2);
+    if (f?.for === "snap" && f.text.trim()) draft = { capture: "snap", frames: [{ png: f.png, ms: 0 }], url: f.url, viewport: f.viewport, text: f.text };
+    frozen.delete(p2);
+    if (rec?.page !== p2) return;
+    clearTimeout(rec.timer);
+    if (rec.frames.length) draft = { capture: "recording", frames: rec.frames, url: rec.url, viewport: rec.viewport, text: rec.text };
+    rec = null;
+  }
   const tell = (page, event, detail) => page.evaluate(([e, d]) => dispatchEvent(new CustomEvent(e, { detail: d })), [event, detail]).catch(() => {
   });
   async function sample(r) {
@@ -202841,12 +202859,24 @@ function liveWindow(o) {
     if (frame !== page.mainFrame() || new URL(frame.url()).origin !== origin) throw new Error(`Jeyna feedback works on ${origin} only.`);
     const msg = Msg.parse(raw2);
     const mine = rec?.page === page ? rec : null;
-    if (msg.type === "hello") return { recording: mine && { region: mine.region, frames: mine.frames.length, elapsed: Date.now() - mine.start, reviewing: mine.reviewing } };
+    if (msg.type === "hello") {
+      const snap = frozen.get(page)?.for === "snap" ? frozen.get(page) : null;
+      return {
+        snap: snap && { png: snap.png.toString("base64"), ...size(snap.png), dpr: snap.viewport.dpr, text: snap.text },
+        recording: mine && { region: mine.region, frames: mine.frames.length, elapsed: Date.now() - mine.start, reviewing: mine.reviewing, text: mine.text }
+      };
+    }
+    if (msg.type === "draft") {
+      const f2 = frozen.get(page);
+      if (mine?.reviewing) mine.text = msg.text;
+      else if (f2) f2.text = msg.text;
+      return true;
+    }
     if (msg.type === "freeze") {
       if (rec) throw new Error("A recording is under way in this window: stop it first.");
       const png = await page.screenshot({ type: "png" });
       const viewport = await page.evaluate(() => ({ width: innerWidth, height: innerHeight, dpr: devicePixelRatio }));
-      frozen.set(page, { url: frame.url(), viewport, for: msg.for });
+      frozen.set(page, { url: frame.url(), viewport, for: msg.for, png, text: "" });
       set2({});
       return { png: png.toString("base64"), ...size(png), dpr: viewport.dpr, last: msg.for === "record" ? lastRegion : null };
     }
@@ -202857,7 +202887,7 @@ function liveWindow(o) {
       if (r.x + r.w > f.viewport.width || r.y + r.h > f.viewport.height) throw new Error("The area to record is outside the window.");
       frozen.delete(page);
       lastRegion = r;
-      rec = { page, region: r, url: f.url, viewport: f.viewport, start: Date.now(), frames: [], reviewing: false };
+      rec = { page, region: r, url: f.url, viewport: f.viewport, start: Date.now(), frames: [], reviewing: false, text: "" };
       set2({});
       void sample(rec);
       return true;
@@ -202904,18 +202934,13 @@ function liveWindow(o) {
     await c.addInitScript({ content: o.script });
     const follow = (p2) => {
       p2.on("framenavigated", (f) => f === p2.mainFrame() && set2({ url: f.url() }));
-      p2.on("close", () => {
-        frozen.delete(p2);
-        if (rec?.page === p2) clearTimeout(rec.timer), rec = null;
-        set2({});
-      });
+      p2.on("close", () => (keep(p2), set2({})));
     };
     c.pages().forEach(follow);
     c.on("page", follow);
     c.on("close", () => {
       ctx = null;
-      frozen.clear();
-      if (rec) clearTimeout(rec.timer), rec = null;
+      for (const p2 of [...frozen.keys(), ...rec ? [rec.page] : []]) keep(p2);
       set2({ open: false, url: null, openedAt: null });
     });
     set2({ open: true, openedAt: (/* @__PURE__ */ new Date()).toISOString() });
@@ -202937,6 +202962,23 @@ function liveWindow(o) {
     },
     // The studio's Stop recording.
     stop,
+    // A draft's frames, for the studio to show; and finishing it there: saved (pngs: the frames cropped, else as they
+    // are) or let go.
+    draftFrame: (i) => draft?.frames[i]?.png ?? null,
+    saveDraft(text6, pngs) {
+      if (!draft) throw new Error("No unsaved feedback from the app window.");
+      const d = draft;
+      if (pngs && pngs.length !== d.frames.length) throw new Error(`This draft has ${d.frames.length} frames; send as many images.`);
+      const frames = d.frames.map((f, i) => ({ png: pngs?.[i] ?? f.png.toString("base64"), ms: f.ms }));
+      const item = createFeedback(o.root, { text: text6, capture: d.capture, frames, source: "live", url: d.url, viewport: d.viewport });
+      draft = null;
+      set2({});
+      return item;
+    },
+    discardDraft() {
+      draft = null;
+      set2({});
+    },
     async close() {
       await (await ctx)?.close();
     }
@@ -203019,7 +203061,7 @@ function scan() {
   runs.sort((a, b) => (b.session?.started ?? "").localeCompare(a.session?.started ?? "") || b.id.localeCompare(a.id));
   return { schema: 1, generated: (/* @__PURE__ */ new Date()).toISOString(), root: root3, app: readApp(), runs, feedback: readFeedback(root3), window: live?.state() ?? CLOSED };
 }
-var CLOSED = { open: false, url: null, openedAt: null, capturing: false, recording: false };
+var CLOSED = { open: false, url: null, openedAt: null, capturing: false, recording: false, draft: null };
 var live;
 var liveFor = "";
 function windowFor(app) {
@@ -203098,21 +203140,30 @@ async function body3(req) {
   return JSON.parse(Buffer.concat(chunks).toString("utf8"));
 }
 var Change = external_exports.strictObject({ status: external_exports.enum(FEEDBACK_STATUSES).optional(), text: external_exports.string().optional() });
-var WindowAction = external_exports.strictObject({ action: external_exports.enum(["open", "close", "stop"]) });
+var WindowAction = external_exports.discriminatedUnion("action", [
+  external_exports.strictObject({ action: external_exports.enum(["open", "close", "stop", "discard-draft"]) }),
+  external_exports.strictObject({ action: external_exports.literal("save-draft"), text: external_exports.string(), pngs: external_exports.array(external_exports.string()).optional() })
+]);
 async function windowAction(req, res) {
   if (!fromStudio(req)) return json2(res, 403, { error: "the window opens from the studio page only" });
   if (req.method !== "POST") return json2(res, 405, { error: "method not allowed" });
   try {
-    const { action } = WindowAction.parse(await body3(req));
+    const a = WindowAction.parse(await body3(req));
     const app = readApp();
     if (!app) throw new Error("No app.url: .jeyna/jeyna.config.yaml is missing or does not parse.");
-    if (action === "open") await windowFor(app.url).open();
-    else if (action === "stop") live?.stop();
-    else await live?.close();
+    let saved;
+    if (a.action === "open") await windowFor(app.url).open();
+    else if (a.action === "stop") live?.stop();
+    else if (a.action === "close") await live?.close();
+    else if (a.action === "discard-draft") live?.discardDraft();
+    else if (a.action === "save-draft") {
+      if (!live) throw new Error("No unsaved feedback from the app window.");
+      saved = live.saveDraft(a.text, a.pngs).id;
+    }
     rescan();
-    return json2(res, 200, { window: live?.state() ?? CLOSED });
+    return json2(res, 200, { window: live?.state() ?? CLOSED, ...saved && { id: saved } });
   } catch (e) {
-    const msg = e instanceof external_exports.ZodError ? "send { action: open | close | stop }" : e.message.split("\n")[0];
+    const msg = e instanceof external_exports.ZodError ? "send { action: open | close | stop | discard-draft }, or { action: save-draft, text, pngs? }" : e.message.split("\n")[0];
     log3("window action refused:", msg);
     return json2(res, 400, { error: msg });
   }
@@ -203140,6 +203191,12 @@ function handle2(req, res) {
   const item = /^\/api\/feedback(?:\/([^/]+))?$/.exec(url2.pathname);
   if (item) return void feedbackWrite(req, res, item[1] && decodeURIComponent(item[1]));
   if (url2.pathname === "/api/window") return void windowAction(req, res);
+  const draft = /^\/api\/window\/draft\/(\d+)\.png$/.exec(url2.pathname);
+  if (draft) {
+    const png = live?.draftFrame(Number(draft[1]));
+    if (!png) return notFound(res);
+    return res.writeHead(200, { "content-type": TYPES[".png"], "cache-control": "no-cache" }).end(png);
+  }
   if (req.method !== "GET" && req.method !== "HEAD") return res.writeHead(405).end();
   if (url2.pathname === "/api/index") {
     return res.writeHead(200, { "content-type": TYPES[".json"], "cache-control": "no-cache" }).end(payload);

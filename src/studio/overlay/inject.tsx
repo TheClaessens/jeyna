@@ -13,16 +13,19 @@ import windowCss from "./window.css";
 
 type Shot = { png: string; w: number; h: number; dpr: number };
 type Review = Shot & { region: Rect; frames: { png: string; ms: number }[] };
-type Hello = { recording: { region: Rect; frames: number; elapsed: number; reviewing: boolean } | null };
+// What the sidecar holds for this tab when the document loads: a frozen snap or a recording, each with its text so far.
+type Hello = { snap: (Shot & { text: string }) | null; recording: { region: Rect; frames: number; elapsed: number; reviewing: boolean; text: string } | null };
 type Mode =
-  | { kind: "snap"; shot: Shot }
+  | { kind: "snap"; shot: Shot; text?: string }
   | { kind: "region"; shot: Shot; last: Rect | null }
   | { kind: "recording"; region: Rect; hud: { x: number; y: number }; frames: number; since: number }
-  | { kind: "review"; review: Review };
+  | { kind: "review"; review: Review; text?: string };
 type Toast = { id: string } | { error: string };
 
 const bridge = (window as unknown as { __jeyna?: (msg: unknown) => Promise<never> }).__jeyna;
 const call = <T,>(msg: unknown) => bridge!(msg) as Promise<T>;
+// The text as it is typed goes to the sidecar, so a reload brings it back and a closed window leaves it as a draft.
+const keepText = (text: string) => void call({ type: "draft", text }).catch(() => {});
 const mac = /Mac|iPhone|iPad/.test(navigator.platform);
 const keys = (k: string) => (mac ? `⌥⇧${k}` : `Alt+Shift+${k}`);
 const HUD = { w: 240, h: 36 };
@@ -68,10 +71,11 @@ function mount() {
 function Capture() {
   const pill = useRef<HTMLDivElement>(null);
   const toastEl = useRef<HTMLDivElement>(null);
-  // A recording already under way when this document loaded (the app navigated) is picked up from the first render, so
-  // the pill never shows over it.
+  // What the sidecar held when this document loaded (the app navigated or reloaded) is picked up from the first render,
+  // so the pill never shows over it.
   const [mode, setMode] = useState<Mode | null>(() => {
     const r = hello?.recording;
+    if (hello?.snap) return { kind: "snap", shot: hello.snap, text: hello.snap.text };
     return r && !r.reviewing ? { kind: "recording", region: r.region, hud: hudFor(r.region), frames: r.frames, since: Date.now() - r.elapsed } : null;
   });
   const [busy, setBusy] = useState(!!hello?.recording?.reviewing); // busy: between two modes, Jeyna's UI stays hidden
@@ -105,7 +109,7 @@ function Capture() {
     setMode(null); // the ring and timer go before the page is shot again
     await frames(2);
     try {
-      setMode({ kind: "review", review: await call<Review>({ type: "review" }) });
+      setMode({ kind: "review", review: await call<Review>({ type: "review" }), text: hello?.recording?.text });
     } catch (e) {
       fail(e);
     } finally {
@@ -173,7 +177,16 @@ function Capture() {
       </div>
       {mode?.kind === "snap" && (
         <Frozen>
-          <Overlay image={{ src: png(mode.shot.png), w: mode.shot.w, h: mode.shot.h }} ratio={mode.shot.dpr} title={location.host + location.pathname} whole="window" onSave={saveSnap(mode.shot)} onCancel={cancel} />
+          <Overlay
+            image={{ src: png(mode.shot.png), w: mode.shot.w, h: mode.shot.h }}
+            ratio={mode.shot.dpr}
+            title={location.host + location.pathname}
+            whole="window"
+            initialText={mode.text}
+            onText={keepText}
+            onSave={saveSnap(mode.shot)}
+            onCancel={cancel}
+          />
         </Frozen>
       )}
       {mode?.kind === "region" && (
@@ -191,7 +204,7 @@ function Capture() {
         </Frozen>
       )}
       {mode?.kind === "recording" && <Recording mode={mode} onStop={() => void call({ type: "stop" }).catch(fail)} />}
-      {mode?.kind === "review" && <ReviewOverlay review={mode.review} onSaved={saved} onCancel={cancel} />}
+      {mode?.kind === "review" && <ReviewOverlay review={mode.review} text={mode.text} onSaved={saved} onCancel={cancel} />}
       {toast && (
         <div ref={toastEl} popover="manual" className="jw-toast" role={"id" in toast ? "status" : "alert"}>
           {"id" in toast ? (
@@ -248,7 +261,7 @@ function Recording({ mode, onStop }: { mode: Extract<Mode, { kind: "recording" }
 
 // The recording plays in place over the page as it is now, with a scrubber; the selection can only tighten inside the
 // region, and that crop applies to every frame.
-function ReviewOverlay({ review, onSaved, onCancel }: { review: Review; onSaved: (id: string) => void; onCancel: () => void }) {
+function ReviewOverlay({ review, text, onSaved, onCancel }: { review: Review; text?: string; onSaved: (id: string) => void; onCancel: () => void }) {
   const { region, frames: list } = review;
   const [i, setI] = useState(list.length - 1);
   const [playing, setPlaying] = useState(false);
@@ -290,6 +303,8 @@ function ReviewOverlay({ review, onSaved, onCancel }: { review: Review; onSaved:
         whole="recording"
         limit={region}
         initial={region}
+        initialText={text}
+        onText={keepText}
         layer={<img className="jo-layer" src={png(list[i].png)} alt="" style={{ left: region.x, top: region.y, width: region.w, height: region.h }} />}
         extra={
           <div className="jo-scrub">
