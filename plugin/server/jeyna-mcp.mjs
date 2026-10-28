@@ -4725,11 +4725,11 @@ var require_core = __commonJS2({
     Ajv2.ValidationError = validation_error_1.default;
     Ajv2.MissingRefError = ref_error_1.default;
     exports2.default = Ajv2;
-    function checkOptions(checkOpts, options2, msg, log4 = "error") {
+    function checkOptions(checkOpts, options2, msg, log5 = "error") {
       for (const key in checkOpts) {
         const opt = key;
         if (opt in options2)
-          this.logger[log4](`${msg}: option ${key}. ${checkOpts[opt]}`);
+          this.logger[log5](`${msg}: option ${key}. ${checkOpts[opt]}`);
       }
     }
     function getSchEnv(keyRef) {
@@ -8932,7 +8932,7 @@ var require_merge = __commonJS2({
 var require_addPairToJSMap = __commonJS2({
   "node_modules/.pnpm/yaml@2.9.1/node_modules/yaml/dist/nodes/addPairToJSMap.js"(exports2) {
     "use strict";
-    var log4 = require_log();
+    var log5 = require_log();
     var merge2 = require_merge();
     var stringify5 = require_stringify();
     var identity = require_identity();
@@ -8981,7 +8981,7 @@ var require_addPairToJSMap = __commonJS2({
           let jsonStr = JSON.stringify(strKey);
           if (jsonStr.length > 40)
             jsonStr = jsonStr.substring(0, 36) + '..."';
-          log4.warn(ctx.doc.options.logLevel, `Keys with collection values will be stringified due to JS Object restrictions: ${jsonStr}. Set mapAsMap: true to use object keys.`);
+          log5.warn(ctx.doc.options.logLevel, `Keys with collection values will be stringified due to JS Object restrictions: ${jsonStr}. Set mapAsMap: true to use object keys.`);
           ctx.mapKeyWarned = true;
         }
         return strKey;
@@ -14398,7 +14398,7 @@ var require_public_api = __commonJS2({
     var composer = require_composer();
     var Document = require_Document();
     var errors2 = require_errors2();
-    var log4 = require_log();
+    var log5 = require_log();
     var identity = require_identity();
     var lineCounter = require_line_counter();
     var parser = require_parser();
@@ -14450,7 +14450,7 @@ var require_public_api = __commonJS2({
       const doc = parseDocument(src, options2);
       if (!doc)
         return null;
-      doc.warnings.forEach((warning) => log4.warn(doc.options.logLevel, warning));
+      doc.warnings.forEach((warning) => log5.warn(doc.options.logLevel, warning));
       if (doc.errors.length > 0) {
         if (doc.options.logLevel !== "silent")
           throw doc.errors[0];
@@ -15941,7 +15941,7 @@ var require_utilsBundle = __commonJS2({
         var tty = __require("tty");
         var util22 = __require("util");
         exports22.init = init;
-        exports22.log = log4;
+        exports22.log = log5;
         exports22.formatArgs = formatArgs;
         exports22.save = save2;
         exports22.load = load2;
@@ -16076,7 +16076,7 @@ var require_utilsBundle = __commonJS2({
           }
           return (/* @__PURE__ */ new Date()).toISOString() + " ";
         }
-        function log4(...args) {
+        function log5(...args) {
           return process.stderr.write(util22.formatWithOptions(exports22.inspectOpts, ...args) + "\n");
         }
         function save2(namespaces) {
@@ -30805,7 +30805,7 @@ ${ctx.indent}`;
     var require_addPairToJSMap2 = __commonJS3({
       "node_modules/yaml/dist/nodes/addPairToJSMap.js"(exports22) {
         "use strict";
-        var log4 = require_log2();
+        var log5 = require_log2();
         var merge22 = require_merge2();
         var stringify5 = require_stringify2();
         var identity2 = require_identity2();
@@ -30854,7 +30854,7 @@ ${ctx.indent}`;
               let jsonStr = JSON.stringify(strKey);
               if (jsonStr.length > 40)
                 jsonStr = jsonStr.substring(0, 36) + '..."';
-              log4.warn(ctx.doc.options.logLevel, `Keys with collection values will be stringified due to JS Object restrictions: ${jsonStr}. Set mapAsMap: true to use object keys.`);
+              log5.warn(ctx.doc.options.logLevel, `Keys with collection values will be stringified due to JS Object restrictions: ${jsonStr}. Set mapAsMap: true to use object keys.`);
               ctx.mapKeyWarned = true;
             }
             return strKey;
@@ -36166,7 +36166,7 @@ ${end.comment}` : end.comment;
         var composer = require_composer2();
         var Document = require_Document2();
         var errors2 = require_errors3();
-        var log4 = require_log2();
+        var log5 = require_log2();
         var identity2 = require_identity2();
         var lineCounter = require_line_counter2();
         var parser = require_parser22();
@@ -36218,7 +36218,7 @@ ${end.comment}` : end.comment;
           const doc = parseDocument(src, options2);
           if (!doc)
             return null;
-          doc.warnings.forEach((warning) => log4.warn(doc.options.logLevel, warning));
+          doc.warnings.forEach((warning) => log5.warn(doc.options.logLevel, warning));
           if (doc.errors.length > 0) {
             if (doc.options.logLevel !== "silent")
               throw doc.errors[0];
@@ -51999,11 +51999,11 @@ ${end.comment}` : end.comment;
         Ajv2.ValidationError = validation_error_1.default;
         Ajv2.MissingRefError = ref_error_1.default;
         exports22.default = Ajv2;
-        function checkOptions(checkOpts, options2, msg, log4 = "error") {
+        function checkOptions(checkOpts, options2, msg, log5 = "error") {
           for (const key in checkOpts) {
             const opt = key;
             if (opt in options2)
-              this.logger[log4](`${msg}: option ${key}. ${checkOpts[opt]}`);
+              this.logger[log5](`${msg}: option ${key}. ${checkOpts[opt]}`);
           }
         }
         function getSchEnv(keyRef) {
@@ -57767,11 +57767,11 @@ ${end.comment}` : end.comment;
         Ajv2.ValidationError = validation_error_1.default;
         Ajv2.MissingRefError = ref_error_1.default;
         exports22.default = Ajv2;
-        function checkOptions(checkOpts, options2, msg, log4 = "error") {
+        function checkOptions(checkOpts, options2, msg, log5 = "error") {
           for (const key in checkOpts) {
             const opt = key;
             if (opt in options2)
-              this.logger[log4](`${msg}: option ${key}. ${checkOpts[opt]}`);
+              this.logger[log5](`${msg}: option ${key}. ${checkOpts[opt]}`);
           }
         }
         function getSchEnv(keyRef) {
@@ -207113,42 +207113,6 @@ var request2 = import_index2.default.request;
 var _electron = import_index2.default._electron;
 var _android = import_index2.default._android;
 
-// node_modules/.pnpm/playwright-core@1.64.1/node_modules/playwright-core/package.json
-var package_default = {
-  name: "playwright-core",
-  version: "1.64.1",
-  description: "A high-level API to automate web browsers",
-  repository: {
-    type: "git",
-    url: "git+https://github.com/microsoft/playwright.git"
-  },
-  homepage: "https://playwright.dev",
-  engines: {
-    node: ">=20"
-  },
-  author: {
-    name: "Microsoft Corporation"
-  },
-  license: "Apache-2.0",
-  exports: {
-    ".": {
-      types: "./index.d.ts",
-      import: "./index.mjs",
-      require: "./index.js",
-      default: "./index.js"
-    },
-    "./package.json": "./package.json",
-    "./lib/bootstrap": "./lib/bootstrap.js",
-    "./lib/coreBundle": "./lib/coreBundle.js",
-    "./lib/utilsBundle": "./lib/utilsBundle.js",
-    "./lib/tools/cli-client/program": "./lib/tools/cli-client/program.js"
-  },
-  bin: {
-    "playwright-core": "cli.js"
-  },
-  types: "types/types.d.ts"
-};
-
 // src/accounts.ts
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -207198,6 +207162,66 @@ function redactDeep(msg, redact2) {
   return walk(msg);
 }
 
+// node_modules/.pnpm/playwright-core@1.64.1/node_modules/playwright-core/package.json
+var package_default = {
+  name: "playwright-core",
+  version: "1.64.1",
+  description: "A high-level API to automate web browsers",
+  repository: {
+    type: "git",
+    url: "git+https://github.com/microsoft/playwright.git"
+  },
+  homepage: "https://playwright.dev",
+  engines: {
+    node: ">=20"
+  },
+  author: {
+    name: "Microsoft Corporation"
+  },
+  license: "Apache-2.0",
+  exports: {
+    ".": {
+      types: "./index.d.ts",
+      import: "./index.mjs",
+      require: "./index.js",
+      default: "./index.js"
+    },
+    "./package.json": "./package.json",
+    "./lib/bootstrap": "./lib/bootstrap.js",
+    "./lib/coreBundle": "./lib/coreBundle.js",
+    "./lib/utilsBundle": "./lib/utilsBundle.js",
+    "./lib/tools/cli-client/program": "./lib/tools/cli-client/program.js"
+  },
+  bin: {
+    "playwright-core": "cli.js"
+  },
+  types: "types/types.d.ts"
+};
+
+// src/chrome.ts
+var log2 = (...a) => console.error((/* @__PURE__ */ new Date()).toISOString(), ...a);
+async function launchChrome(open6) {
+  const channel = process.env.JEYNA_BROWSER_CHANNEL ?? "chrome";
+  let why;
+  try {
+    const b = await open6(channel);
+    log2(`launched channel ${channel}`);
+    return b;
+  } catch (e) {
+    why = e.message.split("\n")[0];
+    log2(`${channel} launch failed:`, why);
+  }
+  try {
+    const b = await open6(void 0);
+    log2("using Playwright's Chromium");
+    return b;
+  } catch {
+    throw new Error(
+      `No browser found. Google Chrome (channel "${channel}") did not launch: ${why}. Install Google Chrome, or install Playwright's Chromium: npx playwright install chromium (if it still is not found, pin the version Jeyna bundles: npx playwright@${package_default.version} install chromium).`
+    );
+  }
+}
+
 // src/shared.ts
 import { existsSync as existsSync2 } from "node:fs";
 import { dirname, join as join2, resolve } from "node:path";
@@ -207239,7 +207263,7 @@ function findProjectRoot(...candidates) {
 }
 
 // src/browser.ts
-var log2 = (...a) => console.error((/* @__PURE__ */ new Date()).toISOString(), ...a);
+var log3 = (...a) => console.error((/* @__PURE__ */ new Date()).toISOString(), ...a);
 var browser;
 function getBrowser(headed) {
   if (browser) return browser;
@@ -207247,7 +207271,7 @@ function getBrowser(headed) {
     (b) => {
       b.on("disconnected", () => {
         if (browser !== launching) return;
-        log2("browser disconnected; the next browser call launches a new one");
+        log3("browser disconnected; the next browser call launches a new one");
         browser = void 0;
         pages.clear();
       });
@@ -207261,25 +207285,9 @@ function getBrowser(headed) {
   return browser = launching;
 }
 async function launch(headed) {
-  const channel = process.env.JEYNA_BROWSER_CHANNEL ?? "chrome";
-  let why;
-  try {
-    const b = await chromium.launch({ channel, headless: !headed });
-    log2(`launched channel ${channel}, version ${b.version()}`);
-    return b;
-  } catch (e) {
-    why = e.message.split("\n")[0];
-    log2(`${channel} launch failed:`, why);
-  }
-  try {
-    const b = await chromium.launch({ headless: !headed });
-    log2("using Playwright's Chromium");
-    return b;
-  } catch {
-    throw new Error(
-      `No browser found. Google Chrome (channel "${channel}") did not launch: ${why}. Install Google Chrome, or install Playwright's Chromium: npx playwright install chromium (if it still is not found, pin the version Jeyna bundles: npx playwright@${package_default.version} install chromium).`
-    );
-  }
+  const b = await launchChrome((channel) => chromium.launch({ channel, headless: !headed }));
+  log3(`browser version ${b.version()}`);
+  return b;
 }
 var pages = /* @__PURE__ */ new Map();
 var shots = /* @__PURE__ */ new Map();
@@ -208425,8 +208433,8 @@ ${readFileSync6(finding, "utf8")}` });
 var from = (i) => i.front?.source === "evidence" ? `${i.front.finding ?? i.front.run} \xB7 ${i.front.evidence}` : "Live";
 
 // src/server.ts
-var log3 = (...a) => console.error((/* @__PURE__ */ new Date()).toISOString(), ...a);
-process.on("unhandledRejection", (e) => log3("unhandledRejection", e));
+var log4 = (...a) => console.error((/* @__PURE__ */ new Date()).toISOString(), ...a);
+process.on("unhandledRejection", (e) => log4("unhandledRejection", e));
 var { values, positionals } = parseArgs({ options: { project: { type: "string" } }, strict: false });
 var projectRoot = () => findProjectRoot(values.project, process.env.CLAUDE_PROJECT_DIR);
 function getContext() {
@@ -208488,7 +208496,7 @@ server2.registerTool = ((name, config2, handler) => register(name, config2, (asy
   const what = `call ${id} ${name} ${a[0]?.case ?? "-"}`;
   const runDir = current?.runDir;
   const record2 = (line) => {
-    log3(line);
+    log4(line);
     const dir = current?.runDir ?? runDir;
     if (dir) try {
       appendFileSync(join10(dir, "server.log"), `${(/* @__PURE__ */ new Date()).toISOString()} ${line}
@@ -208548,7 +208556,7 @@ var transport = new StdioServerTransport2();
 var send = transport.send.bind(transport);
 transport.send = (msg) => send(redactDeep(msg, currentRedactor()));
 await server2.connect(transport);
-log3("jeyna-mcp ready", process.argv.slice(2).join(" "));
+log4("jeyna-mcp ready", process.argv.slice(2).join(" "));
 /*! Bundled license information:
 
 playwright-core/lib/utilsBundle.js:

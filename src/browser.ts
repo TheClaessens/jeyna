@@ -2,17 +2,16 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { type Browser, chromium, type Page } from "playwright-core";
-import pw from "playwright-core/package.json" with { type: "json" };
 import { z } from "zod";
 import type { Config } from "./schema.js";
 import { current, fail, ok } from "./session.js";
 import { accountValues, substitute } from "./accounts.js";
+import { launchChrome } from "./chrome.js";
 import { appUrl, clip } from "./shared.js";
 
 const log = (...a: unknown[]) => console.error(new Date().toISOString(), ...a);
 
-// One browser per server process: the installed Chrome with a temporary profile, else Playwright's
-// Chromium (D13). JEYNA_BROWSER_CHANNEL overrides the channel, which is how P4 forces the fallback.
+// One browser per server process, with a temporary profile (chrome.ts picks Chrome or Playwright's Chromium).
 // When it goes away (a crash, or the user closes the headed window) the next call launches a new one.
 let browser: Promise<Browser> | undefined;
 
@@ -37,27 +36,9 @@ function getBrowser(headed: boolean): Promise<Browser> {
 }
 
 async function launch(headed: boolean): Promise<Browser> {
-  const channel = process.env.JEYNA_BROWSER_CHANNEL ?? "chrome";
-  let why: string;
-  try {
-    const b = await chromium.launch({ channel, headless: !headed });
-    log(`launched channel ${channel}, version ${b.version()}`);
-    return b;
-  } catch (e) {
-    why = (e as Error).message.split("\n")[0];
-    log(`${channel} launch failed:`, why);
-  }
-  try {
-    const b = await chromium.launch({ headless: !headed });
-    log("using Playwright's Chromium");
-    return b;
-  } catch {
-    throw new Error(
-      `No browser found. Google Chrome (channel "${channel}") did not launch: ${why}. ` +
-        `Install Google Chrome, or install Playwright's Chromium: npx playwright install chromium ` +
-        `(if it still is not found, pin the version Jeyna bundles: npx playwright@${pw.version} install chromium).`,
-    );
-  }
+  const b = await launchChrome((channel) => chromium.launch({ channel, headless: !headed }));
+  log(`browser version ${b.version()}`);
+  return b;
 }
 
 // One page in its own context per case, created on the case's first browser call (D4).
