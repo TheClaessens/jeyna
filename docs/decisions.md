@@ -949,3 +949,32 @@ Settled in a grilling session with the developer before any code. Ships in the n
 - `get_feedback` (MCP, read-only, in `src/finish.ts` beside `update_status`): no arguments lists `todo` (open and processed, oldest first, one line each, no images) and `broken` (items that do not parse, with their errors); `id` returns the item as JSON then every frame as an image, a recording's frames each preceded by `Frame n of m at t s`, and for feedback on evidence the finding's file and the whole evidence image; `next: true` does the same for the oldest open item. A tool, not the agent's `Read`: one call, the server's parse and checks, and the frames in order with their times.
 - Skills `plugin/skills/feedback/SKILL.md` and `plugin/skills/feedback-next/SKILL.md`, both `disable-model-invocation`. `feedback-next` loads with `next: true` and then follows `feedback` from its Load step (it reads that file), so the rules live in one place.
 - Verified: `src/finish.test.ts` drives `get_feedback` over MCP (list, one item with a finding and its evidence, a recording's frames, next, none left); `claude plugin validate ./plugin`. Pending live verification (developer): `/reload-plugins`, then `/jeyna:feedback` on a project with a few items: the list, picking "2, 4", one item loaded with its image, processed after a change, done only after saying OK; and `/jeyna:feedback-next`.
+
+## D37 · 2026-10-28 · Live is Jeyna's own Chrome window; capture in place, at full size (amends D36)
+
+From the developer's test of D36 capture: the share prompt and "Sharing this tab" bar get in the way, the modal shrinks what is being captured (a retina tab drawn at about a quarter of its size), and the crop is inaccurate (a Live crop came out about 50 CSS px off, catching the studio's hint line). A design review (`docs/design/feedback-capture.md`) looked at every capture mechanism; the developer took its recommendation, minus element picking and trim for v1.
+
+**Why not canvas**
+- A canvas cannot draw an `<iframe>`, and a cross-origin app's pixels reach the studio's JavaScript only through the Screen Capture API. A cleverer canvas does not help; not framing the app does.
+- Still rejected: proxying the app through the sidecar plus DOM-to-image (D36: not real pixels; it loses fonts, canvas/WebGL, nested iframes and hover/focus states, and the proxy breaks OAuth, cookies and hot reload); an injected `<script>` in the app; OS screenshots.
+- Deferred: a browser extension (`chrome.tabs.captureVisibleTab`), the one way to capture in the developer's everyday Chrome profile. A second artifact to ship; add it if that becomes a requirement. Region/Element Capture on top of `getDisplayMedia` is the fallback if the window below proves unworkable.
+
+**The window** (replaces D36's iframe and `getDisplayMedia`, both removed)
+- Live opens `app.url` in a **headed Chrome** that the sidecar launches with playwright-core: `launchPersistentContext` with the Chrome-then-Chromium fallback playtests already use (D13), `viewport: null` (a real, resizable window at the screen's device pixel ratio), and `--enable-automation` left out so Chrome shows no "controlled by automated test software" bar. One window per sidecar; Open again brings it to the front.
+- Its profile is per project, `.jeyna/chrome-profile/`, gitignored by `/jeyna:init`: logins and storage persist between sessions, and deleting the folder resets it. Not the developer's everyday profile, so no saved logins or extensions from there.
+- Capture is CDP `page.screenshot({ clip })`: real compositor pixels of exactly the selected region at device resolution, no prompt, no bar.
+- This is not the "Playwright browser in the sidecar streaming frames" D36 rejected: nothing is streamed or forwarded, the developer uses the window directly. That rejection stands.
+- The capture UI is injected with `addInitScript` into a closed shadow root and talks to the sidecar through `exposeBinding`. The binding accepts calls only from the main frame on `app.url`'s origin (feedback text becomes instructions to Claude); on any other origin the script does nothing.
+- Capture state (mode, frozen frame, region, frames, draft text) lives in the sidecar, so a recording carries on across navigations and a draft survives a reload. Closing the window with unsaved text offers the draft once in the studio.
+- The studio's Live page becomes the launcher: Open app window (with the existing reachability probe and "Open anyway"), the window's state (open, page, size; recording with time and frames, and a Stop), the shortcuts, and the items captured in this window.
+- Cost accepted: playwright-core in the sidecar bundle, `plugin/studio/` about 9 MB larger.
+
+**Capture in place**
+- **Snap**: ⌥⇧S (Alt+Shift+S; matched on `e.code`, swallowed so the app never sees it) or the window's small pill freezes the page first, so hover states and open menus survive, then shows the frozen frame at 1:1 under a shade. Drag a region (8 handles, arrow keys move and ⌥+arrows resize, ⇧ for 10 px); a click or **A** takes the whole window. A 320 px panel opens beside the selection (right, else below, left, above; docked and draggable if none fits), textarea focused, and handles never take focus from it. ⌘↩ saves; a toast gives the id and the prompt. Esc cancels, asking first when there is text. Jeyna's UI is never in a capture.
+- **Recording**: ⌥⇧R picks the region first (the same overlay, the last region preselected), then the app is live and usable while a ring and a timer/Stop sit outside the region, so they are never in a frame. ⌥⇧R, Stop or 40 frames ends it (Esc does not). Frames every 500 ms, all kept, at most 40 (D36 unchanged). Then the recording plays back in place with a scrubber, and the region can be cropped tighter for every frame before saving.
+- **Evidence**: the same overlay in a full-window lightbox at 100 % (Fit when larger), replacing the modal; the page behind is inert and the back-reference is taken when it opens.
+- The modal `CaptureEditor` goes; the Flipbook stays for the item page.
+- Out of v1: clicking an element to select it (and a `target` selector in the item), trimming a recording, several captures per item, drawing on captures, full-page snaps, window sizes from `viewports:`.
+
+**The item**
+- D36's format stays, schema 1. A live item adds two optional fields, `url` (the page at the freeze) and `viewport` (`{ width, height, dpr }`), and `get_feedback` prints them before the frames so Claude knows the route.
