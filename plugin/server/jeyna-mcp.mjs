@@ -207943,6 +207943,7 @@ var MAX_FRAMES = 40;
 var FEEDBACK_STATUSES = ["open", "processed", "done", "wontfix"];
 var ID = /^FB-\d{3,}$/;
 var PNG4 = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+var Viewport = external_exports.strictObject({ width: external_exports.number().int().positive(), height: external_exports.number().int().positive(), dpr: external_exports.number().positive() });
 var FeedbackFront = external_exports.strictObject({
   schema: external_exports.literal(1),
   id: external_exports.string(),
@@ -207956,6 +207957,8 @@ var FeedbackFront = external_exports.strictObject({
   run: external_exports.string().optional(),
   evidence: external_exports.string().optional(),
   finding: external_exports.string().optional(),
+  url: external_exports.string().optional(),
+  viewport: Viewport.optional(),
   created: external_exports.string()
 });
 var feedbackDir = (root) => join7(root, ".jeyna", "feedback");
@@ -208000,7 +208003,9 @@ var NewFeedback = external_exports.strictObject({
   source: external_exports.enum(["live", "evidence"]),
   run: external_exports.string().optional(),
   evidence: external_exports.string().optional(),
-  finding: external_exports.string().optional()
+  finding: external_exports.string().optional(),
+  url: external_exports.string().url().optional(),
+  viewport: Viewport.optional()
 });
 function updateFeedback(root, id, change) {
   const path = itemFile(root, id);
@@ -208364,7 +208369,7 @@ ${m[2]}`);
   server3.registerTool(
     "get_feedback",
     {
-      description: "The developer's feedback from Jeyna studio (D36). No arguments: the items still to do, oldest first (open, and processed ones awaiting the developer's check), one line each, no images. id: that item in full: its text, every capture frame as an image (a recording's frames in order, with their time), and for feedback on evidence the finding's file and the whole evidence image. next: the same for the oldest open item.",
+      description: "The developer's feedback from Jeyna studio (D36). No arguments: the items still to do, oldest first (open, and processed ones awaiting the developer's check), one line each, no images. id: that item in full: its text, every capture frame as an image (a recording's frames in order, with their time); for feedback on Live the page url and viewport it was captured at, and for feedback on evidence the finding's file and the whole evidence image. next: the same for the oldest open item.",
       inputSchema: {
         id: external_exports.string().optional().describe("Feedback id, e.g. FB-007"),
         next: external_exports.boolean().optional().describe("Load the oldest open item")
@@ -208395,7 +208400,7 @@ ${m[2]}`);
         if (!fr) throw new Error(`.jeyna/feedback/${item.path} does not parse: ${item.errors.join("; ")}. The developer fixes or deletes it in the studio.`);
         const png = (path) => ({ type: "image", data: readFileSync6(path).toString("base64"), mimeType: "image/png" });
         const content = [
-          { type: "text", text: JSON.stringify({ id: item.id, status: fr.status, ...fr.note && { note: fr.note }, capture: fr.capture, from: from(item), created: fr.created, text: item.text, path: `.jeyna/feedback/${item.path}`, ...item.errors.length && { errors: item.errors } }) }
+          { type: "text", text: JSON.stringify({ id: item.id, status: fr.status, ...fr.note && { note: fr.note }, capture: fr.capture, from: from(item), ...fr.url && { url: fr.url }, ...fr.viewport && { viewport: fr.viewport }, created: fr.created, text: item.text, path: `.jeyna/feedback/${item.path}`, ...item.errors.length && { errors: item.errors } }) }
         ];
         fr.frames.forEach((f, i) => {
           if (fr.capture === "recording") content.push({ type: "text", text: `Frame ${i + 1} of ${fr.frames.length} at ${(f.ms / 1e3).toFixed(1)} s` });

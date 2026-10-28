@@ -262,7 +262,7 @@ test("update_status sets a feedback item's status; finding-only statuses and arg
   expect(text(await call("update_status", { id: "FB-002", status: "done" }))).toBe("No feedback FB-002 under .jeyna/feedback/.");
 });
 
-test("get_feedback lists what is to do without images, loads one item with its frames, and next takes the oldest open one (D36)", async () => {
+test("get_feedback lists what is to do without images, loads one item with its frames and where it was captured, and next takes the oldest open one (D36, D37)", async () => {
   const { root, call, text, runDir } = await started();
   const png = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
   const finding = JSON.parse(text(await call("record_finding", { case: "t1-390x844", finding: A11Y }))).id;
@@ -270,7 +270,8 @@ test("get_feedback lists what is to do without images, loads one item with its f
   const run = basename(runDir);
   createFeedback(root, { text: "Done already", capture: "snap", frames: [{ png, ms: 0 }], source: "live" });
   createFeedback(root, { text: "Label above the field\nlike the email one", capture: "snap", frames: [{ png, ms: 0 }], source: "evidence", run, evidence: "t1-390x844-1-login.png", finding });
-  createFeedback(root, { text: "Spinner flickers", capture: "recording", frames: [{ png, ms: 0 }, { png, ms: 1500 }], source: "live" });
+  const at = { url: "http://localhost:4173/todos", viewport: { width: 1512, height: 860, dpr: 2 } };
+  createFeedback(root, { text: "Spinner flickers", capture: "recording", frames: [{ png, ms: 0 }, { png, ms: 1500 }], source: "live", ...at });
   await call("update_status", { id: "FB-001", status: "done" });
   await call("update_status", { id: "FB-002", status: "processed" });
 
@@ -290,7 +291,7 @@ test("get_feedback lists what is to do without images, loads one item with its f
   expect(one.content[2].text).toContain(A11Y.actual);
 
   const next = (await call("get_feedback", { next: true })) as unknown as { content: { type: string; text?: string }[] };
-  expect(JSON.parse(next.content[0].text!).id).toBe("FB-003");
+  expect(JSON.parse(next.content[0].text!)).toMatchObject({ id: "FB-003", ...at });
   expect(next.content.map((c) => c.text ?? c.type)).toEqual([next.content[0].text, "Frame 1 of 2 at 0.0 s", "image", "Frame 2 of 2 at 1.5 s", "image"]);
 
   expect(text(await call("get_feedback", { id: "FB-009" }))).toBe("No feedback FB-009 under .jeyna/feedback/.");

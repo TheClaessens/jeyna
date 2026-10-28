@@ -234,7 +234,7 @@ export function registerFinishTools(server: McpServer, getContext: () => { root:
     {
       description:
         "The developer's feedback from Jeyna studio (D36). No arguments: the items still to do, oldest first (open, and processed ones awaiting the developer's check), one line each, no images. " +
-        "id: that item in full: its text, every capture frame as an image (a recording's frames in order, with their time), and for feedback on evidence the finding's file and the whole evidence image. next: the same for the oldest open item.",
+        "id: that item in full: its text, every capture frame as an image (a recording's frames in order, with their time); for feedback on Live the page url and viewport it was captured at, and for feedback on evidence the finding's file and the whole evidence image. next: the same for the oldest open item.",
       inputSchema: {
         id: z.string().optional().describe("Feedback id, e.g. FB-007"),
         next: z.boolean().optional().describe("Load the oldest open item"),
@@ -260,7 +260,7 @@ export function registerFinishTools(server: McpServer, getContext: () => { root:
         if (!fr) throw new Error(`.jeyna/feedback/${item.path} does not parse: ${item.errors.join("; ")}. The developer fixes or deletes it in the studio.`);
         const png = (path: string) => ({ type: "image" as const, data: readFileSync(path).toString("base64"), mimeType: "image/png" });
         const content: ({ type: "text"; text: string } | ReturnType<typeof png>)[] = [
-          { type: "text", text: JSON.stringify({ id: item.id, status: fr.status, ...(fr.note && { note: fr.note }), capture: fr.capture, from: from(item), created: fr.created, text: item.text, path: `.jeyna/feedback/${item.path}`, ...(item.errors.length && { errors: item.errors }) }) },
+          { type: "text", text: JSON.stringify({ id: item.id, status: fr.status, ...(fr.note && { note: fr.note }), capture: fr.capture, from: from(item), ...(fr.url && { url: fr.url }), ...(fr.viewport && { viewport: fr.viewport }), created: fr.created, text: item.text, path: `.jeyna/feedback/${item.path}`, ...(item.errors.length && { errors: item.errors }) }) },
         ];
         fr.frames.forEach((f, i) => {
           if (fr.capture === "recording") content.push({ type: "text", text: `Frame ${i + 1} of ${fr.frames.length} at ${(f.ms / 1000).toFixed(1)} s` });

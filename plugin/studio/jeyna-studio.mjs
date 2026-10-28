@@ -39342,6 +39342,7 @@ function findProjectRoot(...candidates) {
 var FEEDBACK_STATUSES = ["open", "processed", "done", "wontfix"];
 var ID = /^FB-\d{3,}$/;
 var PNG = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+var Viewport = external_exports.strictObject({ width: external_exports.number().int().positive(), height: external_exports.number().int().positive(), dpr: external_exports.number().positive() });
 var FeedbackFront = external_exports.strictObject({
   schema: external_exports.literal(1),
   id: external_exports.string(),
@@ -39355,6 +39356,8 @@ var FeedbackFront = external_exports.strictObject({
   run: external_exports.string().optional(),
   evidence: external_exports.string().optional(),
   finding: external_exports.string().optional(),
+  url: external_exports.string().optional(),
+  viewport: Viewport.optional(),
   created: external_exports.string()
 });
 var feedbackDir = (root4) => join2(root4, ".jeyna", "feedback");
@@ -39403,7 +39406,9 @@ var NewFeedback = external_exports.strictObject({
   source: external_exports.enum(["live", "evidence"]),
   run: external_exports.string().optional(),
   evidence: external_exports.string().optional(),
-  finding: external_exports.string().optional()
+  finding: external_exports.string().optional(),
+  url: external_exports.string().url().optional(),
+  viewport: Viewport.optional()
 });
 function createFeedback(root4, input2, now = /* @__PURE__ */ new Date()) {
   const n = NewFeedback.parse(input2);
@@ -39414,6 +39419,7 @@ function createFeedback(root4, input2, now = /* @__PURE__ */ new Date()) {
       throw new Error(`No evidence ${n.evidence} in run ${n.run}.`);
     }
     if (n.finding && !existsSync2(join2(runDirOf(root4, n.run), "findings", `${basename(n.finding)}.md`))) throw new Error(`No finding ${n.finding} in run ${n.run}.`);
+    if (n.url || n.viewport) throw new Error("url and viewport are only for feedback on Live");
   } else if (n.run || n.evidence || n.finding) {
     throw new Error("run, evidence and finding are only for feedback on evidence");
   }
@@ -39441,6 +39447,8 @@ function createFeedback(root4, input2, now = /* @__PURE__ */ new Date()) {
     ...n.run && { run: n.run },
     ...n.evidence && { evidence: n.evidence },
     ...n.finding && { finding: n.finding },
+    ...n.url && { url: n.url },
+    ...n.viewport && { viewport: n.viewport },
     created: now.toISOString()
   };
   writeFileSync(join2(dir, `${id}.md`), `---

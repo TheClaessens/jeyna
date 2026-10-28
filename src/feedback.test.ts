@@ -46,6 +46,17 @@ test("create refuses what is not a PNG, a snap of two frames, evidence that does
   expect(existsSync(feedbackDir(root)) ? readdirSync(feedbackDir(root)) : []).toEqual([]);
 });
 
+test("a live item keeps the page url and viewport it was captured at; evidence items take neither (D37)", () => {
+  const root = project();
+  const viewport = { width: 1512, height: 860, dpr: 2 };
+  createFeedback(root, { ...snap, url: "http://localhost:4173/login", viewport });
+  expect(readFeedback(root)[0]).toMatchObject({ errors: [], front: { url: "http://localhost:4173/login", viewport } });
+  const onEvidence = { ...snap, source: "evidence" as const, run: "2026-10-17-todos", evidence: "t1-390x844-1-login.png" };
+  expect(() => createFeedback(root, { ...onEvidence, url: "http://localhost:4173/login" })).toThrow("url and viewport are only for feedback on Live");
+  expect(() => createFeedback(root, { ...onEvidence, viewport })).toThrow("url and viewport are only for feedback on Live");
+  expect(() => createFeedback(root, { ...snap, viewport: { width: 0, height: 860, dpr: 2 } })).toThrow();
+});
+
 test("text changes only while open; a new status drops the old note; delete removes the item and its frames", () => {
   const root = project();
   createFeedback(root, snap);

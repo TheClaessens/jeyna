@@ -14,6 +14,9 @@ export type FeedbackStatus = (typeof FEEDBACK_STATUSES)[number];
 const ID = /^FB-\d{3,}$/;
 const PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 
+// The page at the freeze on Live (D37), so Claude knows the route and the size it was seen at.
+const Viewport = z.strictObject({ width: z.number().int().positive(), height: z.number().int().positive(), dpr: z.number().positive() });
+
 export const FeedbackFront = z.strictObject({
   schema: z.literal(1),
   id: z.string(),
@@ -27,6 +30,8 @@ export const FeedbackFront = z.strictObject({
   run: z.string().optional(),
   evidence: z.string().optional(),
   finding: z.string().optional(),
+  url: z.string().optional(),
+  viewport: Viewport.optional(),
   created: z.string(),
 });
 export type FeedbackFront = z.infer<typeof FeedbackFront>;
@@ -91,6 +96,8 @@ export const NewFeedback = z.strictObject({
   run: z.string().optional(),
   evidence: z.string().optional(),
   finding: z.string().optional(),
+  url: z.string().url().optional(),
+  viewport: Viewport.optional(),
 });
 export type NewFeedback = z.infer<typeof NewFeedback>;
 
@@ -105,6 +112,7 @@ export function createFeedback(root: string, input: NewFeedback, now = new Date(
       throw new Error(`No evidence ${n.evidence} in run ${n.run}.`);
     }
     if (n.finding && !existsSync(join(runDirOf(root, n.run), "findings", `${basename(n.finding)}.md`))) throw new Error(`No finding ${n.finding} in run ${n.run}.`);
+    if (n.url || n.viewport) throw new Error("url and viewport are only for feedback on Live");
   } else if (n.run || n.evidence || n.finding) {
     throw new Error("run, evidence and finding are only for feedback on evidence");
   }
@@ -126,6 +134,7 @@ export function createFeedback(root: string, input: NewFeedback, now = new Date(
   const front: FeedbackFront = {
     schema: 1, id, status: "open", capture: n.capture, frames, source: n.source,
     ...(n.run && { run: n.run }), ...(n.evidence && { evidence: n.evidence }), ...(n.finding && { finding: n.finding }),
+    ...(n.url && { url: n.url }), ...(n.viewport && { viewport: n.viewport }),
     created: now.toISOString(),
   };
   writeFileSync(join(dir, `${id}.md`), `---\n${stringify(front)}---\n\n${n.text.trim()}\n`, { flag: "wx" });
