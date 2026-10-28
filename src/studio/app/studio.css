@@ -244,20 +244,7 @@ code.prompt { padding: 6px 10px; border: 1px solid var(--hair); border-radius: 6
 .vr { width: 1px; height: 20px; background: var(--hair-strong); }
 .seg .n { font-weight: 400; color: var(--muted); margin-left: 4px; }
 
-/* The capture editor: crop over the frame, then the text */
-dialog.capture { width: min(1100px, calc(100vw - 32px)); max-height: calc(100vh - 32px); padding: 24px; border: 1px solid var(--hair-strong); border-radius: 10px; background: var(--surface); color: var(--navy); }
-dialog.capture::backdrop { background: rgba(14, 31, 56, .55); }
-dialog.capture form, dialog.capture .saved { display: flex; flex-direction: column; gap: 12px; }
-dialog.capture header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; }
-dialog.capture h2 { font-size: 18px; font-weight: 600; }
-dialog.capture .row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
-dialog.capture .row.end { justify-content: flex-end; }
-.stage { position: relative; align-self: center; line-height: 0; touch-action: none; user-select: none; overflow: hidden; } /* clips .sel's shade to the image */
-.stage canvas { display: block; max-width: 100%; max-height: 55vh; border: 1px solid var(--hair); border-radius: 4px; cursor: crosshair; background: var(--raised); }
-.stage .sel { position: absolute; pointer-events: none; border: 2px solid var(--tide); box-shadow: 0 0 0 9999px rgba(14, 31, 56, .45); }
-.stage:has(.sel) canvas { border-radius: 0; }
-dialog.capture .text { display: flex; flex-direction: column; gap: 6px; font-weight: 600; font-size: 13px; }
-dialog.capture textarea, .fbtext textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--hair-strong); border-radius: 6px; font: inherit; font-weight: 400; font-size: 14px; color: var(--navy); background: var(--surface); resize: vertical; }
+.fbtext textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--hair-strong); border-radius: 6px; font: inherit; font-weight: 400; font-size: 14px; color: var(--navy); background: var(--surface); resize: vertical; }
 
 /* Flipbook */
 .flipbook { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
@@ -284,19 +271,13 @@ main.feedback .head .row, .tools .row { display: flex; flex-wrap: wrap; align-it
 .attention .row ul { flex: 1 1 auto; }
 @media (max-width: 720px) { main.feedback { padding: 20px 16px; } .fblist .row { padding: 12px 16px; } .fblist .thumb { display: none; } }
 
-/* Live: the app framed under one toolbar */
-main.live { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; }
-.livebar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; padding: 8px 24px; background: var(--surface); border-bottom: 1px solid var(--hair); font-size: 13px; }
-.livebar .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
-.livebar label.check { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; color: var(--text2); cursor: pointer; }
-.livebar input[type=checkbox] { accent-color: var(--tide); }
-.btn.rec { color: var(--fail); border-color: var(--fail); font-weight: 600; }
-.btn.rec .dot { width: 10px; height: 10px; border-radius: 5px; background: var(--fail); animation: blink 1s steps(2, start) infinite; }
-@keyframes blink { to { visibility: hidden; } }
-@media (prefers-reduced-motion: reduce) { .btn.rec .dot { animation: none; } }
-main.live iframe { flex: 1 1 auto; width: 100%; min-height: 480px; border: 0; background: var(--surface); }
-.livemsg { padding: 24px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
-.livehint { padding: 6px 24px; font-size: 12px; border-top: 1px solid var(--hair); }
+/* Live: the launcher of the app window (D37) */
+.launcher { display: flex; flex-direction: column; gap: 12px; }
+.launcher .row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.launcher .grow { flex: 1; }
+.launcher .dot.on { width: 10px; height: 10px; border-radius: 5px; background: var(--pass); }
+dl.keys { display: grid; grid-template-columns: max-content 1fr; gap: 8px 16px; margin: 0; }
+dl.keys dd { margin: 0; color: var(--text2); }
 .tools code.prompt { flex: none; text-align: left; color: var(--navy); }
 main.feedback > .seg { align-self: flex-start; flex-wrap: wrap; }
 .evidence > img { align-self: flex-start; }

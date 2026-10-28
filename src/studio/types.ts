@@ -1,6 +1,7 @@
 // What the sidecar serves and pushes: one JSON document for .jeyna/playtests/ and .jeyna/feedback/ (index.json).
 // Type-only imports, so the browser bundle pulls in no server code.
 import type { FeedbackItem } from "../feedback.js";
+import type { WindowState } from "./window.js";
 import type { Session } from "../schema.js";
 import type { Finding, Since } from "../validate.js";
 
@@ -29,4 +30,6 @@ export type StudioIndex = {
   runs: StudioRun[];
   // Every .jeyna/feedback/FB-*.md, oldest id first, each with its own errors (D36).
   feedback: FeedbackItem[];
+  // The Live window: open or not, its page, whether a snap is frozen in it (D37).
+  window: WindowState;
 };

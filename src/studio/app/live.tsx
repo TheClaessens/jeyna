@@ -1,22 +1,25 @@
-// Studio · Live (D36): the app at app.url in a frame, to use by hand and capture feedback on. Its pixels are
-// cross-origin, so capture goes through the Screen Capture API: one share per session, a snap grabs one frame,
-// a recording keeps a frame every 500 ms. The crop starts on the frame's rectangle.
-import { useEffect, useRef, useState } from "react";
-import { FRAME_MS, MAX_FRAMES } from "../../recording.js";
+// Studio · Live (D37): the launcher of the Live window, the app in its own Chrome where the developer snaps feedback in
+// place. Open or bring it to the front, close it, the keys that work in it, and what was captured since it opened.
+import { Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import * as m from "../model.js";
 import type { StudioIndex } from "../types.js";
-import { CaptureEditor, type Frame, type Rect } from "./capture.js";
+import { Card } from "./ui.js";
+
+const mac = /Mac|iPhone|iPad/.test(navigator.platform);
+const key = (k: string) => (mac ? `⌥⇧${k}` : `Alt+Shift+${k}`);
+
+async function windowApi(action: "open" | "close") {
+  const res = await fetch("/api/window", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action }) });
+  const out = await res.json();
+  if (!res.ok) throw new Error(out.error ?? res.statusText);
+}
 
 export function LiveScreen({ index }: { index: StudioIndex }) {
   const app = index.app;
-  const frame = useRef<HTMLIFrameElement>(null);
-  const video = useRef<HTMLVideoElement>(null);
-  const stream = useRef<MediaStream | null>(null);
-  const rec = useRef<{ timer: number; frames: Frame[] } | null>(null);
-  const [sharing, setSharing] = useState(false);
-  const [otherTab, setOtherTab] = useState(false);
-  const [recording, setRecording] = useState(0); // frames kept so far; 0 when not recording
-  const [editor, setEditor] = useState<{ frames: Frame[]; initial: Rect | null } | null>(null);
+  const w = index.window;
   const [up, setUp] = useState<boolean | null>(null);
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
   // Does anything answer at app.url? An opaque response is enough; only a network error means it is down.
@@ -26,122 +29,83 @@ export function LiveScreen({ index }: { index: StudioIndex }) {
     fetch(app.url, { mode: "no-cors", cache: "no-store" }).then(() => setUp(true), () => setUp(false));
   };
   useEffect(probe, [app?.url]);
-  useEffect(() => () => {
-    if (rec.current) clearInterval(rec.current.timer);
-    for (const t of stream.current?.getTracks() ?? []) t.stop();
-  }, []);
 
-  async function share(): Promise<HTMLVideoElement> {
-    const v = video.current!;
-    if (stream.current?.active) return v;
-    // preferCurrentTab and selfBrowserSurface are Chromium's; other browsers ignore them and ask which surface to share.
-    const options = { video: true, audio: false, preferCurrentTab: !otherTab, selfBrowserSurface: otherTab ? "exclude" : "include" };
-    const s = await navigator.mediaDevices.getDisplayMedia(options as DisplayMediaStreamOptions);
-    s.getVideoTracks()[0].addEventListener("ended", () => {
-      stream.current = null;
-      setSharing(false);
-      if (rec.current) stop();
-    });
-    stream.current = s;
-    v.srcObject = s;
-    await v.play();
-    setSharing(true);
-    return v;
-  }
-
-  const grab = (v: HTMLVideoElement): Frame => {
-    const c = document.createElement("canvas");
-    c.width = v.videoWidth;
-    c.height = v.videoHeight;
-    c.getContext("2d")!.drawImage(v, 0, 0);
-    return { src: c, w: c.width, h: c.height, ms: 0 };
-  };
-
-  // Sharing this tab, the frame's box scaled to the captured size is where the app is. Sharing another tab, nothing is known.
-  const appRect = (w: number, h: number): Rect | null => {
-    const b = frame.current?.getBoundingClientRect();
-    if (otherTab || !b) return null;
-    const sx = w / window.innerWidth;
-    const sy = h / window.innerHeight;
-    return { x: b.left * sx, y: b.top * sy, w: Math.min(b.width * sx, w - b.left * sx), h: Math.min(b.height * sy, h - b.top * sy) };
-  };
-
-  const run = (f: () => Promise<void>) => () => {
+  const act = (action: "open" | "close") => async () => {
+    setBusy(true);
     setError("");
-    f().catch((e) => setError((e as Error).name === "NotAllowedError" ? "Screen sharing was not allowed, so nothing was captured." : (e as Error).message));
-  };
-
-  const snap = run(async () => {
-    const f = grab(await share());
-    setEditor({ frames: [f], initial: appRect(f.w, f.h) });
-  });
-
-  const record = run(async () => {
-    const v = await share();
-    const start = performance.now();
-    const r = { timer: 0, frames: [grab(v)] };
-    r.timer = window.setInterval(() => {
-      r.frames.push({ ...grab(v), ms: performance.now() - start });
-      setRecording(r.frames.length);
-      if (r.frames.length >= MAX_FRAMES) stop();
-    }, FRAME_MS);
-    rec.current = r;
-    setRecording(1);
-  });
-
-  function stop() {
-    const r = rec.current;
-    if (!r) return;
-    clearInterval(r.timer);
-    rec.current = null;
-    setRecording(0);
-    setEditor({ frames: r.frames, initial: appRect(r.frames[0].w, r.frames[0].h) });
-  }
-
-  const endShare = () => {
-    for (const t of stream.current?.getTracks() ?? []) t.stop();
-    stream.current = null;
-    setSharing(false);
+    try {
+      await windowApi(action);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
   };
 
   if (!app) return <p className="empty-state">No app.url: .jeyna/jeyna.config.yaml is missing or does not parse.</p>;
+  const page = w.url ? (w.url.startsWith(app.url) ? w.url.slice(app.url.replace(/\/$/, "").length) || "/" : w.url) : null;
+  const captured = w.openedAt ? index.feedback.filter((i) => i.front?.source === "live" && i.front.created >= w.openedAt!).reverse() : [];
+
   return (
-    <main className="live">
-      <div className="livebar">
-        <a href={app.url} target="_blank" rel="noreferrer" className="mono">{app.url}</a>
-        <div className="actions">
-          {recording ? (
-            <button type="button" className="btn rec" onClick={stop}>
-              <span className="dot" aria-hidden="true" />Stop · {recording} / {MAX_FRAMES} frames
-            </button>
+    <div className="center">
+      <main className="feedback live">
+        <section className="head">
+          <div className="title"><h1>Live</h1></div>
+          <p className="summary">Use {app.name} in its own Chrome window and snap feedback right where you see it. It lands in <Link to="/feedback">Feedback</Link>.</p>
+        </section>
+
+        <Card className="launcher">
+          {w.open ? (
+            <div className="row">
+              <span className="dot on" aria-hidden="true" />
+              <span>
+                App window open{page && <> · <span className="mono">{page}</span></>}
+                {w.capturing && <span className="muted"> · capturing</span>}
+              </span>
+              <span className="grow" />
+              <button type="button" className="btn" onClick={act("open")} disabled={busy}>Bring to front</button>
+              <button type="button" className="btn" onClick={act("close")} disabled={busy}>Close</button>
+            </div>
+          ) : up === false ? (
+            <div className="row">
+              <span>Nothing answers at <span className="mono">{app.url}</span>. Start your app, then try again.</span>
+              <span className="grow" />
+              <button type="button" className="btn" onClick={probe}>Try again</button>
+              <button type="button" className="btn" onClick={act("open")} disabled={busy}>Open anyway</button>
+            </div>
           ) : (
-            <>
-              <button type="button" className="btn primary" onClick={snap}>Snap</button>
-              <button type="button" className="btn" onClick={record}>Record</button>
-            </>
+            <div className="row">
+              <button type="button" className="btn primary" onClick={act("open")} disabled={busy || up === null}>{busy ? "Opening…" : "Open app window"}</button>
+              <span className="mono">{app.url}</span>
+            </div>
           )}
-          {sharing ? (
-            <button type="button" className="btn" onClick={endShare} disabled={!!recording}>Stop sharing</button>
-          ) : (
-            <label className="check" title="For an app that refuses to be framed: open it in its own tab and capture that tab.">
-              <input type="checkbox" checked={otherTab} onChange={(e) => setOtherTab(e.target.checked)} />
-              capture another tab
-            </label>
-          )}
-        </div>
-      </div>
-      {error && <p className="error livemsg" role="alert">{error}</p>}
-      {up === false ? (
-        <div className="livemsg">
-          <p>Nothing answers at <span className="mono">{app.url}</span>. Start your app, then reload.</p>
-          <button type="button" className="btn" onClick={probe}>Reload</button>
-        </div>
-      ) : (
-        <iframe ref={frame} src={app.url} title={`${app.name} at ${app.url}`} />
-      )}
-      <p className="livehint muted">A blank frame? Your app may refuse to be framed: open it in its own tab, tick “capture another tab” and pick that tab.</p>
-      <video ref={video} muted playsInline hidden />
-      {editor && <CaptureEditor frames={editor.frames} initial={editor.initial} origin={{ source: "live" }} onClose={() => setEditor(null)} />}
-    </main>
+          <p className="muted">Chrome, with this project's own profile in <span className="mono">.jeyna/chrome-profile/</span>, so logins are kept between sessions.</p>
+          {error && <p className="error" role="alert">{error}</p>}
+        </Card>
+
+        <Card title="In the app window">
+          <dl className="keys">
+            <dt><kbd>{key("S")}</kbd></dt><dd>Snap: freeze the window, select what matters, write what should change. Or <b>Snap</b> on Jeyna's pill, bottom right.</dd>
+            <dt><kbd>A</kbd></dt><dd>Select the whole window</dd>
+            <dt><kbd>{mac ? "⌘↩" : "Ctrl+↩"}</kbd></dt><dd>Save</dd>
+            <dt><kbd>Esc</kbd></dt><dd>Cancel; it asks first if you wrote something</dd>
+          </dl>
+        </Card>
+
+        {!!captured.length && (
+          <Card title="Captured in this window" pad={false} className="fblist">
+            {captured.map((i) => (
+              <Link key={i.id} to="/feedback/$feedbackId" params={{ feedbackId: i.id }} className="row">
+                <span className="id">{i.id}</span>
+                <span className="ttl">
+                  <span className="t">{i.text.split("\n")[0]}</span>
+                  <span className="where">{i.front!.url ?? "Live"} · {m.dateTime(i.front!.created)}</span>
+                </span>
+              </Link>
+            ))}
+          </Card>
+        )}
+      </main>
+    </div>
   );
 }

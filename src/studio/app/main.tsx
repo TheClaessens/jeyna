@@ -9,6 +9,7 @@ import { LiveScreen } from "./live.js";
 import { Rail, RunScreen } from "./run.js";
 import { useStudio } from "./store.js";
 import { type Section, TopBar } from "./ui.js";
+import "../overlay/overlay.css";
 import "./studio.css";
 
 // Filters live in the URL as plain strings (?severity=critical,major&dups=0), not JSON.

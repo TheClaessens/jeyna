@@ -1,9 +1,8 @@
 // The capture overlay (D37): select a region of an image at full size, in place, and write what should change. One
 // component for the studio's evidence lightbox and the app window's frozen frame. It works in display px over the image
-// and hands the host the selection in the image's own pixels; the host crops and saves.
+// and hands the host the selection in the image's own pixels; the host crops and saves, and brings overlay.css.
 import { type KeyboardEvent, type PointerEvent, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { fromPoints, type Handle, MIN, move, placePanel, type Rect, resize, toImage } from "./geometry.js";
-import "./overlay.css";
 
 const HANDLES: Handle[] = ["nw", "n", "ne", "e", "se", "s", "sw", "w"];
 const CLICK = 4; // display px a pointer may travel and still be a click

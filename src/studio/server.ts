@@ -20,6 +20,7 @@ import { createFeedback, deleteFeedback, FEEDBACK_STATUSES, feedbackFile, NewFee
 import { findProjectRoot, runDirOf, splitFront } from "../shared.js";
 import { type Finding, previousRun, readFindings, readSession, since, validateRun } from "../validate.js";
 import type { StudioFinding, StudioIndex, StudioRun } from "./types.js";
+import { liveWindow } from "./window.js";
 
 const log = (...a: unknown[]) => console.error(new Date().toISOString(), ...a);
 
@@ -110,7 +111,17 @@ function scan(): StudioIndex {
         .map((d) => scanRun(join(playtests, d)))
     : [];
   runs.sort((a, b) => (b.session?.started ?? "").localeCompare(a.session?.started ?? "") || b.id.localeCompare(a.id));
-  return { schema: 1, generated: new Date().toISOString(), root, app: readApp(), runs, feedback: readFeedback(root) };
+  return { schema: 1, generated: new Date().toISOString(), root, app: readApp(), runs, feedback: readFeedback(root), window: live?.state() ?? CLOSED };
+}
+
+// --- The Live window (D37), made on first open for the app.url of that moment.
+const CLOSED = { open: false, url: null, openedAt: null, capturing: false };
+let live: ReturnType<typeof liveWindow> | undefined;
+let liveFor = "";
+function windowFor(app: string) {
+  if (live && liveFor !== app && !live.state().open) live = undefined; // app.url changed while the window was closed
+  liveFor = app;
+  return (live ??= liveWindow({ root, app, script: readFileSync(join(assets, "overlay.js"), "utf8"), onChange: () => changed() }));
 }
 
 let index = scan();
@@ -143,11 +154,13 @@ function changed() {
   timer = setTimeout(rescan, 150);
 }
 
-// One recursive watch on .jeyna/ covers playtests/ (even before it exists) and feedback/. index.json is ours: ignored.
+// One recursive watch on .jeyna/ covers playtests/ (even before it exists) and feedback/. index.json is ours, and
+// chrome-profile/ is the Live window's, which Chrome writes to all the time: both ignored.
 let watcher: FSWatcher | undefined;
 function startWatch() {
   watcher = watch(jeyna, { recursive: true }, (_, file) => {
-    if (!String(file ?? "").startsWith("index.json")) changed();
+    const f = String(file ?? "");
+    if (!f.startsWith("index.json") && !f.startsWith("chrome-profile")) changed();
   });
   log("watching", jeyna);
 }
@@ -190,6 +203,27 @@ async function body(req: IncomingMessage): Promise<unknown> {
 
 const Change = z.strictObject({ status: z.enum(FEEDBACK_STATUSES).optional(), text: z.string().optional() });
 
+const WindowAction = z.strictObject({ action: z.enum(["open", "close"]) });
+
+// Open (or bring to the front) and close the Live window, from the studio page only.
+async function windowAction(req: IncomingMessage, res: ServerResponse) {
+  if (!fromStudio(req)) return json(res, 403, { error: "the window opens from the studio page only" });
+  if (req.method !== "POST") return json(res, 405, { error: "method not allowed" });
+  try {
+    const { action } = WindowAction.parse(await body(req));
+    const app = readApp();
+    if (!app) throw new Error("No app.url: .jeyna/jeyna.config.yaml is missing or does not parse.");
+    if (action === "open") await windowFor(app.url).open();
+    else await live?.close();
+    rescan();
+    return json(res, 200, { window: live?.state() ?? CLOSED });
+  } catch (e) {
+    const msg = e instanceof z.ZodError ? "send { action: open | close }" : (e as Error).message.split("\n")[0];
+    log("window action refused:", msg);
+    return json(res, 400, { error: msg });
+  }
+}
+
 const json = (res: ServerResponse, status: number, data: unknown) =>
   res.writeHead(status, { "content-type": TYPES[".json"], "cache-control": "no-cache" }).end(JSON.stringify(data));
 
@@ -215,6 +249,7 @@ function handle(req: IncomingMessage, res: ServerResponse) {
   const url = new URL(req.url ?? "/", "http://localhost");
   const item = /^\/api\/feedback(?:\/([^/]+))?$/.exec(url.pathname);
   if (item) return void feedbackWrite(req, res, item[1] && decodeURIComponent(item[1]));
+  if (url.pathname === "/api/window") return void windowAction(req, res);
   if (req.method !== "GET" && req.method !== "HEAD") return res.writeHead(405).end();
   if (url.pathname === "/api/index") {
     return res.writeHead(200, { "content-type": TYPES[".json"], "cache-control": "no-cache" }).end(payload);
