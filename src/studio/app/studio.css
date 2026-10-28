@@ -252,7 +252,7 @@ dialog.capture header { display: flex; flex-wrap: wrap; align-items: baseline; g
 dialog.capture h2 { font-size: 18px; font-weight: 600; }
 dialog.capture .row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 dialog.capture .row.end { justify-content: flex-end; }
-.stage { position: relative; align-self: center; line-height: 0; touch-action: none; user-select: none; }
+.stage { position: relative; align-self: center; line-height: 0; touch-action: none; user-select: none; overflow: hidden; } /* clips .sel's shade to the image */
 .stage canvas { display: block; max-width: 100%; max-height: 55vh; border: 1px solid var(--hair); border-radius: 4px; cursor: crosshair; background: var(--raised); }
 .stage .sel { position: absolute; pointer-events: none; border: 2px solid var(--tide); box-shadow: 0 0 0 9999px rgba(14, 31, 56, .45); }
 .stage:has(.sel) canvas { border-radius: 0; }

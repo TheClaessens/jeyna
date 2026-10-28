@@ -1,33 +1,17 @@
 // Studio · Live (D36): the app at app.url in a frame, to use by hand and capture feedback on. Its pixels are
 // cross-origin, so capture goes through the Screen Capture API: one share per session, a snap grabs one frame,
-// a recording samples a frame every 500 ms and keeps those that changed. The crop starts on the frame's rectangle.
+// a recording keeps a frame every 500 ms. The crop starts on the frame's rectangle.
 import { useEffect, useRef, useState } from "react";
 import { FRAME_MS, MAX_FRAMES } from "../../recording.js";
 import type { StudioIndex } from "../types.js";
 import { CaptureEditor, type Frame, type Rect } from "./capture.js";
-
-// A 64 px wide greyscale copy of a frame, to tell a changed frame from a repeat cheaply.
-function signature(c: HTMLCanvasElement): Uint8ClampedArray {
-  const s = document.createElement("canvas");
-  s.width = 64;
-  s.height = Math.max(1, Math.round((64 * c.height) / c.width));
-  const g = s.getContext("2d", { willReadFrequently: true })!;
-  g.drawImage(c, 0, 0, s.width, s.height);
-  return g.getImageData(0, 0, s.width, s.height).data;
-}
-const differs = (a: Uint8ClampedArray, b: Uint8ClampedArray) => {
-  if (a.length !== b.length) return true;
-  let sum = 0;
-  for (let i = 0; i < a.length; i += 4) sum += Math.abs(a[i] - b[i]) + Math.abs(a[i + 1] - b[i + 1]) + Math.abs(a[i + 2] - b[i + 2]);
-  return sum / (a.length / 4) > 1; // ponytail: a mean of 1/765 per pixel; a blinking caret alone stays under it
-};
 
 export function LiveScreen({ index }: { index: StudioIndex }) {
   const app = index.app;
   const frame = useRef<HTMLIFrameElement>(null);
   const video = useRef<HTMLVideoElement>(null);
   const stream = useRef<MediaStream | null>(null);
-  const rec = useRef<{ timer: number; start: number; frames: Frame[]; last: Uint8ClampedArray } | null>(null);
+  const rec = useRef<{ timer: number; frames: Frame[] } | null>(null);
   const [sharing, setSharing] = useState(false);
   const [otherTab, setOtherTab] = useState(false);
   const [recording, setRecording] = useState(0); // frames kept so far; 0 when not recording
@@ -65,7 +49,7 @@ export function LiveScreen({ index }: { index: StudioIndex }) {
     return v;
   }
 
-  const grab = (v: HTMLVideoElement): Frame & { src: HTMLCanvasElement } => {
+  const grab = (v: HTMLVideoElement): Frame => {
     const c = document.createElement("canvas");
     c.width = v.videoWidth;
     c.height = v.videoHeight;
@@ -94,15 +78,10 @@ export function LiveScreen({ index }: { index: StudioIndex }) {
 
   const record = run(async () => {
     const v = await share();
-    const f = grab(v);
     const start = performance.now();
-    const r = { timer: 0, start, frames: [f] as Frame[], last: signature(f.src) };
+    const r = { timer: 0, frames: [grab(v)] };
     r.timer = window.setInterval(() => {
-      const next = grab(v);
-      const sig = signature(next.src);
-      if (!differs(sig, r.last)) return;
-      r.last = sig;
-      r.frames.push({ ...next, ms: performance.now() - start });
+      r.frames.push({ ...grab(v), ms: performance.now() - start });
       setRecording(r.frames.length);
       if (r.frames.length >= MAX_FRAMES) stop();
     }, FRAME_MS);

@@ -46,7 +46,7 @@ The one glossary for Jeyna. Use these words in docs, code, issues and agent prom
 - **Feedback item**: one capture plus the developer's text, `.jeyna/feedback/FB-<nnn>.md` beside its capture files, numbered across the project. Made in the studio; an item made on evidence names its run, evidence and finding. Status `open`, `processed` (Claude implemented it, a person still checks it), `done` (only by the developer, or by the agent on their explicit OK), `wontfix`. (D36)
 - **Capture**: a snap or a recording. Never changes once saved. (D36)
 - **Snap**: one cropped PNG, from an evidence image or the Live page. (D36)
-- **Recording**: ordered PNG frames with timestamps, every 500 ms, duplicates dropped, at most 40; played back as a flipbook. Not a video, and not a clip. (D36)
+- **Recording**: ordered PNG frames with timestamps, one every 500 ms, at most 40; played back as a flipbook. Not a video, and not a clip. (D36)
 - **Live**: the studio page that frames the running app (`app.url`) for capturing feedback while using it by hand. (D36)
 
 ## What the developer sees
