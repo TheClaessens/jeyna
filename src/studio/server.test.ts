@@ -201,10 +201,10 @@ test("feedback: the studio page creates, edits and deletes items; the index carr
 test("the Live window opens and closes from the studio page only; the index says whether it is open (D37)", async () => {
   const post = (data: unknown, origin = url) =>
     fetch(`${url}/api/window`, { method: "POST", headers: { origin, "content-type": "application/json" }, body: JSON.stringify(data) });
-  expect((await index()).window).toEqual({ open: false, url: null, openedAt: null, capturing: false });
+  expect((await index()).window).toEqual({ open: false, url: null, openedAt: null, capturing: false, recording: false });
   expect((await post({ action: "open" }, "http://evil.example")).status).toBe(403);
   const bad = await post({ action: "launch" });
-  expect([bad.status, (await bad.json()).error]).toEqual([400, "send { action: open | close }"]);
+  expect([bad.status, (await bad.json()).error]).toEqual([400, "send { action: open | close | stop }"]);
   const closed = await post({ action: "close" });
   expect([closed.status, (await closed.json()).window.open]).toEqual([200, false]);
 });

@@ -17,24 +17,26 @@ export const MIN = 8; // smallest selection side; a smaller drag is a click
 export type Handle = "n" | "ne" | "e" | "se" | "s" | "sw" | "w" | "nw";
 const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), hi);
 
-// A drag from one corner to the other, inside the view.
-export function fromPoints(a: { x: number; y: number }, b: { x: number; y: number }, view: Size): Rect {
-  const [ax, bx] = [clamp(a.x, 0, view.w), clamp(b.x, 0, view.w)];
-  const [ay, by] = [clamp(a.y, 0, view.h), clamp(b.y, 0, view.h)];
+// The selection always stays inside `limit`: the whole image, or the region a recording holds.
+
+// A drag from one corner to the other.
+export function fromPoints(a: { x: number; y: number }, b: { x: number; y: number }, limit: Rect): Rect {
+  const [ax, bx] = [clamp(a.x, limit.x, limit.x + limit.w), clamp(b.x, limit.x, limit.x + limit.w)];
+  const [ay, by] = [clamp(a.y, limit.y, limit.y + limit.h), clamp(b.y, limit.y, limit.y + limit.h)];
   return { x: Math.min(ax, bx), y: Math.min(ay, by), w: Math.abs(bx - ax), h: Math.abs(by - ay) };
 }
 
-export function move(r: Rect, dx: number, dy: number, view: Size): Rect {
-  return { ...r, x: clamp(r.x + dx, 0, view.w - r.w), y: clamp(r.y + dy, 0, view.h - r.h) };
+export function move(r: Rect, dx: number, dy: number, limit: Rect): Rect {
+  return { ...r, x: clamp(r.x + dx, limit.x, limit.x + limit.w - r.w), y: clamp(r.y + dy, limit.y, limit.y + limit.h - r.h) };
 }
 
 // Moves the edges a handle holds; the opposite edges stay, and no side gets under MIN.
-export function resize(r: Rect, handle: Handle, dx: number, dy: number, view: Size): Rect {
+export function resize(r: Rect, handle: Handle, dx: number, dy: number, limit: Rect): Rect {
   let [left, top, right, bottom] = [r.x, r.y, r.x + r.w, r.y + r.h];
-  if (handle.includes("w")) left = clamp(left + dx, 0, right - MIN);
-  if (handle.includes("e")) right = clamp(right + dx, left + MIN, view.w);
-  if (handle.includes("n")) top = clamp(top + dy, 0, bottom - MIN);
-  if (handle.includes("s")) bottom = clamp(bottom + dy, top + MIN, view.h);
+  if (handle.includes("w")) left = clamp(left + dx, limit.x, right - MIN);
+  if (handle.includes("e")) right = clamp(right + dx, left + MIN, limit.x + limit.w);
+  if (handle.includes("n")) top = clamp(top + dy, limit.y, bottom - MIN);
+  if (handle.includes("s")) bottom = clamp(bottom + dy, top + MIN, limit.y + limit.h);
   return { x: left, y: top, w: right - left, h: bottom - top };
 }
 
@@ -61,4 +63,20 @@ export function placePanel(sel: Rect, panel: Size, view: Size): { x: number; y: 
   const far = (p: { x: number; y: number }) => (p.x + panel.w / 2 - cx) ** 2 + (p.y + panel.h / 2 - cy) ** 2;
   const best = corners.reduce((a, b) => (far(b) > far(a) ? b : a));
   return { ...best, docked: true };
+}
+
+// Where the recording timer goes: outside the region on the same sides as the panel, so it is never in a frame. When the
+// region leaves no room (the whole window), it docks in the corner of the edge farther from the region's centre, and the
+// region is trimmed to stop GAP short of it.
+export function placeHud(region: Rect, hud: Size, view: Size): { x: number; y: number; region: Rect } {
+  const p = placePanel(region, hud, view);
+  if (!p.docked) return { x: p.x, y: p.y, region };
+  const x = view.w - MARGIN - hud.w;
+  if (region.y + region.h / 2 <= view.h / 2) {
+    const y = view.h - MARGIN - hud.h;
+    return { x, y, region: { ...region, h: Math.min(region.h, y - GAP - region.y) } };
+  }
+  const y = MARGIN;
+  const top = Math.max(region.y, y + hud.h + GAP);
+  return { x, y, region: { ...region, y: top, h: region.y + region.h - top } };
 }

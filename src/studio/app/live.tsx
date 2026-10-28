@@ -1,5 +1,6 @@
-// Studio · Live (D37): the launcher of the Live window, the app in its own Chrome where the developer snaps feedback in
-// place. Open or bring it to the front, close it, the keys that work in it, and what was captured since it opened.
+// Studio · Live (D37): the launcher of the Live window, the app in its own Chrome where the developer snaps and records
+// feedback in place. Open or bring it to the front, stop a recording, close it, the keys that work in it, and what was
+// captured since it opened.
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import * as m from "../model.js";
@@ -9,7 +10,7 @@ import { Card } from "./ui.js";
 const mac = /Mac|iPhone|iPad/.test(navigator.platform);
 const key = (k: string) => (mac ? `⌥⇧${k}` : `Alt+Shift+${k}`);
 
-async function windowApi(action: "open" | "close") {
+async function windowApi(action: "open" | "close" | "stop") {
   const res = await fetch("/api/window", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action }) });
   const out = await res.json();
   if (!res.ok) throw new Error(out.error ?? res.statusText);
@@ -30,7 +31,7 @@ export function LiveScreen({ index }: { index: StudioIndex }) {
   };
   useEffect(probe, [app?.url]);
 
-  const act = (action: "open" | "close") => async () => {
+  const act = (action: "open" | "close" | "stop") => async () => {
     setBusy(true);
     setError("");
     try {
@@ -51,18 +52,19 @@ export function LiveScreen({ index }: { index: StudioIndex }) {
       <main className="feedback live">
         <section className="head">
           <div className="title"><h1>Live</h1></div>
-          <p className="summary">Use {app.name} in its own Chrome window and snap feedback right where you see it. It lands in <Link to="/feedback">Feedback</Link>.</p>
+          <p className="summary">Use {app.name} in its own Chrome window and snap or record feedback right where you see it. It lands in <Link to="/feedback">Feedback</Link>.</p>
         </section>
 
         <Card className="launcher">
           {w.open ? (
             <div className="row">
-              <span className="dot on" aria-hidden="true" />
+              <span className={`dot ${w.recording ? "rec" : "on"}`} aria-hidden="true" />
               <span>
-                App window open{page && <> · <span className="mono">{page}</span></>}
+                {w.recording ? "Recording in the app window" : "App window open"}{page && <> · <span className="mono">{page}</span></>}
                 {w.capturing && <span className="muted"> · capturing</span>}
               </span>
               <span className="grow" />
+              {w.recording && <button type="button" className="btn primary" onClick={act("stop")} disabled={busy}>Stop recording</button>}
               <button type="button" className="btn" onClick={act("open")} disabled={busy}>Bring to front</button>
               <button type="button" className="btn" onClick={act("close")} disabled={busy}>Close</button>
             </div>
@@ -86,6 +88,7 @@ export function LiveScreen({ index }: { index: StudioIndex }) {
         <Card title="In the app window">
           <dl className="keys">
             <dt><kbd>{key("S")}</kbd></dt><dd>Snap: freeze the window, select what matters, write what should change. Or <b>Snap</b> on Jeyna's pill, bottom right.</dd>
+            <dt><kbd>{key("R")}</kbd></dt><dd>Record: choose an area, then use the app; a frame every half second, up to 20 s. {key("R")} again or Stop ends it, and you review it in place before saving. Or <b>Record</b> on the pill.</dd>
             <dt><kbd>A</kbd></dt><dd>Select the whole window</dd>
             <dt><kbd>{mac ? "⌘↩" : "Ctrl+↩"}</kbd></dt><dd>Save</dd>
             <dt><kbd>Esc</kbd></dt><dd>Cancel; it asks first if you wrote something</dd>

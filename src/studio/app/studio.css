@@ -276,6 +276,7 @@ main.feedback .head .row, .tools .row { display: flex; flex-wrap: wrap; align-it
 .launcher .row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
 .launcher .grow { flex: 1; }
 .launcher .dot.on { width: 10px; height: 10px; border-radius: 5px; background: var(--pass); }
+.launcher .dot.rec { width: 10px; height: 10px; border-radius: 5px; background: var(--fail); }
 dl.keys { display: grid; grid-template-columns: max-content 1fr; gap: 8px 16px; margin: 0; }
 dl.keys dd { margin: 0; color: var(--text2); }
 .tools code.prompt { flex: none; text-align: left; color: var(--navy); }

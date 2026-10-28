@@ -18,3 +18,15 @@ dialog.jw-freeze::backdrop { background: transparent; }
 /* The hint bar lets a drag pass under it, so the top of the window can still be selected. */
 .jo-hint { pointer-events: none; }
 .jo-hint button { pointer-events: auto; }
+/* A recording: the ring just outside the region and the timer, both outside it, so never in a frame. */
+.jw-ring, .jw-hud { position: fixed; inset: auto; margin: 0; }
+.jw-ring { box-sizing: border-box; padding: 0; border: 2px solid #B23A28; border-radius: 2px; background: transparent; pointer-events: none; }
+.jw-hud { box-sizing: border-box; width: 240px; height: 36px; padding: 0 4px 0 12px; align-items: center; gap: 8px; background: #0E1F38; color: #fff;
+  border: 1px solid rgba(255, 255, 255, .2); border-radius: 18px; font: 13px/1 ui-monospace, monospace; }
+.jw-hud:popover-open { display: flex; }
+.jw-hud span:nth-child(2) { flex: 1; }
+.jw-hud.low { background: #7F5700; }
+.jw-hud button { font: 13px 'Public Sans', 'Segoe UI', system-ui, sans-serif; color: #fff; background: rgba(255, 255, 255, .14); border: 0; border-radius: 14px; padding: 5px 10px; cursor: pointer; white-space: nowrap; }
+.jw-dot { width: 10px; height: 10px; border-radius: 5px; background: #FF5A45; }
+@media (prefers-reduced-motion: no-preference) { .jw-dot { animation: jw-blink 1s steps(2, start) infinite; } }
+@keyframes jw-blink { to { visibility: hidden; } }

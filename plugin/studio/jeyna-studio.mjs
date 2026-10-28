@@ -13993,9 +13993,9 @@ var require_utilsBundle = __commonJS2({
            *
            * @return { SmartBuffer }
            */
-          static fromSize(size, encoding) {
+          static fromSize(size2, encoding) {
             return new this({
-              size,
+              size: size2,
               encoding
             });
           }
@@ -17654,10 +17654,10 @@ var require_utilsBundle = __commonJS2({
         Object.defineProperty(exports22, "__esModule", { value: true });
         exports22.ReceiveBuffer = void 0;
         var ReceiveBuffer = class {
-          constructor(size = 4096) {
-            this.buffer = Buffer.allocUnsafe(size);
+          constructor(size2 = 4096) {
+            this.buffer = Buffer.allocUnsafe(size2);
             this.offset = 0;
-            this.originalSize = size;
+            this.originalSize = size2;
           }
           get length() {
             return this.offset;
@@ -33728,12 +33728,12 @@ ${end.comment}` : end.comment;
             return realLength;
           },
           restore(state = {}) {
-            let { after, cursor: cursor2, initial, input: input2, prompt, size, value: value2 } = state;
+            let { after, cursor: cursor2, initial, input: input2, prompt, size: size2, value: value2 } = state;
             initial = utils2.isPrimitive(initial) ? String(initial) : "";
             input2 = utils2.isPrimitive(input2) ? String(input2) : "";
             value2 = utils2.isPrimitive(value2) ? String(value2) : "";
-            if (size) {
-              let codes = ansi.cursor.up(size) + ansi.cursor.to(this.strLen(prompt));
+            if (size2) {
+              let codes = ansi.cursor.up(size2) + ansi.cursor.to(this.strLen(prompt));
               let diff22 = input2.length - cursor2;
               if (diff22 > 0) {
                 codes += ansi.cursor.left(diff22);
@@ -33855,8 +33855,8 @@ ${end.comment}` : end.comment;
             if (this.state.closed || this.options.show === false) return;
             let { prompt, after, rest } = this.sections();
             let { cursor, initial = "", input: input2 = "", value: value2 = "" } = this;
-            let size = this.state.size = rest.length;
-            let state = { after, cursor, initial, input: input2, prompt, size, value: value2 };
+            let size2 = this.state.size = rest.length;
+            let state = { after, cursor, initial, input: input2, prompt, size: size2, value: value2 };
             let codes = ansi.cursor.restore(state);
             if (codes) {
               this.stdout.write(codes);
@@ -34885,7 +34885,7 @@ ${end.comment}` : end.comment;
             return this.styles.primary(this.selected.name);
           }
           async render() {
-            let { submitted, size } = this.state;
+            let { submitted, size: size2 } = this.state;
             let prompt = "";
             let header = await this.header();
             let prefix = await this.prefix();
@@ -34904,7 +34904,7 @@ ${end.comment}` : end.comment;
             if (submitted && !output2 && !body4.trim() && this.multiple && this.emptyError != null) {
               prompt += this.styles.danger(this.emptyError);
             }
-            this.clear(size);
+            this.clear(size2);
             this.write([header, prompt, body4, footer2].filter(Boolean).join("\n"));
             this.write(this.margin[2]);
             this.restore();
@@ -35325,7 +35325,7 @@ ${end.comment}` : end.comment;
             }
           }
           async render() {
-            let { input: input2, size } = this.state;
+            let { input: input2, size: size2 } = this.state;
             let prefix = await this.prefix();
             let sep2 = await this.separator();
             let msg = await this.message();
@@ -35339,7 +35339,7 @@ ${end.comment}` : end.comment;
             let footer2 = await this.footer();
             if (help && !promptLine.includes(help)) output2 += " " + help;
             promptLine += " " + output2;
-            this.clear(size);
+            this.clear(size2);
             this.write([header, promptLine, footer2].filter(Boolean).join("\n"));
             this.restore();
           }
@@ -35627,7 +35627,7 @@ ${end.comment}` : end.comment;
             return this.styles.submitted(input2 || initial);
           }
           async render() {
-            let size = this.state.size;
+            let size2 = this.state.size;
             let prefix = await this.prefix();
             let separator = await this.separator();
             let message = await this.message();
@@ -35639,7 +35639,7 @@ ${end.comment}` : end.comment;
             let footer2 = await this.footer();
             if (help && !output2.includes(help)) output2 += " " + help;
             prompt += " " + output2;
-            this.clear(size);
+            this.clear(size2);
             this.write([header, prompt, footer2].filter(Boolean).join("\n"));
             this.restore();
           }
@@ -36062,7 +36062,7 @@ ${end.comment}` : end.comment;
             return this.margin[0] + [heading2, ...visible2.map((v) => v.join(" "))].join("\n");
           }
           async render() {
-            let { submitted, size } = this.state;
+            let { submitted, size: size2 } = this.state;
             let prefix = await this.prefix();
             let separator = await this.separator();
             let message = await this.message();
@@ -36083,7 +36083,7 @@ ${end.comment}` : end.comment;
             if (submitted && !output2 && !body4.trim() && this.multiple && err != null) {
               prompt += this.styles.danger(err);
             }
-            this.clear(size);
+            this.clear(size2);
             this.write([header, prompt, key2, body4, footer2].filter(Boolean).join("\n"));
             if (!this.state.submitted) {
               this.write(this.margin[2]);
@@ -36419,7 +36419,7 @@ ${end.comment}` : end.comment;
             return color2(`${this.state.completed}% completed`);
           }
           async render() {
-            let { index: index3, keys: keys2 = [], submitted, size } = this.state;
+            let { index: index3, keys: keys2 = [], submitted, size: size2 } = this.state;
             let newline2 = [this.options.newline, "\n"].find((v) => v != null);
             let prefix = await this.prefix();
             let separator = await this.separator();
@@ -36435,7 +36435,7 @@ ${end.comment}` : end.comment;
             let footer2 = await this.footer();
             if (input2) prompt += " " + input2;
             if (hint && !input2 && this.state.completed === 0) prompt += " " + hint;
-            this.clear(size);
+            this.clear(size2);
             let lines = [header, prompt, body4, footer2, error512.trim()];
             this.write(lines.filter(Boolean).join(newline2));
             this.restore();
@@ -36606,7 +36606,7 @@ ${end.comment}` : end.comment;
             return "";
           }
           async render() {
-            let { submitted, size } = this.state;
+            let { submitted, size: size2 } = this.state;
             let prefix = await this.prefix();
             let separator = await this.separator();
             let message = await this.message();
@@ -36622,7 +36622,7 @@ ${end.comment}` : end.comment;
             if (submitted && !output2 && !body4 && this.multiple && this.type !== "form") {
               prompt += this.styles.danger(this.emptyError);
             }
-            this.clear(size);
+            this.clear(size2);
             this.write([prompt, header, body4, footer2].filter(Boolean).join("\n"));
             this.restore();
           }
@@ -36727,7 +36727,7 @@ ${end.comment}` : end.comment;
             return value2.join(this.styles.muted(" / "));
           }
           async render() {
-            let { size } = this.state;
+            let { size: size2 } = this.state;
             let header = await this.header();
             let prefix = await this.prefix();
             let separator = await this.separator();
@@ -36738,7 +36738,7 @@ ${end.comment}` : end.comment;
             let prompt = [prefix, message, separator, output2].join(" ");
             this.state.prompt = prompt;
             if (help && !prompt.includes(help)) prompt += " " + help;
-            this.clear(size);
+            this.clear(size2);
             this.write([header, prompt, footer2].filter(Boolean).join("\n"));
             this.write(this.margin[2]);
             this.restore();
@@ -37918,19 +37918,19 @@ ${end.comment}` : end.comment;
           }
           return result2;
         }
-        function bufferAlloc(size) {
+        function bufferAlloc(size2) {
           bufferAlloc = modern;
           try {
-            return bufferAlloc(size);
+            return bufferAlloc(size2);
           } catch (e) {
             bufferAlloc = legacy;
-            return bufferAlloc(size);
+            return bufferAlloc(size2);
           }
-          function modern(size2) {
-            return Buffer.allocUnsafe(size2);
+          function modern(size22) {
+            return Buffer.allocUnsafe(size22);
           }
-          function legacy(size2) {
-            return new Buffer(size2);
+          function legacy(size22) {
+            return new Buffer(size22);
           }
         }
         function bufferFrom(something, encoding) {
@@ -53400,12 +53400,12 @@ ${end.comment}` : end.comment;
         var fs7 = __require("fs");
         var shebangCommand = require_shebang_command();
         function readShebang(command) {
-          const size = 150;
-          const buffer = Buffer.alloc(size);
+          const size2 = 150;
+          const buffer = Buffer.alloc(size2);
           let fd;
           try {
             fd = fs7.openSync(command, "r");
-            fs7.readSync(fd, buffer, 0, size, 0);
+            fs7.readSync(fd, buffer, 0, size2, 0);
             fs7.closeSync(fd);
           } catch (e) {
           }
@@ -67203,8 +67203,8 @@ Expecting one of '${allowedValues.join("', '")}'`);
       });
       inst._zod.check = (payload2) => {
         const input2 = payload2.value;
-        const size = input2.size;
-        if (size <= def.maximum)
+        const size2 = input2.size;
+        if (size2 <= def.maximum)
           return;
         payload2.issues.push({
           origin: getSizableOrigin2(input2),
@@ -67231,8 +67231,8 @@ Expecting one of '${allowedValues.join("', '")}'`);
       });
       inst._zod.check = (payload2) => {
         const input2 = payload2.value;
-        const size = input2.size;
-        if (size >= def.minimum)
+        const size2 = input2.size;
+        if (size2 >= def.minimum)
           return;
         payload2.issues.push({
           origin: getSizableOrigin2(input2),
@@ -67260,10 +67260,10 @@ Expecting one of '${allowedValues.join("', '")}'`);
       });
       inst._zod.check = (payload2) => {
         const input2 = payload2.value;
-        const size = input2.size;
-        if (size === def.size)
+        const size2 = input2.size;
+        if (size2 === def.size)
           return;
-        const tooBig = size > def.size;
+        const tooBig = size2 > def.size;
         payload2.issues.push({
           origin: getSizableOrigin2(input2),
           ...tooBig ? { code: "too_big", maximum: def.size } : { code: "too_small", minimum: def.size },
@@ -76117,11 +76117,11 @@ Expecting one of '${allowedValues.join("', '")}'`);
       });
     }
     // @__NO_SIDE_EFFECTS__
-    function _size2(size, params2) {
+    function _size2(size2, params2) {
       return new $ZodCheckSizeEquals2({
         check: "size_equals",
         ...normalizeParams2(params2),
-        size
+        size: size2
       });
     }
     // @__NO_SIDE_EFFECTS__
@@ -78817,8 +78817,8 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
       $ZodFile2.init(inst, def);
       ZodType2.init(inst, def);
       inst._zod.processJSONSchema = (ctx, json22, params2) => fileProcessor2(inst, ctx, json22, params2);
-      inst.min = (size, params2) => inst.check(/* @__PURE__ */ _minSize2(size, params2));
-      inst.max = (size, params2) => inst.check(/* @__PURE__ */ _maxSize2(size, params2));
+      inst.min = (size2, params2) => inst.check(/* @__PURE__ */ _minSize2(size2, params2));
+      inst.max = (size2, params2) => inst.check(/* @__PURE__ */ _maxSize2(size2, params2));
       inst.mime = (types4, params2) => inst.check(/* @__PURE__ */ _mime2(Array.isArray(types4) ? types4 : [types4], params2));
     });
     function file2(params2) {
@@ -82791,8 +82791,8 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
           maxSize: { value: maxSize, message: errorUtil.toString(message) }
         });
       }
-      size(size, message) {
-        return this.min(size, message).max(size, message);
+      size(size2, message) {
+        return this.min(size2, message).max(size2, message);
       }
       nonempty(message) {
         return this.min(1, message);
@@ -88746,7 +88746,7 @@ ${value2}`, dataLines++;
       }
       function parseLine(chunk, start3, end) {
         if (start3 === end) {
-          dispatchEvent();
+          dispatchEvent2();
           return;
         }
         const firstCharCode = chunk.charCodeAt(start3);
@@ -88811,7 +88811,7 @@ ${value2}`, dataLines++;
             break;
         }
       }
-      function dispatchEvent() {
+      function dispatchEvent2() {
         dataLines > 0 && onEvent({
           id,
           event: eventType,
@@ -89157,15 +89157,15 @@ ${value2}`, dataLines++;
     crypto2 = globalThis.crypto?.webcrypto ?? // Node.js [18-16] REPL
     globalThis.crypto ?? // Node.js >18
     import("node:crypto").then((m) => m.webcrypto);
-    async function getRandomValues(size) {
-      return (await crypto2).getRandomValues(new Uint8Array(size));
+    async function getRandomValues(size2) {
+      return (await crypto2).getRandomValues(new Uint8Array(size2));
     }
-    async function random(size) {
+    async function random(size2) {
       const mask = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._~";
       const evenDistCutoff = Math.pow(2, 8) - Math.pow(2, 8) % mask.length;
       let result2 = "";
-      while (result2.length < size) {
-        const randomBytes = await getRandomValues(size - result2.length);
+      while (result2.length < size2) {
+        const randomBytes = await getRandomValues(size2 - result2.length);
         for (const randomByte of randomBytes) {
           if (randomByte < evenDistCutoff) {
             result2 += mask[randomByte % mask.length];
@@ -92622,15 +92622,15 @@ var require_coreBundle = __commonJS2({
     }
     function findNewNode(from, to) {
       function fillMap(root4, map2, position3) {
-        let size = 1;
-        let childPosition = position3 + size;
+        let size2 = 1;
+        let childPosition = position3 + size2;
         for (const child of root4.children || []) {
           if (typeof child === "string") {
-            size++;
+            size2++;
             childPosition++;
           } else {
-            size += fillMap(child, map2, childPosition);
-            childPosition += size;
+            size2 += fillMap(child, map2, childPosition);
+            childPosition += size2;
           }
         }
         if (!["none", "presentation", "fragment", "iframe", "generic"].includes(root4.role) && root4.name) {
@@ -92640,11 +92640,11 @@ var require_coreBundle = __commonJS2({
             map2.set(root4.role, byRole);
           }
           const existing = byRole.get(root4.name);
-          const sizeAndPosition = size * 100 - position3;
+          const sizeAndPosition = size2 * 100 - position3;
           if (!existing || existing.sizeAndPosition < sizeAndPosition)
             byRole.set(root4.name, { node: root4, sizeAndPosition });
         }
-        return size;
+        return size2;
       }
       const fromMap = /* @__PURE__ */ new Map();
       if (from)
@@ -93356,13 +93356,13 @@ ${escaped2}
         "use strict";
       }
     });
-    function padImageToSize(image2, size) {
-      if (image2.width === size.width && image2.height === size.height)
+    function padImageToSize(image2, size2) {
+      if (image2.width === size2.width && image2.height === size2.height)
         return image2;
-      const buffer = new Uint8Array(size.width * size.height * 4);
-      for (let y = 0; y < size.height; y++) {
-        for (let x = 0; x < size.width; x++) {
-          const to = (y * size.width + x) * 4;
+      const buffer = new Uint8Array(size2.width * size2.height * 4);
+      for (let y = 0; y < size2.height; y++) {
+        for (let x = 0; x < size2.width; x++) {
+          const to = (y * size2.width + x) * 4;
           if (y < image2.height && x < image2.width) {
             const from = (y * image2.width + x) * 4;
             buffer[to] = image2.data[from];
@@ -93377,17 +93377,17 @@ ${escaped2}
           }
         }
       }
-      return { data: Buffer.from(buffer), width: size.width, height: size.height };
+      return { data: Buffer.from(buffer), width: size2.width, height: size2.height };
     }
-    function scaleImageToSize(image2, size) {
+    function scaleImageToSize(image2, size2) {
       const { data: src, width: w1, height: h1 } = image2;
-      const w2 = Math.max(1, Math.floor(size.width));
-      const h2 = Math.max(1, Math.floor(size.height));
+      const w2 = Math.max(1, Math.floor(size2.width));
+      const h2 = Math.max(1, Math.floor(size2.height));
       if (w1 === w2 && h1 === h2)
         return image2;
       if (w1 <= 0 || h1 <= 0)
         throw new Error("Invalid input image");
-      if (size.width <= 0 || size.height <= 0 || !isFinite(size.width) || !isFinite(size.height))
+      if (size2.width <= 0 || size2.height <= 0 || !isFinite(size2.width) || !isFinite(size2.height))
         throw new Error("Invalid output dimensions");
       const clamp = (v, lo, hi) => v < lo ? lo : v > hi ? hi : v;
       const weights = (t, o) => {
@@ -100714,10 +100714,10 @@ ${escaped2}
               return 0;
             };
             var getHeapMax = () => 2147483648;
-            var alignMemory = (size, alignment) => Math.ceil(size / alignment) * alignment;
-            var growMemory = (size) => {
+            var alignMemory = (size2, alignment) => Math.ceil(size2 / alignment) * alignment;
+            var growMemory = (size2) => {
               var oldHeapSize = wasmMemory.buffer.byteLength;
-              var pages = (size - oldHeapSize + 65535) / 65536 | 0;
+              var pages = (size2 - oldHeapSize + 65535) / 65536 | 0;
               try {
                 wasmMemory.grow(pages);
                 updateMemoryViews();
@@ -100811,10 +100811,10 @@ ${escaped2}
       m.HEAPU8.set(image2.data, inPtr);
       const sizePtr = m._malloc(4);
       const outPtr = m._webp_encode_rgba(inPtr, image2.width, image2.height, quality, lossless ? 1 : 0, sizePtr);
-      const size = m.HEAPU32[sizePtr >> 2];
+      const size2 = m.HEAPU32[sizePtr >> 2];
       let out;
-      if (outPtr && size) {
-        out = Buffer.from(m.HEAPU8.subarray(outPtr, outPtr + size));
+      if (outPtr && size2) {
+        out = Buffer.from(m.HEAPU8.subarray(outPtr, outPtr + size2));
         m._webp_free(outPtr);
       }
       m._free(inPtr);
@@ -100855,8 +100855,8 @@ ${escaped2}
           return true;
         if (fourcc === "VP8 ")
           return false;
-        const size = buffer.readUInt32LE(offset + 4);
-        offset += 8 + size + (size & 1);
+        const size2 = buffer.readUInt32LE(offset + 4);
+        offset += 8 + size2 + (size2 & 1);
       }
       return false;
     }
@@ -100905,23 +100905,23 @@ ${escaped2}
       };
       let actual = decode4(actualBuffer);
       let expected = decode4(expectedBuffer);
-      const size = { width: Math.max(expected.width, actual.width), height: Math.max(expected.height, actual.height) };
+      const size2 = { width: Math.max(expected.width, actual.width), height: Math.max(expected.height, actual.height) };
       let sizesMismatchError = "";
       if (expected.width !== actual.width || expected.height !== actual.height) {
         sizesMismatchError = `Expected an image ${expected.width}px by ${expected.height}px, received ${actual.width}px by ${actual.height}px. `;
-        actual = padImageToSize(actual, size);
-        expected = padImageToSize(expected, size);
+        actual = padImageToSize(actual, size2);
+        expected = padImageToSize(expected, size2);
       }
-      const diff2 = new PNG({ width: size.width, height: size.height });
+      const diff2 = new PNG({ width: size2.width, height: size2.height });
       let count;
       if (options2.comparator === "ssim-cie94") {
-        count = compare(expected.data, actual.data, diff2.data, size.width, size.height, {
+        count = compare(expected.data, actual.data, diff2.data, size2.width, size2.height, {
           // All ΔE* formulae are originally designed to have the difference of 1.0 stand for a "just noticeable difference" (JND).
           // See https://en.wikipedia.org/wiki/Color_difference#CIELAB_%CE%94E*
           maxColorDeltaE94: 1
         });
       } else if ((options2.comparator ?? "pixelmatch") === "pixelmatch") {
-        count = (0, import_pixelmatch.default)(expected.data, actual.data, diff2.data, size.width, size.height, {
+        count = (0, import_pixelmatch.default)(expected.data, actual.data, diff2.data, size2.width, size2.height, {
           threshold: options2.threshold ?? 0.2
         });
       } else {
@@ -102295,25 +102295,25 @@ ${lines.join("\n")}`;
             const [startStr, endStr] = range.replace(/bytes=/, "").split("-");
             let start3;
             let end;
-            const size = import_fs5.default.statSync(absoluteFilePath).size;
+            const size2 = import_fs5.default.statSync(absoluteFilePath).size;
             if (startStr !== "" && endStr === "") {
               start3 = +startStr;
-              end = size - 1;
+              end = size2 - 1;
             } else if (startStr === "" && endStr !== "") {
-              start3 = size - +endStr;
-              end = size - 1;
+              start3 = size2 - +endStr;
+              end = size2 - 1;
             } else {
               start3 = +startStr;
               end = +endStr;
             }
-            if (Number.isNaN(start3) || Number.isNaN(end) || start3 >= size || end >= size || start3 > end) {
+            if (Number.isNaN(start3) || Number.isNaN(end) || start3 >= size2 || end >= size2 || start3 > end) {
               response2.writeHead(416, {
-                "Content-Range": `bytes */${size}`
+                "Content-Range": `bytes */${size2}`
               });
               return response2.end();
             }
             response2.writeHead(206, {
-              "Content-Range": `bytes ${start3}-${end}/${size}`,
+              "Content-Range": `bytes ${start3}-${end}/${size2}`,
               "Accept-Ranges": "bytes",
               "Content-Length": end - start3 + 1,
               "Content-Type": mime.getType(import_path5.default.extname(absoluteFilePath))
@@ -102624,10 +102624,10 @@ ${lines.join("\n")}`;
               this._buffers.set(file2, []);
             const buffer = this._buffers.get(file2);
             buffer.push(text22);
-            let size = 0;
+            let size2 = 0;
             for (const chunk of buffer)
-              size += chunk.length;
-            if (flush || size >= APPEND_CHUNK_SIZE)
+              size2 += chunk.length;
+            if (flush || size2 >= APPEND_CHUNK_SIZE)
               this._flushFile(file2);
           }
           _flushFile(file2) {
@@ -104703,10 +104703,10 @@ ${lines.join("\n")}`;
         if (name.length > 45)
           name = name.substring(0, 42) + "...";
         const status = r.response.status > 0 ? String(r.response.status) : "ERR";
-        const size = r.response._transferSize > 0 ? r.response._transferSize : r.response.bodySize;
+        const size2 = r.response._transferSize > 0 ? r.response._transferSize : r.response.bodySize;
         const route2 = formatRouteStatus(r);
         const start3 = r._monotonicTime ? formatTimestamp(r._monotonicTime, model.startTime) : "-";
-        console.log(`  ${(ordinal + ".").padStart(4)} ${start3.padEnd(9)} ${r.request.method.padEnd(8)} ${status.padEnd(8)} ${name.padEnd(45)} ${msToString(r.time).padStart(10)} ${bytesToString2(size).padStart(8)} ${route2.padEnd(10)}`);
+        console.log(`  ${(ordinal + ".").padStart(4)} ${start3.padEnd(9)} ${r.request.method.padEnd(8)} ${status.padEnd(8)} ${name.padEnd(45)} ${msToString(r.time).padStart(10)} ${bytesToString2(size2).padStart(8)} ${route2.padEnd(10)}`);
       }
     }
     async function traceRequest(requestId) {
@@ -104721,7 +104721,7 @@ ${lines.join("\n")}`;
       }
       const r = resource;
       const status = r.response.status > 0 ? `${r.response.status} ${r.response.statusText}` : "ERR";
-      const size = r.response._transferSize > 0 ? r.response._transferSize : r.response.bodySize;
+      const size2 = r.response._transferSize > 0 ? r.response._transferSize : r.response.bodySize;
       console.log(`
   ${r.request.method} ${r.request.url}
 `);
@@ -104730,7 +104730,7 @@ ${lines.join("\n")}`;
       if (r._monotonicTime)
         console.log(`    start:     ${formatTimestamp(r._monotonicTime, model.startTime)}`);
       console.log(`    duration:  ${msToString(r.time)}`);
-      console.log(`    size:      ${bytesToString2(size)}`);
+      console.log(`    size:      ${bytesToString2(size2)}`);
       if (r.response.content.mimeType)
         console.log(`    type:      ${r.response.content.mimeType}`);
       const route2 = formatRouteStatus(r);
@@ -106712,8 +106712,8 @@ function inject(globalThis) {
             };
           }
           // TODO(bidi): remove once post body is available.
-          _setBodySize(size) {
-            this._bodySize = size;
+          _setBodySize(size2) {
+            this._bodySize = size2;
           }
           bodySize() {
             return this._bodySize || this.postDataBuffer()?.length || 0;
@@ -106915,14 +106915,14 @@ function inject(globalThis) {
             if (!this._rawResponseHeadersPromise.isDone())
               this._rawResponseHeadersPromise.resolve(headers || this._headers);
           }
-          setTransferSize(size) {
-            this._transferSizePromise.resolve(size);
+          setTransferSize(size2) {
+            this._transferSizePromise.resolve(size2);
           }
-          setEncodedBodySize(size) {
-            this._encodedBodySizePromise.resolve(size);
+          setEncodedBodySize(size2) {
+            this._encodedBodySizePromise.resolve(size2);
           }
-          setResponseHeadersSize(size) {
-            this._responseHeadersSizePromise.resolve(size);
+          setResponseHeadersSize(size2) {
+            this._responseHeadersSizePromise.resolve(size2);
           }
           timing() {
             return this._timing;
@@ -113297,7 +113297,7 @@ ${snapshottedObjectBuiltins.map((n) => `  const ${n} = (typeof globalThis.${n} =
     });
     async function filesExceedUploadLimit(files) {
       const sizes = await Promise.all(files.map(async (file2) => (await import_fs12.default.promises.stat(file2)).size));
-      return sizes.reduce((total, size) => total + size, 0) >= fileUploadSizeLimit;
+      return sizes.reduce((total, size2) => total + size2, 0) >= fileUploadSizeLimit;
     }
     async function prepareFilesForUpload(frame, params2) {
       const { payloads, streams, directoryStream } = params2;
@@ -114579,8 +114579,8 @@ ${snapshottedObjectBuiltins.map((n) => `  const ${n} = (typeof globalThis.${n} =
             const y2 = Math.ceil(rect.y + rect.height - 1e-3);
             return { x, y, width: x2 - x, height: y2 - y };
           }
-          static enclosingIntSize(size) {
-            return { width: Math.floor(size.width + 1e-3), height: Math.floor(size.height + 1e-3) };
+          static enclosingIntSize(size2) {
+            return { width: Math.floor(size2.width + 1e-3), height: Math.floor(size2.height + 1e-3) };
           }
           static getViewportSizeFromWindowFeatures(features) {
             const widthString = features.find((f) => f.startsWith("width="));
@@ -115225,14 +115225,14 @@ ${snapshottedObjectBuiltins.map((n) => `  const ${n} = (typeof globalThis.${n} =
         delete window.__pwCleanupScreenshot;
       };
     }
-    function trimClipToSize(clip, size) {
+    function trimClipToSize(clip, size2) {
       const p1 = {
-        x: Math.max(0, Math.min(clip.x, size.width)),
-        y: Math.max(0, Math.min(clip.y, size.height))
+        x: Math.max(0, Math.min(clip.x, size2.width)),
+        y: Math.max(0, Math.min(clip.y, size2.height))
       };
       const p2 = {
-        x: Math.max(0, Math.min(clip.x + clip.width, size.width)),
-        y: Math.max(0, Math.min(clip.y + clip.height, size.height))
+        x: Math.max(0, Math.min(clip.x + clip.width, size2.width)),
+        y: Math.max(0, Math.min(clip.y + clip.height, size2.height))
       };
       const result2 = { x: p1.x, y: p1.y, width: p2.x - p1.x, height: p2.y - p1.y };
       assert(result2.width > 0 && result2.height > 0, "Clipped area is either empty or outside the resulting image");
@@ -115735,8 +115735,8 @@ ${snapshottedObjectBuiltins.map((n) => `  const ${n} = (typeof globalThis.${n} =
             if (!this._clients.size)
               this._stopScreencast();
           }
-          _startScreencast(size, quality, fps) {
-            this._size = size;
+          _startScreencast(size2, quality, fps) {
+            this._size = size2;
             if (!this._size) {
               const viewport = this.page.browserContext._options.viewport || { width: 800, height: 600 };
               const scale = Math.min(1, 800 / Math.max(viewport.width, viewport.height));
@@ -130126,7 +130126,7 @@ ${e.stack}`);
             const response2 = request22.request._existingResponse();
             if (response2) {
               response2.setTransferSize(event.encodedDataLength);
-              response2.responseHeadersSize().then((size) => response2.setEncodedBodySize(event.encodedDataLength - size));
+              response2.responseHeadersSize().then((size2) => response2.setEncodedBodySize(event.encodedDataLength - size2));
               response2._requestFinished(helper.secondsToRoundishMillis(event.timestamp - request22._timestamp));
             }
             this._deleteRequest(request22);
@@ -130840,8 +130840,8 @@ ${e.stack}`);
               size: options2.size,
               fps: options2.fps
             };
-            const { size } = this._screencast.addClient(this._client);
-            const videoSize = options2.size ?? size;
+            const { size: size2 } = this._screencast.addClient(this._client);
+            const videoSize = options2.size ?? size2;
             this._videoRecorder = new FfmpegVideoRecorder(ffmpegPath, videoSize, options2.fps ?? kDefaultFps, outputFile2);
             this._artifact = new Artifact(this._screencast.page.browserContext, outputFile2);
             return this._artifact;
@@ -130861,7 +130861,7 @@ ${e.stack}`);
           }
         };
         FfmpegVideoRecorder = class {
-          constructor(ffmpegPath, size, fps, outputFile2) {
+          constructor(ffmpegPath, size2, fps, outputFile2) {
             this._process = null;
             this._gracefullyClose = null;
             this._lastFrame = null;
@@ -130871,7 +130871,7 @@ ${e.stack}`);
               throw new Error("File must have .webm extension");
             this._outputFile = outputFile2;
             this._ffmpegPath = ffmpegPath;
-            this._size = size;
+            this._size = size2;
             this._fps = fps;
             this._creationTimeMs = Date.now();
             this._launchPromise = this._launch().catch((e) => e);
@@ -154622,7 +154622,7 @@ before the end of the test to ignore remaining routes in flight.`);
       return { options: values2 };
     }
     function filePayloadExceedsSizeLimit(payloads) {
-      return payloads.reduce((size, item) => size + (item.buffer ? item.buffer.byteLength : 0), 0) >= fileUploadSizeLimit2;
+      return payloads.reduce((size2, item) => size2 + (item.buffer ? item.buffer.byteLength : 0), 0) >= fileUploadSizeLimit2;
     }
     async function resolvePathsAndDirectoryForInputFiles(items) {
       let localPaths;
@@ -159632,8 +159632,8 @@ ${pretty}`);
       const files = entries.filter((e) => e.isFile());
       return Promise.all(files.map(async (e) => {
         const full = import_path46.default.join(e.parentPath, e.name);
-        const { size, mtimeMs } = await import_fs52.default.promises.stat(full);
-        return { path: full, size, mtimeMs };
+        const { size: size2, mtimeMs } = await import_fs52.default.promises.stat(full);
+        return { path: full, size: size2, mtimeMs };
       }));
     }
     function parseSections(text22) {
@@ -163931,8 +163931,8 @@ ${itemTexts.map((t) => `  - listitem: ${escapeWithQuotes(t, '"')}`).join("\n")}`
             cursor: z33.boolean().optional().describe("Render an animated mouse cursor that travels to each action point. Paces actions by 800ms so that the cursor has time to travel.")
           }),
           toolName: "browser_start_video",
-          toolParams: ({ filename, size, fps, cursor }) => {
-            const parsedSize = size ? size.split("x").map(Number) : void 0;
+          toolParams: ({ filename, size: size2, fps, cursor }) => {
+            const parsedSize = size2 ? size2.split("x").map(Number) : void 0;
             return { filename, size: parsedSize ? { width: parsedSize[0], height: parsedSize[1] } : void 0, fps, cursor };
           }
         });
@@ -175135,7 +175135,7 @@ function normalizeUri(value2) {
 // node_modules/.pnpm/micromark-factory-space@2.1.0/node_modules/micromark-factory-space/index.js
 function factorySpace(effects, ok3, type3, max) {
   const limit = max ? max - 1 : Infinity;
-  let size = 0;
+  let size2 = 0;
   return start3;
   function start3(code2) {
     if (markdownSpace(code2)) {
@@ -175145,7 +175145,7 @@ function factorySpace(effects, ok3, type3, max) {
     return ok3(code2);
   }
   function prefix(code2) {
-    if (markdownSpace(code2) && size++ < limit) {
+    if (markdownSpace(code2) && size2++ < limit) {
       effects.consume(code2);
       return prefix;
     }
@@ -175154,7 +175154,7 @@ function factorySpace(effects, ok3, type3, max) {
   }
 }
 function factorySpaceMinMax(effects, ok3, nok, type3, min, max) {
-  let size = 0;
+  let size2 = 0;
   return start3;
   function start3(code2) {
     if (max > 0 && markdownSpace(code2)) {
@@ -175164,16 +175164,16 @@ function factorySpaceMinMax(effects, ok3, nok, type3, min, max) {
     return after(code2);
   }
   function prefix(code2) {
-    if (markdownSpace(code2) && size < max) {
+    if (markdownSpace(code2) && size2 < max) {
       effects.consume(code2);
-      size++;
+      size2++;
       return prefix;
     }
     effects.exit(type3);
     return after(code2);
   }
   function after(code2) {
-    return size >= min ? ok3(code2) : nok(code2);
+    return size2 >= min ? ok3(code2) : nok(code2);
   }
 }
 
@@ -175499,14 +175499,14 @@ function initializeDocument(effects) {
       editMap.consume(self2.events);
     }
   }
-  function exitContainers(size) {
+  function exitContainers(size2) {
     let index3 = stack.length;
-    while (index3-- > size) {
+    while (index3-- > size2) {
       const entry = stack[index3];
       self2.containerState = entry[1];
       entry[0].exit.call(self2, effects);
     }
-    stack.length = size;
+    stack.length = size2;
   }
   function closeFlow() {
     childFlow.write([null]);
@@ -175672,7 +175672,7 @@ var autolink = {
   tokenize: tokenizeAutolink
 };
 function tokenizeAutolink(effects, ok3, nok) {
-  let size = 0;
+  let size2 = 0;
   return start3;
   function start3(code2) {
     effects.enter("autolink");
@@ -175694,7 +175694,7 @@ function tokenizeAutolink(effects, ok3, nok) {
   }
   function schemeOrEmailAtext(code2) {
     if (code2 === 43 || code2 === 45 || code2 === 46 || asciiAlphanumeric(code2)) {
-      size = 1;
+      size2 = 1;
       return schemeInsideOrEmailAtext(code2);
     }
     return emailAtext(code2);
@@ -175702,14 +175702,14 @@ function tokenizeAutolink(effects, ok3, nok) {
   function schemeInsideOrEmailAtext(code2) {
     if (code2 === 58) {
       effects.consume(code2);
-      size = 0;
+      size2 = 0;
       return urlInside;
     }
-    if ((code2 === 43 || code2 === 45 || code2 === 46 || asciiAlphanumeric(code2)) && size++ < 32) {
+    if ((code2 === 43 || code2 === 45 || code2 === 46 || asciiAlphanumeric(code2)) && size2++ < 32) {
       effects.consume(code2);
       return schemeInsideOrEmailAtext;
     }
-    size = 0;
+    size2 = 0;
     return emailAtext(code2);
   }
   function urlInside(code2) {
@@ -175744,7 +175744,7 @@ function tokenizeAutolink(effects, ok3, nok) {
   function emailLabel(code2) {
     if (code2 === 46) {
       effects.consume(code2);
-      size = 0;
+      size2 = 0;
       return emailAtSignOrDot;
     }
     if (code2 === 62) {
@@ -175758,7 +175758,7 @@ function tokenizeAutolink(effects, ok3, nok) {
     return emailValue(code2);
   }
   function emailValue(code2) {
-    if ((code2 === 45 || asciiAlphanumeric(code2)) && size++ < 63) {
+    if ((code2 === 45 || asciiAlphanumeric(code2)) && size2++ < 63) {
       const next = code2 === 45 ? emailValue : emailLabel;
       effects.consume(code2);
       return next;
@@ -175873,7 +175873,7 @@ var characterReference = {
 };
 function tokenizeCharacterReference(effects, ok3, nok) {
   const self2 = this;
-  let size = 0;
+  let size2 = 0;
   let max;
   let test;
   return start3;
@@ -175912,7 +175912,7 @@ function tokenizeCharacterReference(effects, ok3, nok) {
     return value2(code2);
   }
   function value2(code2) {
-    if (code2 === 59 && size) {
+    if (code2 === 59 && size2) {
       const token = effects.exit("characterReferenceValue");
       if (test === asciiAlphanumeric && !decodeNamedCharacterReference(self2.sliceSerialize(token))) {
         return nok(code2);
@@ -175923,7 +175923,7 @@ function tokenizeCharacterReference(effects, ok3, nok) {
       effects.exit("characterReference");
       return ok3;
     }
-    if (test(code2) && size++ < max) {
+    if (test(code2) && size2++ < max) {
       effects.consume(code2);
       return value2;
     }
@@ -176075,7 +176075,7 @@ function tokenizeCodeFenced(effects, ok3, nok) {
     return ok3(code2);
   }
   function tokenizeCloseStart(effects2, ok4, nok2) {
-    let size = 0;
+    let size2 = 0;
     return startBefore;
     function startBefore(code2) {
       effects2.enter("lineEnding");
@@ -176096,11 +176096,11 @@ function tokenizeCodeFenced(effects, ok3, nok) {
     }
     function sequenceClose(code2) {
       if (code2 === marker) {
-        size++;
+        size2++;
         effects2.consume(code2);
         return sequenceClose;
       }
-      if (size >= sizeOpen) {
+      if (size2 >= sizeOpen) {
         effects2.exit("codeFencedFenceSequence");
         return markdownSpace(code2) ? factorySpace(effects2, sequenceCloseAfter, "whitespace")(code2) : sequenceCloseAfter(code2);
       }
@@ -176224,7 +176224,7 @@ function previous(code2) {
 function tokenizeCodeText(effects, ok3, nok) {
   const self2 = this;
   let sizeOpen = 0;
-  let size;
+  let size2;
   let token;
   return start3;
   function start3(code2) {
@@ -176253,7 +176253,7 @@ function tokenizeCodeText(effects, ok3, nok) {
     }
     if (code2 === 96) {
       token = effects.enter("codeTextSequence");
-      size = 0;
+      size2 = 0;
       return sequenceClose(code2);
     }
     if (markdownLineEnding(code2)) {
@@ -176276,10 +176276,10 @@ function tokenizeCodeText(effects, ok3, nok) {
   function sequenceClose(code2) {
     if (code2 === 96) {
       effects.consume(code2);
-      size++;
+      size2++;
       return sequenceClose;
     }
-    if (size === sizeOpen) {
+    if (size2 === sizeOpen) {
       effects.exit("codeTextSequence");
       effects.exit("codeText");
       return ok3(code2);
@@ -176801,7 +176801,7 @@ function factoryDestination(effects, ok3, nok, type3, literalType, literalMarker
 // node_modules/.pnpm/micromark-factory-label@2.0.1/node_modules/micromark-factory-label/index.js
 function factoryLabel(effects, ok3, nok, type3, markerType, stringType) {
   const self2 = this;
-  let size = 0;
+  let size2 = 0;
   let seen;
   return start3;
   function start3(code2) {
@@ -176813,12 +176813,12 @@ function factoryLabel(effects, ok3, nok, type3, markerType, stringType) {
     return atBreak;
   }
   function atBreak(code2) {
-    if (size > 999 || code2 === null || code2 === 91 || code2 === 93 && !seen || // To do: remove in the future once we’ve switched from
+    if (size2 > 999 || code2 === null || code2 === 91 || code2 === 93 && !seen || // To do: remove in the future once we’ve switched from
     // `micromark-extension-footnote` to `micromark-extension-gfm-footnote`,
     // which doesn’t need this.
     // Hidden footnotes hook.
     /* c8 ignore next 3 */
-    code2 === 94 && !size && "_hiddenFootnoteSupport" in self2.parser.constructs) {
+    code2 === 94 && !size2 && "_hiddenFootnoteSupport" in self2.parser.constructs) {
       return nok(code2);
     }
     if (code2 === 93) {
@@ -176841,7 +176841,7 @@ function factoryLabel(effects, ok3, nok, type3, markerType, stringType) {
     return labelInside(code2);
   }
   function labelInside(code2) {
-    if (code2 === null || code2 === 91 || code2 === 93 || markdownLineEnding(code2) || size++ > 999) {
+    if (code2 === null || code2 === 91 || code2 === 93 || markdownLineEnding(code2) || size2++ > 999) {
       effects.exit("chunkString");
       return atBreak(code2);
     }
@@ -176852,7 +176852,7 @@ function factoryLabel(effects, ok3, nok, type3, markerType, stringType) {
   function labelEscape(code2) {
     if (code2 === 91 || code2 === 92 || code2 === 93) {
       effects.consume(code2);
-      size++;
+      size2++;
       return labelInside;
     }
     return labelInside(code2);
@@ -177082,7 +177082,7 @@ function resolveHeadingAtx(events, context) {
   return events;
 }
 function tokenizeHeadingAtx(effects, ok3, nok) {
-  let size = 0;
+  let size2 = 0;
   return start3;
   function start3(code2) {
     effects.enter("atxHeading");
@@ -177093,7 +177093,7 @@ function tokenizeHeadingAtx(effects, ok3, nok) {
     return sequenceOpen(code2);
   }
   function sequenceOpen(code2) {
-    if (code2 === 35 && size++ < 6) {
+    if (code2 === 35 && size2++ < 6) {
       effects.consume(code2);
       return sequenceOpen;
     }
@@ -178180,7 +178180,7 @@ var thematicBreak = {
   tokenize: tokenizeThematicBreak
 };
 function tokenizeThematicBreak(effects, ok3, nok) {
-  let size = 0;
+  let size2 = 0;
   let marker;
   return start3;
   function start3(code2) {
@@ -178196,7 +178196,7 @@ function tokenizeThematicBreak(effects, ok3, nok) {
       effects.enter("thematicBreakSequence");
       return sequence(code2);
     }
-    if (size >= 3 && (code2 === null || markdownLineEnding(code2))) {
+    if (size2 >= 3 && (code2 === null || markdownLineEnding(code2))) {
       effects.exit("thematicBreak");
       return ok3(code2);
     }
@@ -178205,7 +178205,7 @@ function tokenizeThematicBreak(effects, ok3, nok) {
   function sequence(code2) {
     if (code2 === marker) {
       effects.consume(code2);
-      size++;
+      size2++;
       return sequence;
     }
     effects.exit("thematicBreakSequence");
@@ -178234,7 +178234,7 @@ function tokenizeListStart(effects, ok3, nok) {
   const self2 = this;
   const tail = self2.events[self2.events.length - 1];
   let initialSize = tail && tail[1].type === "linePrefix" ? tail[2].sliceSerialize(tail[1], true).length : 0;
-  let size = 0;
+  let size2 = 0;
   return start3;
   function start3(code2) {
     const kind = self2.containerState.type || (code2 === 42 || code2 === 43 || code2 === 45 ? "listUnordered" : "listOrdered");
@@ -178258,11 +178258,11 @@ function tokenizeListStart(effects, ok3, nok) {
     return nok(code2);
   }
   function inside(code2) {
-    if (asciiDigit(code2) && ++size < 10) {
+    if (asciiDigit(code2) && ++size2 < 10) {
       effects.consume(code2);
       return inside;
     }
-    if ((!self2.interrupt || size < 2) && (self2.containerState.marker ? code2 === self2.containerState.marker : code2 === 41 || code2 === 46)) {
+    if ((!self2.interrupt || size2 < 2) && (self2.containerState.marker ? code2 === self2.containerState.marker : code2 === 41 || code2 === 46)) {
       effects.exit("listItemValue");
       return atMarker(code2);
     }
@@ -178561,14 +178561,14 @@ function resolveAllLineSuffixes(events, context) {
       const chunks = context.sliceStream(data);
       let index3 = chunks.length;
       let bufferIndex = -1;
-      let size = 0;
+      let size2 = 0;
       let tabs;
       while (index3--) {
         const chunk = chunks[index3];
         if (typeof chunk === "string") {
           bufferIndex = chunk.length;
           while (chunk.charCodeAt(bufferIndex - 1) === 32) {
-            size++;
+            size2++;
             bufferIndex--;
           }
           if (bufferIndex) {
@@ -178577,7 +178577,7 @@ function resolveAllLineSuffixes(events, context) {
           bufferIndex = -1;
         } else if (chunk === -2) {
           tabs = true;
-          size++;
+          size2++;
         } else if (chunk === -1) {
         } else {
           index3++;
@@ -178585,17 +178585,17 @@ function resolveAllLineSuffixes(events, context) {
         }
       }
       if (context._contentTypeTextTrailing && eventIndex === events.length) {
-        size = 0;
+        size2 = 0;
       }
-      if (size) {
+      if (size2) {
         const token = {
-          type: eventIndex === events.length || tabs || size < 2 ? "lineSuffix" : "hardBreakTrailing",
+          type: eventIndex === events.length || tabs || size2 < 2 ? "lineSuffix" : "hardBreakTrailing",
           start: {
             _bufferIndex: index3 ? bufferIndex : data.start._bufferIndex + bufferIndex,
             _index: data.start._index + index3,
             line: data.end.line,
-            column: data.end.column - size,
-            offset: data.end.offset - size
+            column: data.end.column - size2,
+            offset: data.end.offset - size2
           },
           end: {
             ...data.end
@@ -184903,8 +184903,8 @@ var $ZodCheckMaxSize = /* @__PURE__ */ $constructor("$ZodCheckMaxSize", (inst, d
   (_a3 = inst._zod.def).when ?? (_a3.when = _whenHasSize);
   inst._zod.check = (payload2) => {
     const input2 = payload2.value;
-    const size = input2.size;
-    if (size <= def.maximum)
+    const size2 = input2.size;
+    if (size2 <= def.maximum)
       return;
     payload2.issues.push({
       origin: getSizableOrigin(input2),
@@ -184923,8 +184923,8 @@ var $ZodCheckMinSize = /* @__PURE__ */ $constructor("$ZodCheckMinSize", (inst, d
   (_a3 = inst._zod.def).when ?? (_a3.when = _whenHasSize);
   inst._zod.check = (payload2) => {
     const input2 = payload2.value;
-    const size = input2.size;
-    if (size >= def.minimum)
+    const size2 = input2.size;
+    if (size2 >= def.minimum)
       return;
     payload2.issues.push({
       origin: getSizableOrigin(input2),
@@ -184943,10 +184943,10 @@ var $ZodCheckSizeEquals = /* @__PURE__ */ $constructor("$ZodCheckSizeEquals", (i
   (_a3 = inst._zod.def).when ?? (_a3.when = _whenHasSize);
   inst._zod.check = (payload2) => {
     const input2 = payload2.value;
-    const size = input2.size;
-    if (size === def.size)
+    const size2 = input2.size;
+    if (size2 === def.size)
       return;
-    const tooBig = size > def.size;
+    const tooBig = size2 > def.size;
     payload2.issues.push({
       origin: getSizableOrigin(input2),
       ...tooBig ? { code: "too_big", maximum: def.size } : { code: "too_small", minimum: def.size },
@@ -185997,14 +185997,14 @@ var $ZodDate = /* @__PURE__ */ $constructor("$ZodDate", (inst, def) => {
     return payload2;
   };
 });
-function capSize(inst, size) {
+function capSize(inst, size2) {
   const caps = sizeCaps(inst._zod.def.checks);
   if (!caps.length)
     return;
   const cap2 = Math.min(...caps.map((c) => c[0]));
   const parse6 = inst._zod.parse;
   inst._zod.parse = (payload2, ctx) => {
-    const n = size(payload2.value);
+    const n = size2(payload2.value);
     if (n > cap2 && !ctx?.skipChecks && ctx?.direction !== "backward") {
       for (const [max, ch] of sizeCaps(inst._zod.def.checks)) {
         if (n > max && ch._zod.def.when(payload2)) {
@@ -196620,9 +196620,9 @@ function generateNullableCheck(doc, ctx, schema, accessor, buildsValue = true) {
   doc.write(`}`);
   return outputVar;
 }
-function generateSizeGate(doc, schema, size) {
+function generateSizeGate(doc, schema, size2) {
   for (const [max, check4] of sizeCaps(schema._zod.def.checks)) {
-    doc.write(`if (${size} > ${numericOperand(max, check4._zod.def.check)}) return INVALID;`);
+    doc.write(`if (${size2} > ${numericOperand(max, check4._zod.def.check)}) return INVALID;`);
   }
 }
 function generateArrayCheck(doc, ctx, schema, accessor, buildsValue = true) {
@@ -197758,11 +197758,11 @@ function _minSize(minimum, params2) {
   });
 }
 // @__NO_SIDE_EFFECTS__
-function _size(size, params2) {
+function _size(size2, params2) {
   return new $ZodCheckSizeEquals({
     check: "size_equals",
     ...normalizeParams(params2),
-    size
+    size: size2
   });
 }
 // @__NO_SIDE_EFFECTS__
@@ -201011,8 +201011,8 @@ var ZodFile = /* @__PURE__ */ $constructor("ZodFile", (inst, def) => {
   $ZodFile.init(inst, def);
   ZodType.init(inst, def);
   inst._zod.processJSONSchema = (ctx, json3, params2) => fileProcessor(inst, ctx, json3, params2);
-  inst.min = (size, params2) => inst.check(_minSize(size, params2));
-  inst.max = (size, params2) => inst.check(_maxSize(size, params2));
+  inst.min = (size2, params2) => inst.check(_minSize(size2, params2));
+  inst.max = (size2, params2) => inst.check(_maxSize(size2, params2));
   inst.mime = (types2, params2) => inst.check(_mime(Array.isArray(types2) ? types2 : [types2], params2));
 });
 function file(params2) {
@@ -202418,6 +202418,7 @@ import { existsSync as existsSync2, mkdirSync, readdirSync, readFileSync, rmSync
 import { basename, join as join2 } from "node:path";
 
 // src/recording.ts
+var FRAME_MS = 500;
 var MAX_FRAMES = 40;
 
 // src/shared.ts
@@ -202788,42 +202789,103 @@ async function launchChrome(open6) {
 }
 
 // src/studio/window.ts
+var Region = external_exports.strictObject({ x: external_exports.number().int().min(0), y: external_exports.number().int().min(0), w: external_exports.number().int().min(1), h: external_exports.number().int().min(1) });
 var Msg = external_exports.discriminatedUnion("type", [
   external_exports.strictObject({ type: external_exports.literal("hello") }),
-  external_exports.strictObject({ type: external_exports.literal("freeze") }),
-  external_exports.strictObject({ type: external_exports.literal("save"), text: external_exports.string(), png: external_exports.string() }),
+  external_exports.strictObject({ type: external_exports.literal("freeze"), for: external_exports.enum(["snap", "record"]) }),
+  external_exports.strictObject({ type: external_exports.literal("record"), region: Region }),
+  external_exports.strictObject({ type: external_exports.literal("stop") }),
+  external_exports.strictObject({ type: external_exports.literal("review") }),
+  // png: the snap, cropped. pngs: a recording's frames cropped tighter; left out, the frames are saved as taken.
+  external_exports.strictObject({ type: external_exports.literal("save"), text: external_exports.string(), png: external_exports.string().optional(), pngs: external_exports.array(external_exports.string()).optional() }),
   external_exports.strictObject({ type: external_exports.literal("cancel") })
 ]);
+var size = (png) => ({ w: png.readUInt32BE(16), h: png.readUInt32BE(20) });
 function liveWindow(o) {
   const origin = new URL(o.app).origin;
   let ctx = null;
-  let state = { open: false, url: null, openedAt: null, capturing: false };
+  let state = { open: false, url: null, openedAt: null, capturing: false, recording: false };
   const frozen = /* @__PURE__ */ new Map();
+  let rec = null;
+  let lastRegion = null;
   const set2 = (next) => {
-    state = { ...state, ...next, capturing: frozen.size > 0 };
+    state = { ...state, ...next, capturing: frozen.size > 0 || !!rec?.reviewing, recording: !!rec && !rec.reviewing };
     o.onChange();
   };
+  const tell = (page, event, detail) => page.evaluate(([e, d]) => dispatchEvent(new CustomEvent(e, { detail: d })), [event, detail]).catch(() => {
+  });
+  async function sample(r) {
+    if (rec !== r || r.reviewing) return;
+    const t = Date.now();
+    try {
+      const { x, y, w: width, h: height } = r.region;
+      const png = await r.page.screenshot({ type: "png", clip: { x, y, width, height } });
+      if (rec !== r || r.reviewing) return;
+      r.frames.push({ png, ms: r.frames.length ? Math.round(t - r.start) : 0 });
+      tell(r.page, "jeyna:frame", r.frames.length);
+    } catch {
+    }
+    if (r.frames.length >= MAX_FRAMES) return stop();
+    r.timer = setTimeout(() => sample(r), Math.max(0, FRAME_MS - (Date.now() - t)));
+  }
+  function stop() {
+    if (!rec || rec.reviewing) return;
+    clearTimeout(rec.timer);
+    rec.reviewing = true;
+    if (!rec.frames.length) rec = null;
+    else tell(rec.page, "jeyna:stopped");
+    set2({});
+  }
   async function bridge(source14, raw2) {
     const { page, frame } = source14;
     if (frame !== page.mainFrame() || new URL(frame.url()).origin !== origin) throw new Error(`Jeyna feedback works on ${origin} only.`);
     const msg = Msg.parse(raw2);
-    if (msg.type === "hello") return true;
+    const mine = rec?.page === page ? rec : null;
+    if (msg.type === "hello") return { recording: mine && { region: mine.region, frames: mine.frames.length, elapsed: Date.now() - mine.start, reviewing: mine.reviewing } };
     if (msg.type === "freeze") {
+      if (rec) throw new Error("A recording is under way in this window: stop it first.");
       const png = await page.screenshot({ type: "png" });
       const viewport = await page.evaluate(() => ({ width: innerWidth, height: innerHeight, dpr: devicePixelRatio }));
-      frozen.set(page, { url: frame.url(), viewport });
+      frozen.set(page, { url: frame.url(), viewport, for: msg.for });
       set2({});
-      return { png: png.toString("base64"), w: png.readUInt32BE(16), h: png.readUInt32BE(20), dpr: viewport.dpr };
+      return { png: png.toString("base64"), ...size(png), dpr: viewport.dpr, last: msg.for === "record" ? lastRegion : null };
     }
     const f = frozen.get(page);
-    if (msg.type === "save") {
-      if (!f) throw new Error("Nothing is frozen in this tab: snap again.");
-      const item = createFeedback(o.root, { text: msg.text, capture: "snap", frames: [{ png: msg.png, ms: 0 }], source: "live", url: f.url, viewport: f.viewport });
+    if (msg.type === "record") {
+      if (f?.for !== "record") throw new Error("Choose the area to record first: \u2325\u21E7R.");
+      const r = msg.region;
+      if (r.x + r.w > f.viewport.width || r.y + r.h > f.viewport.height) throw new Error("The area to record is outside the window.");
       frozen.delete(page);
+      lastRegion = r;
+      rec = { page, region: r, url: f.url, viewport: f.viewport, start: Date.now(), frames: [], reviewing: false };
+      set2({});
+      void sample(rec);
+      return true;
+    }
+    if (msg.type === "stop") return stop(), true;
+    if (msg.type === "review") {
+      if (!mine?.reviewing) throw new Error("No recording to review in this tab.");
+      const png = await page.screenshot({ type: "png" });
+      const dpr = await page.evaluate(() => devicePixelRatio);
+      return { png: png.toString("base64"), ...size(png), dpr, region: mine.region, frames: mine.frames.map((x) => ({ png: x.png.toString("base64"), ms: x.ms })) };
+    }
+    if (msg.type === "save") {
+      let item;
+      if (mine?.reviewing) {
+        const pngs = msg.pngs ?? mine.frames.map((x) => x.png.toString("base64"));
+        if (pngs.length !== mine.frames.length) throw new Error(`A recording of ${mine.frames.length} frames saves ${mine.frames.length} images.`);
+        item = createFeedback(o.root, { text: msg.text, capture: "recording", frames: pngs.map((png, i) => ({ png, ms: mine.frames[i].ms })), source: "live", url: mine.url, viewport: mine.viewport });
+        rec = null;
+      } else {
+        if (f?.for !== "snap" || !msg.png) throw new Error("Nothing is frozen in this tab: snap again.");
+        item = createFeedback(o.root, { text: msg.text, capture: "snap", frames: [{ png: msg.png, ms: 0 }], source: "live", url: f.url, viewport: f.viewport });
+        frozen.delete(page);
+      }
       set2({});
       return { id: item.id };
     }
     frozen.delete(page);
+    if (mine?.reviewing) rec = null;
     set2({});
     return true;
   }
@@ -202842,13 +202904,18 @@ function liveWindow(o) {
     await c.addInitScript({ content: o.script });
     const follow = (p2) => {
       p2.on("framenavigated", (f) => f === p2.mainFrame() && set2({ url: f.url() }));
-      p2.on("close", () => frozen.delete(p2) && set2({}));
+      p2.on("close", () => {
+        frozen.delete(p2);
+        if (rec?.page === p2) clearTimeout(rec.timer), rec = null;
+        set2({});
+      });
     };
     c.pages().forEach(follow);
     c.on("page", follow);
     c.on("close", () => {
       ctx = null;
       frozen.clear();
+      if (rec) clearTimeout(rec.timer), rec = null;
       set2({ open: false, url: null, openedAt: null });
     });
     set2({ open: true, openedAt: (/* @__PURE__ */ new Date()).toISOString() });
@@ -202868,6 +202935,8 @@ function liveWindow(o) {
       await page.bringToFront();
       return page;
     },
+    // The studio's Stop recording.
+    stop,
     async close() {
       await (await ctx)?.close();
     }
@@ -202950,7 +203019,7 @@ function scan() {
   runs.sort((a, b) => (b.session?.started ?? "").localeCompare(a.session?.started ?? "") || b.id.localeCompare(a.id));
   return { schema: 1, generated: (/* @__PURE__ */ new Date()).toISOString(), root: root3, app: readApp(), runs, feedback: readFeedback(root3), window: live?.state() ?? CLOSED };
 }
-var CLOSED = { open: false, url: null, openedAt: null, capturing: false };
+var CLOSED = { open: false, url: null, openedAt: null, capturing: false, recording: false };
 var live;
 var liveFor = "";
 function windowFor(app) {
@@ -203020,16 +203089,16 @@ function fromStudio(req) {
 var MAX_BODY = 200 * 1024 * 1024;
 async function body3(req) {
   const chunks = [];
-  let size = 0;
+  let size2 = 0;
   for await (const c of req) {
-    size += c.length;
-    if (size > MAX_BODY) throw new Error("request too large");
+    size2 += c.length;
+    if (size2 > MAX_BODY) throw new Error("request too large");
     chunks.push(c);
   }
   return JSON.parse(Buffer.concat(chunks).toString("utf8"));
 }
 var Change = external_exports.strictObject({ status: external_exports.enum(FEEDBACK_STATUSES).optional(), text: external_exports.string().optional() });
-var WindowAction = external_exports.strictObject({ action: external_exports.enum(["open", "close"]) });
+var WindowAction = external_exports.strictObject({ action: external_exports.enum(["open", "close", "stop"]) });
 async function windowAction(req, res) {
   if (!fromStudio(req)) return json2(res, 403, { error: "the window opens from the studio page only" });
   if (req.method !== "POST") return json2(res, 405, { error: "method not allowed" });
@@ -203038,11 +203107,12 @@ async function windowAction(req, res) {
     const app = readApp();
     if (!app) throw new Error("No app.url: .jeyna/jeyna.config.yaml is missing or does not parse.");
     if (action === "open") await windowFor(app.url).open();
+    else if (action === "stop") live?.stop();
     else await live?.close();
     rescan();
     return json2(res, 200, { window: live?.state() ?? CLOSED });
   } catch (e) {
-    const msg = e instanceof external_exports.ZodError ? "send { action: open | close }" : e.message.split("\n")[0];
+    const msg = e instanceof external_exports.ZodError ? "send { action: open | close | stop }" : e.message.split("\n")[0];
     log3("window action refused:", msg);
     return json2(res, 400, { error: msg });
   }

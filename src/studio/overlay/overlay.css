@@ -46,3 +46,8 @@
 .jo-warn { color: var(--warn); }
 .jo-error { color: var(--fail); }
 .jo-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.jo-note { margin: 0; font-size: 13px; color: var(--muted); }
+.jo-layer { position: absolute; display: block; pointer-events: none; }
+.jo-scrub { display: flex; align-items: center; gap: 8px; font: 12px ui-monospace, monospace; color: var(--muted); }
+.jo-scrub input { flex: 1; min-width: 0; accent-color: var(--tide); }
+.jo-scrub button { padding: 2px 10px; }

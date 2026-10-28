@@ -115,7 +115,7 @@ function scan(): StudioIndex {
 }
 
 // --- The Live window (D37), made on first open for the app.url of that moment.
-const CLOSED = { open: false, url: null, openedAt: null, capturing: false };
+const CLOSED = { open: false, url: null, openedAt: null, capturing: false, recording: false };
 let live: ReturnType<typeof liveWindow> | undefined;
 let liveFor = "";
 function windowFor(app: string) {
@@ -203,9 +203,9 @@ async function body(req: IncomingMessage): Promise<unknown> {
 
 const Change = z.strictObject({ status: z.enum(FEEDBACK_STATUSES).optional(), text: z.string().optional() });
 
-const WindowAction = z.strictObject({ action: z.enum(["open", "close"]) });
+const WindowAction = z.strictObject({ action: z.enum(["open", "close", "stop"]) });
 
-// Open (or bring to the front) and close the Live window, from the studio page only.
+// Open (or bring to the front) and close the Live window, and stop its recording, from the studio page only.
 async function windowAction(req: IncomingMessage, res: ServerResponse) {
   if (!fromStudio(req)) return json(res, 403, { error: "the window opens from the studio page only" });
   if (req.method !== "POST") return json(res, 405, { error: "method not allowed" });
@@ -214,11 +214,12 @@ async function windowAction(req: IncomingMessage, res: ServerResponse) {
     const app = readApp();
     if (!app) throw new Error("No app.url: .jeyna/jeyna.config.yaml is missing or does not parse.");
     if (action === "open") await windowFor(app.url).open();
+    else if (action === "stop") live?.stop();
     else await live?.close();
     rescan();
     return json(res, 200, { window: live?.state() ?? CLOSED });
   } catch (e) {
-    const msg = e instanceof z.ZodError ? "send { action: open | close }" : (e as Error).message.split("\n")[0];
+    const msg = e instanceof z.ZodError ? "send { action: open | close | stop }" : (e as Error).message.split("\n")[0];
     log("window action refused:", msg);
     return json(res, 400, { error: msg });
   }
