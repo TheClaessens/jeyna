@@ -1,9 +1,11 @@
 // Studio · Finding: chips row, Steps / Expected / Actual, evidence at natural size, Suggested next step, the duplicates
-// of this finding, the source (frontmatter, or the whole file), Copy path and Copy id, j / k / esc.
+// of this finding, the source (frontmatter, or the whole file), Copy path and Copy id, j / k / esc. Give feedback on an
+// evidence image opens it full size to select a region and write what should change (D36, D37).
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import * as m from "../model.js";
 import type { StudioFinding, StudioIndex, StudioRun } from "../types.js";
+import { EvidenceLightbox, SavedToast } from "./capture.js";
 import { Attention, evidenceUrl, filePath } from "./run.js";
 import { Arrow, Card, CopyButton, CopyIcon, Glyph, IdIcon, KindChip, Severity, StatusChip } from "./ui.js";
 
@@ -17,6 +19,9 @@ export function FindingScreen({ index, run, finding }: { index: StudioIndex; run
   const search = useSearch({ strict: false }) as Search;
   const navigate = useNavigate();
   const [whole, setWhole] = useState(false);
+  // Fixed when opened, so the item names this finding even if the page behind changes.
+  const [lightbox, setLightbox] = useState<{ run: string; evidence: string; finding: string }>();
+  const [saved, setSaved] = useState<string>();
   const { view, ...filters } = search;
 
   // Position among the rows the run screen shows with the same filters; a folded duplicate steps from its parent.
@@ -32,7 +37,7 @@ export function FindingScreen({ index, run, finding }: { index: StudioIndex; run
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement | null;
-      if (e.metaKey || e.ctrlKey || e.altKey || t?.tagName === "INPUT" || t?.tagName === "TEXTAREA") return;
+      if (e.metaKey || e.ctrlKey || e.altKey || t?.tagName === "INPUT" || t?.tagName === "TEXTAREA" || document.querySelector("dialog[open]")) return;
       if (e.key === "j" && next) go(next.finding.id);
       else if (e.key === "k" && prev) go(prev.finding.id);
       else if (e.key === "Escape") back();
@@ -137,7 +142,10 @@ export function FindingScreen({ index, run, finding }: { index: StudioIndex; run
                 fr.evidence.map((e) => (
                   <figure key={e}>
                     <a href={evidenceUrl(run.id, e)} target="_blank" rel="noreferrer"><img src={evidenceUrl(run.id, e)} alt={e} /></a>
-                    <figcaption><span>{e}</span><span className="dot">·</span><span className="vp">{fr.viewport}</span></figcaption>
+                    <figcaption>
+                      <span>{e}</span><span className="dot">·</span><span className="vp">{fr.viewport}</span>
+                      <button type="button" className="btn sm" onClick={() => setLightbox({ run: run.id, evidence: e, finding: finding.id })}>Give feedback</button>
+                    </figcaption>
                   </figure>
                 ))
               ) : (
@@ -171,6 +179,9 @@ export function FindingScreen({ index, run, finding }: { index: StudioIndex; run
             </Card>
           </>
         )}
+
+        {lightbox && <EvidenceLightbox {...lightbox} onClose={() => setLightbox(undefined)} onSaved={setSaved} />}
+        {saved && <SavedToast id={saved} onDone={() => setSaved(undefined)} />}
 
         <footer className="foot-keys">
           <span><kbd>j</kbd> / <kbd>k</kbd> next and previous finding</span>

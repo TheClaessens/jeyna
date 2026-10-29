@@ -2,6 +2,10 @@
 
 The one glossary for Jeyna. Use these words in docs, code, issues and agent prompts. Decisions behind them are in `docs/decisions.md` (D-numbers).
 
+## Abilities
+
+- **Ability**: one of Jeyna's features, to get a World of Warcraft flavoured name. Not necessarily a skill. Playtest is the first, Feedback the second. The studio and Jeyna's Watch are surfaces, not abilities. (D36)
+
 ## The loop
 
 - **Run**: one execution of `/jeyna:playtest`, stored as one folder `.jeyna/playtests/<yyyy-mm-dd>-<slug>[-<n>]/`.
@@ -33,9 +37,17 @@ The one glossary for Jeyna. Use these words in docs, code, issues and agent prom
 
 ## Reading a run
 
-- **Studio**: the read-only viewer of `.jeyna/playtests/`, shipped in the plugin and started by `/jeyna:studio`. A sidecar watches the folder, validates every file with the server's rules and pushes an index to a browser page; it edits nothing. (D34)
+- **Studio**: the viewer of `.jeyna/playtests/` and the place feedback is captured, shipped in the plugin and started by `/jeyna:studio`. A sidecar watches the folder, validates every file with the server's rules and pushes an index to a browser page; it edits nothing outside `.jeyna/feedback/`. (D34, D36)
 - **Needs attention**: the studio's lane for what `validate` reports: a finding or session file that does not parse, or a check that fails. The file stays listed with its errors and its source; nothing is dropped. (D34)
 - **Fold**: in the studio, a finding with status `duplicate` sits under the finding its `of` names and leaves the counts. One whose target is not in the run stands on its own. (D34)
+
+## Feedback
+
+- **Feedback item**: one capture plus the developer's text, `.jeyna/feedback/FB-<nnn>.md` beside its capture files, numbered across the project. Made in the studio; an item made on evidence names its run, evidence and finding. Status `open`, `processed` (Claude implemented it, a person still checks it), `done` (only by the developer, or by the agent on their explicit OK), `wontfix`. (D36)
+- **Capture**: a snap or a recording. Never changes once saved. (D36)
+- **Snap**: one PNG of exactly the selected region, from an evidence image or the Live window. (D36, D37)
+- **Recording**: ordered PNG frames with timestamps, one every 500 ms, at most 40; played back as a flipbook. Not a video, and not a clip. (D36)
+- **Live**: the running app (`app.url`) in Jeyna's own Chrome window, opened from the studio's Live page with a per-project profile, where the developer uses the app by hand and snaps or records feedback in place. Not an iframe. (D36, D37)
 
 ## What the developer sees
 

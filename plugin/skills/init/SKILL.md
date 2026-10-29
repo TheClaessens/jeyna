@@ -32,7 +32,7 @@ Ask in one round:
 3. `.jeyna/CONVENTIONS.md`: copy the template as is.
 4. `.jeyna/.env`: create it **with Bash** (the write guard denies `Write`/`Edit` on this file): `cp` the `env` template, then append one empty line per variable, e.g. `printf 'JEYNA_USER_A_USER=\nJEYNA_USER_A_PASS=\n' >> .jeyna/.env`. Leave the values empty. If `.jeyna/.env` already exists, only append the variables it lacks.
 5. `.gitignore` at the project root (create it if missing), adding only lines not already there:
-   - always `.jeyna/.env` and `.jeyna/index.json` (the studio's derived cache, D34);
+   - always `.jeyna/.env`, `.jeyna/index.json` (the studio's derived cache, D34) and `.jeyna/chrome-profile/` (the Live window's browser profile, with its logins, D37);
    - if evidence is gitignored, also `.jeyna/playtests/*/evidence/`.
 
 ## 5. Validate

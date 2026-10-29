@@ -1,5 +1,5 @@
 ---
-description: Open Jeyna studio, the read-only viewer of this project's playtest runs. Starts the studio sidecar on localhost (it watches .jeyna/playtests/ and pushes every change to the page) and gives the developer the URL.
+description: Open Jeyna studio, the viewer of this project's playtest runs and the place to capture feedback. Starts the studio sidecar on localhost (it watches .jeyna/ and pushes every change to the page) and gives the developer the URL.
 disable-model-invocation: true
 argument-hint: "[port]"
 ---
@@ -16,6 +16,6 @@ Start the studio for `${CLAUDE_PROJECT_DIR}` and hand the developer its URL. The
    ```
 
    Its first stdout line is `Jeyna studio: http://localhost:<port>/`. If the port is taken, start it again with another port.
-3. Tell the developer the URL, that the page follows `.jeyna/playtests/` live (a running `/jeyna:playtest` shows up as it writes), and that the studio edits nothing. Leave it running; the developer stops it with the Bash task when done.
+3. Tell the developer the URL, that the page follows `.jeyna/playtests/` live (a running `/jeyna:playtest` shows up as it writes), and that they can snap feedback on **Live** (Open app window: their app in its own Chrome window, ⌥⇧S to snap right where they see it) or on any finding's evidence; the studio writes only those items, under `.jeyna/feedback/` (D36, D37). Leave it running; the developer stops it with the Bash task when done.
 
-Never read, summarise or edit run files for the studio: it reads the folder itself.
+Never read, summarise or edit run or feedback files for the studio: it reads the folder itself.

@@ -1,0 +1,53 @@
+/* The capture overlay (D37). Literal values, not the studio's tokens: the same rules style it inside the app window,
+   where the studio's stylesheet does not reach. Fixed to the viewport; the stage is the image at display size. */
+.jo {
+  --tide: #1F5FA8; --navy: #0E1F38; --muted: #566B82; --hair: rgba(14, 31, 56, .24); --fail: #B23A28; --warn: #7F5700;
+  --shade: rgba(14, 31, 56, .45);
+  position: fixed; inset: 0; display: grid; place-items: center; outline: none;
+  font: 14px/1.5 'Public Sans', 'Segoe UI', system-ui, sans-serif; color: var(--navy);
+}
+.jo kbd { font: 12px ui-monospace, monospace; padding: 0 4px; border: 1px solid var(--hair); border-radius: 4px; }
+.jo button { font: inherit; color: var(--navy); background: #fff; border: 1px solid var(--hair); border-radius: 6px; padding: 5px 10px; cursor: pointer; white-space: nowrap; }
+.jo button.primary { background: var(--tide); border-color: var(--tide); color: #fff; }
+.jo button.primary kbd { border-color: rgba(255, 255, 255, .5); }
+.jo button:disabled { opacity: .5; cursor: default; }
+.jo :focus-visible { outline: 2px solid var(--tide); outline-offset: 2px; }
+
+.jo-hint { position: fixed; top: 12px; left: 50%; transform: translateX(-50%); z-index: 2; display: flex; align-items: center; gap: 12px;
+  max-width: calc(100vw - 24px); padding: 6px 6px 6px 14px; background: #fff; border: 1px solid var(--hair); border-radius: 8px; font-size: 13px; white-space: nowrap; }
+.jo-hint > span { overflow: hidden; text-overflow: ellipsis; }
+.jo-title { font: 12px ui-monospace, monospace; color: var(--muted); }
+
+/* overflow: hidden keeps the selection's shade on the image. */
+.jo-stage { position: relative; overflow: hidden; cursor: crosshair; touch-action: none; user-select: none; line-height: 0; }
+.jo-stage img { display: block; pointer-events: none; }
+.jo-stage.empty::after { content: ""; position: absolute; inset: 0; background: var(--shade); }
+.jo-sel { position: absolute; cursor: move; outline: none; box-shadow: 0 0 0 1px #fff inset, 0 0 0 9999px var(--shade); border: 2px solid var(--tide); }
+.jo-sel:focus-visible { border-style: dashed; }
+.jo-h { position: absolute; width: 10px; height: 10px; margin: -6px 0 0 -6px; background: #fff; border: 2px solid var(--tide); border-radius: 2px; }
+.jo-h.nw { left: 0; top: 0; cursor: nwse-resize; } .jo-h.n { left: 50%; top: 0; cursor: ns-resize; } .jo-h.ne { left: 100%; top: 0; cursor: nesw-resize; }
+.jo-h.e { left: 100%; top: 50%; cursor: ew-resize; } .jo-h.se { left: 100%; top: 100%; cursor: nwse-resize; } .jo-h.s { left: 50%; top: 100%; cursor: ns-resize; }
+.jo-h.sw { left: 0; top: 100%; cursor: nesw-resize; } .jo-h.w { left: 0; top: 50%; cursor: ew-resize; }
+.jo-size { position: absolute; left: -2px; bottom: calc(100% + 4px); padding: 2px 6px; background: var(--tide); color: #fff; border-radius: 4px; font: 12px/1.4 ui-monospace, monospace; white-space: nowrap; }
+.jo-size.inside { bottom: auto; top: 4px; left: 4px; }
+
+.jo-panel { position: fixed; z-index: 3; width: 320px; max-height: calc(100vh - 24px); overflow: auto; display: flex; flex-direction: column; gap: 10px; padding: 14px; background: #fff;
+  border: 1px solid var(--hair); border-radius: 10px; }
+.jo-panel.docked { outline: 1px solid var(--tide); }
+.jo-panel.docked header { cursor: grab; }
+.jo-panel header { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.jo-panel h2 { margin: 0; font-size: 15px; font-weight: 600; }
+.jo-panel label { display: flex; flex-direction: column; gap: 6px; font-weight: 600; font-size: 13px; }
+.jo-panel textarea { width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid var(--hair); border-radius: 6px; font: 400 14px/1.45 inherit; font-family: inherit; color: var(--navy); resize: vertical; }
+.jo-muted { color: var(--muted); font: 12px ui-monospace, monospace; }
+.jo-row { display: flex; align-items: center; gap: 8px; }
+.jo-grow { flex: 1; }
+.jo-warn, .jo-error { margin: 0; font-size: 13px; }
+.jo-warn { color: var(--warn); }
+.jo-error { color: var(--fail); }
+.jo-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.jo-note { margin: 0; font-size: 13px; color: var(--muted); }
+.jo-layer { position: absolute; display: block; pointer-events: none; }
+.jo-scrub { display: flex; align-items: center; gap: 8px; font: 12px ui-monospace, monospace; color: var(--muted); }
+.jo-scrub input { flex: 1; min-width: 0; accent-color: var(--tide); }
+.jo-scrub button { padding: 2px 10px; }

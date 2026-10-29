@@ -167,3 +167,47 @@ test("evidence is served from the run folder and nothing outside it", async () =
   expect(page.headers.get("content-type")).toContain("text/html");
   expect(await page.text()).toContain('<script type="module" src="/app.js">');
 });
+
+test("feedback: the studio page creates, edits and deletes items; the index carries them; other origins are refused (D36)", async () => {
+  const send = (method: string, path: string, data?: unknown, origin = url) =>
+    fetch(`${url}${path}`, { method, headers: { origin, "content-type": "application/json" }, body: data === undefined ? undefined : JSON.stringify(data) });
+  const snap = { text: "Make the button bigger", capture: "snap", frames: [{ png: PNG.toString("base64"), ms: 0 }], source: "evidence", run: "2026-10-17-todos", evidence: "t1-390x844-1-login.png", finding: "PT-todos-001" };
+
+  expect((await send("POST", "/api/feedback", snap, "http://evil.example")).status).toBe(403);
+  expect((await fetch(`${url}/api/feedback`, { method: "POST", body: JSON.stringify(snap) })).status).toBe(403);
+  const bad = await send("POST", "/api/feedback", { ...snap, evidence: "missing.png" });
+  expect([bad.status, (await bad.json()).error]).toEqual([400, "No evidence missing.png in run 2026-10-17-todos."]);
+
+  const seen = nextIndex((i) => i.feedback.length === 1);
+  const created = await send("POST", "/api/feedback", snap);
+  expect(await created.json()).toMatchObject({ id: "FB-001", status: "open", frames: [{ file: "FB-001.png", ms: 0 }] });
+  expect((await seen).feedback[0]).toMatchObject({ id: "FB-001", text: "Make the button bigger", errors: [] });
+
+  const img = await fetch(`${url}/feedback-files/FB-001.png`);
+  expect([img.status, img.headers.get("content-type")]).toEqual([200, "image/png"]);
+  expect((await fetch(`${url}/feedback-files/${encodeURIComponent("../jeyna.config.yaml")}`)).status).toBe(404);
+
+  expect((await send("PATCH", "/api/feedback/FB-001", { text: "Bigger, 44 px" })).status).toBe(200);
+  expect((await send("PATCH", "/api/feedback/FB-001", { status: "wontfix" })).status).toBe(200);
+  const locked = await send("PATCH", "/api/feedback/FB-001", { text: "x" });
+  expect([locked.status, (await locked.json()).error]).toEqual([400, "FB-001 is wontfix; only an open item's text can change. Reopen it first."]);
+  expect((await index()).feedback[0]).toMatchObject({ text: "Bigger, 44 px", front: { status: "wontfix" } });
+
+  expect((await send("DELETE", "/api/feedback/FB-001", undefined, "http://evil.example")).status).toBe(403);
+  expect((await send("DELETE", "/api/feedback/FB-001")).status).toBe(200);
+  expect((await index()).feedback).toEqual([]);
+});
+
+test("the Live window opens and closes from the studio page only; the index says whether it is open; no draft, nothing to finish (D37)", async () => {
+  const post = (data: unknown, origin = url) =>
+    fetch(`${url}/api/window`, { method: "POST", headers: { origin, "content-type": "application/json" }, body: JSON.stringify(data) });
+  expect((await index()).window).toEqual({ open: false, url: null, openedAt: null, capturing: false, recording: false, draft: null });
+  expect((await post({ action: "open" }, "http://evil.example")).status).toBe(403);
+  const bad = await post({ action: "launch" });
+  expect([bad.status, (await bad.json()).error]).toEqual([400, "send { action: open | close | stop | discard-draft }, or { action: save-draft, text, pngs? }"]);
+  const none = await post({ action: "save-draft", text: "x" });
+  expect([none.status, (await none.json()).error]).toEqual([400, "No unsaved feedback from the app window."]);
+  expect((await fetch(`${url}/api/window/draft/0.png`)).status).toBe(404);
+  const closed = await post({ action: "close" });
+  expect([closed.status, (await closed.json()).window.open]).toEqual([200, false]);
+});

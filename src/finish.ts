@@ -4,6 +4,7 @@ import { basename, join, relative, resolve } from "node:path";
 import { parse, stringify } from "yaml";
 import { z } from "zod";
 import { closeContexts } from "./browser.js";
+import { FEEDBACK_STATUSES, type FeedbackItem, feedbackDir, type FeedbackStatus, readFeedback, updateFeedback } from "./feedback.js";
 import { current, endRun, fail, ok, save, type Session } from "./session.js";
 import { runDirOf, splitFront } from "./shared.js";
 import { type Finding, type FindingFront, KINDS, previousRun, readFindings, runs, SEVERITIES, since, STATUSES, validateRun } from "./validate.js";
@@ -170,10 +171,11 @@ export function registerFinishTools(server: McpServer, getContext: () => { root:
     "update_status",
     {
       description:
-        "Change a finding's status (the only mutable field, D11). During a run, mark a cross-scenario duplicate with status duplicate and of: the finding it repeats. wontfix and fixed are for later sessions. Looks in `run` if given, else the current run; with no run running, the one run holding the id. Ids repeat across runs of the same flow, so when several runs hold it, it refuses and lists them: give run.",
+        "Change a finding's status (the only mutable field, D11). During a run, mark a cross-scenario duplicate with status duplicate and of: the finding it repeats. wontfix and fixed are for later sessions. Looks in `run` if given, else the current run; with no run running, the one run holding the id. Ids repeat across runs of the same flow, so when several runs hold it, it refuses and lists them: give run. " +
+        "Also a feedback item's status (FB-001): open, processed (you implemented it; the developer still checks it), done (only on the developer's explicit OK), wontfix (D36).",
       inputSchema: {
-        id: z.string().describe("Finding id, e.g. PT-login-003"),
-        status: z.enum(STATUSES),
+        id: z.string().describe("Finding id, e.g. PT-login-003, or feedback id, e.g. FB-007"),
+        status: z.enum([...new Set([...STATUSES, ...FEEDBACK_STATUSES])] as [string, ...string[]]),
         of: z.string().optional().describe("Required for duplicate: the id of the finding this one repeats"),
         note: z.string().min(1).optional(),
         run: z.string().min(1).optional().describe("Run id holding the finding, e.g. 2026-10-15-login; needed when several runs hold the id"),
@@ -181,6 +183,13 @@ export function registerFinishTools(server: McpServer, getContext: () => { root:
     },
     async ({ id, status, of, note, run }) => {
       try {
+        if (id.startsWith("FB-")) {
+          if (!(FEEDBACK_STATUSES as readonly string[]).includes(status)) throw new Error(`A feedback item's status is one of ${FEEDBACK_STATUSES.join(", ")}, not ${status}.`);
+          if (of || run) throw new Error("of and run are for findings, not feedback.");
+          updateFeedback(getContext().root, id, { status: status as FeedbackStatus, note });
+          return ok({ id, status, path: `.jeyna/feedback/${id}.md` });
+        }
+        if (!(STATUSES as readonly string[]).includes(status)) throw new Error(`A finding's status is one of ${STATUSES.join(", ")}, not ${status}.`);
         if (status === "duplicate" && !of) throw new Error(`A duplicate needs of: the id of the finding ${id} repeats.`);
         if (status !== "duplicate" && of) throw new Error("of is only for status duplicate.");
         const holds = (d: string) => existsSync(join(d, "findings", `${id}.md`));
@@ -219,4 +228,57 @@ export function registerFinishTools(server: McpServer, getContext: () => { root:
       }
     },
   );
+
+  server.registerTool(
+    "get_feedback",
+    {
+      description:
+        "The developer's feedback from Jeyna studio (D36). No arguments: the items still to do, oldest first (open, and processed ones awaiting the developer's check), one line each, no images. " +
+        "id: that item in full: its text, every capture frame as an image (a recording's frames in order, with their time); for feedback on Live the page url and viewport it was captured at, and for feedback on evidence the finding's file and the whole evidence image. next: the same for the oldest open item.",
+      inputSchema: {
+        id: z.string().optional().describe("Feedback id, e.g. FB-007"),
+        next: z.boolean().optional().describe("Load the oldest open item"),
+      },
+      annotations: { readOnlyHint: true },
+    },
+    async ({ id, next }) => {
+      try {
+        if (id && next) throw new Error("Give id or next, not both.");
+        const root = getContext().root;
+        const items = readFeedback(root);
+        if (!id && !next) {
+          return ok({
+            todo: items.filter((i) => i.front?.status === "open" || i.front?.status === "processed").map((i) => ({
+              id: i.id, status: i.front!.status, title: i.text.split("\n")[0], capture: i.front!.capture, frames: i.front!.frames.length, from: from(i),
+            })),
+            broken: items.filter((i) => !i.front).map((i) => ({ id: i.id, errors: i.errors })),
+          });
+        }
+        const item = next ? items.find((i) => i.front?.status === "open") : items.find((i) => i.id === id);
+        if (!item) throw new Error(next ? "No open feedback under .jeyna/feedback/." : `No feedback ${id} under .jeyna/feedback/.`);
+        const fr = item.front;
+        if (!fr) throw new Error(`.jeyna/feedback/${item.path} does not parse: ${item.errors.join("; ")}. The developer fixes or deletes it in the studio.`);
+        const png = (path: string) => ({ type: "image" as const, data: readFileSync(path).toString("base64"), mimeType: "image/png" });
+        const content: ({ type: "text"; text: string } | ReturnType<typeof png>)[] = [
+          { type: "text", text: JSON.stringify({ id: item.id, status: fr.status, ...(fr.note && { note: fr.note }), capture: fr.capture, from: from(item), ...(fr.url && { url: fr.url }), ...(fr.viewport && { viewport: fr.viewport }), created: fr.created, text: item.text, path: `.jeyna/feedback/${item.path}`, ...(item.errors.length && { errors: item.errors }) }) },
+        ];
+        fr.frames.forEach((f, i) => {
+          if (fr.capture === "recording") content.push({ type: "text", text: `Frame ${i + 1} of ${fr.frames.length} at ${(f.ms / 1000).toFixed(1)} s` });
+          if (existsSync(join(feedbackDir(root), f.file))) content.push(png(join(feedbackDir(root), f.file)));
+        });
+        if (fr.source === "evidence") {
+          const run = runDirOf(root, fr.run!);
+          const finding = fr.finding && join(run, "findings", `${basename(fr.finding)}.md`);
+          if (finding && existsSync(finding)) content.push({ type: "text", text: `The finding this was given on, ${fr.finding} (run ${fr.run}):\n\n${readFileSync(finding, "utf8")}` });
+          const evidence = join(run, "evidence", basename(fr.evidence!));
+          if (existsSync(evidence)) content.push({ type: "text", text: `The whole evidence image ${fr.evidence}; the capture above is cropped from it:` }, png(evidence));
+        }
+        return { content };
+      } catch (e) {
+        return fail(e);
+      }
+    },
+  );
 }
+
+const from = (i: FeedbackItem) => (i.front?.source === "evidence" ? `${i.front.finding ?? i.front.run} · ${i.front.evidence}` : "Live");

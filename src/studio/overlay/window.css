@@ -1,0 +1,32 @@
+/* What the capture script adds to the Live window (D37), beside overlay.css: the pill, the frozen-frame dialog and the
+   toast. :host resets what the app's page would otherwise pass down. */
+:host { all: initial; }
+/* display only while open: a closed popover must stay display: none, or hiding it before a snap would not hide it. */
+.jw-pill, .jw-toast { margin: 0; padding: 4px; inset: auto 16px 16px auto; align-items: center; gap: 4px;
+  background: #0E1F38; color: #fff; border: 1px solid rgba(255, 255, 255, .2); border-radius: 18px;
+  font: 13px/1.4 'Public Sans', 'Segoe UI', system-ui, sans-serif; }
+.jw-pill:popover-open, .jw-toast:popover-open { display: flex; }
+.jw-pill button, .jw-toast button { font: inherit; color: #fff; background: transparent; border: 0; border-radius: 14px; padding: 4px 12px; cursor: pointer; white-space: nowrap; }
+.jw-pill button:hover, .jw-toast button:hover { background: rgba(255, 255, 255, .14); }
+.jw-pill button:focus-visible, .jw-toast button:focus-visible { outline: 2px solid #8FD3FF; outline-offset: 1px; }
+.jw-mark { font-variant-emoji: text; padding: 4px 8px !important; }
+.jw-toast { gap: 10px; padding-left: 14px; border-radius: 10px; max-width: calc(100vw - 32px); }
+.jw-toast code { font: 12px ui-monospace, monospace; color: #8FD3FF; }
+.jw-error { color: #FFB4A8; }
+dialog.jw-freeze { position: fixed; inset: 0; width: 100vw; height: 100vh; max-width: none; max-height: none; margin: 0; padding: 0; border: 0; background: transparent; }
+dialog.jw-freeze::backdrop { background: transparent; }
+/* The hint bar lets a drag pass under it, so the top of the window can still be selected. */
+.jo-hint { pointer-events: none; }
+.jo-hint button { pointer-events: auto; }
+/* A recording: the ring just outside the region and the timer, both outside it, so never in a frame. */
+.jw-ring, .jw-hud { position: fixed; inset: auto; margin: 0; }
+.jw-ring { box-sizing: border-box; padding: 0; border: 2px solid #B23A28; border-radius: 2px; background: transparent; pointer-events: none; }
+.jw-hud { box-sizing: border-box; width: 240px; height: 36px; padding: 0 4px 0 12px; align-items: center; gap: 8px; background: #0E1F38; color: #fff;
+  border: 1px solid rgba(255, 255, 255, .2); border-radius: 18px; font: 13px/1 ui-monospace, monospace; }
+.jw-hud:popover-open { display: flex; }
+.jw-hud span:nth-child(2) { flex: 1; }
+.jw-hud.low { background: #7F5700; }
+.jw-hud button { font: 13px 'Public Sans', 'Segoe UI', system-ui, sans-serif; color: #fff; background: rgba(255, 255, 255, .14); border: 0; border-radius: 14px; padding: 5px 10px; cursor: pointer; white-space: nowrap; }
+.jw-dot { width: 10px; height: 10px; border-radius: 5px; background: #FF5A45; }
+@media (prefers-reduced-motion: no-preference) { .jw-dot { animation: jw-blink 1s steps(2, start) infinite; } }
+@keyframes jw-blink { to { visibility: hidden; } }

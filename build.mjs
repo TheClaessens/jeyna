@@ -9,9 +9,10 @@ import { cpSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 const npmPaths = (f) =>
   writeFileSync(f, readFileSync(f, "utf8").replaceAll(/node_modules\/\.pnpm\/[^/]+\/node_modules\//g, "node_modules/"));
 
-await build({
-  entryPoints: ["src/server.ts"],
-  outfile: "plugin/server/jeyna-mcp.mjs",
+// A node bundle that carries playwright-core: the MCP server, and the studio sidecar for its Live window (D37).
+const withPlaywright = (entry, outfile) => build({
+  entryPoints: [entry],
+  outfile,
   bundle: true,
   platform: "node",
   format: "esm",
@@ -30,24 +31,18 @@ await build({
     ].join("\n"),
   },
   logLevel: "warning",
+}).then(() => {
+  npmPaths(outfile);
+  const pw = `${outfile.slice(0, outfile.lastIndexOf("/"))}/pw`;
+  mkdirSync(pw, { recursive: true });
+  for (const f of ["package.json", "browsers.json"]) cpSync(`node_modules/playwright-core/${f}`, `${pw}/${f}`);
 });
-npmPaths("plugin/server/jeyna-mcp.mjs");
 
-mkdirSync("plugin/server/pw", { recursive: true });
-for (const f of ["package.json", "browsers.json"]) cpSync(`node_modules/playwright-core/${f}`, `plugin/server/pw/${f}`);
+await withPlaywright("src/server.ts", "plugin/server/jeyna-mcp.mjs");
 
-// Jeyna studio (D34): the sidecar as one node bundle, the UI as one browser bundle plus its stylesheet, beside index.html and the mark.
-await build({
-  entryPoints: ["src/studio/server.ts"],
-  outfile: "plugin/studio/jeyna-studio.mjs",
-  bundle: true,
-  platform: "node",
-  format: "esm",
-  target: "node20",
-  banner: { js: "import { createRequire as __cr } from 'node:module'; const require = __cr(import.meta.url);" },
-  logLevel: "warning",
-});
-npmPaths("plugin/studio/jeyna-studio.mjs");
+// Jeyna studio (D34): the sidecar as one node bundle, the UI as one browser bundle plus its stylesheet, beside index.html
+// and the mark; and the capture script the sidecar injects into the Live window (D37), its stylesheet inlined as text.
+await withPlaywright("src/studio/server.ts", "plugin/studio/jeyna-studio.mjs");
 await build({
   entryPoints: { app: "src/studio/app/main.tsx" },
   outdir: "plugin/studio",
@@ -58,6 +53,20 @@ await build({
   jsx: "automatic",
   minify: true,
   legalComments: "none",
+  define: { "process.env.NODE_ENV": '"production"' },
+  logLevel: "warning",
+});
+await build({
+  entryPoints: ["src/studio/overlay/inject.tsx"],
+  outfile: "plugin/studio/overlay.js",
+  bundle: true,
+  platform: "browser",
+  format: "iife",
+  target: ["es2022"],
+  jsx: "automatic",
+  minify: true,
+  legalComments: "none",
+  loader: { ".css": "text" },
   define: { "process.env.NODE_ENV": '"production"' },
   logLevel: "warning",
 });

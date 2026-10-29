@@ -27,11 +27,11 @@ var __export2 = (target, all) => {
   for (var name in all)
     __defProp2(target, name, { get: all[name], enumerable: true });
 };
-var __copyProps2 = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames2(from))
+var __copyProps2 = (to, from2, except, desc) => {
+  if (from2 && typeof from2 === "object" || typeof from2 === "function") {
+    for (let key of __getOwnPropNames2(from2))
       if (!__hasOwnProp2.call(to, key) && key !== except)
-        __defProp2(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc2(from, key)) || desc.enumerable });
+        __defProp2(to, key, { get: () => from2[key], enumerable: !(desc = __getOwnPropDesc2(from2, key)) || desc.enumerable });
   }
   return to;
 };
@@ -172,10 +172,10 @@ var require_code = __commonJS2({
     function interpolate(x) {
       return typeof x == "number" || typeof x == "boolean" || x === null ? x : safeStringify(Array.isArray(x) ? x.join(",") : x);
     }
-    function stringify4(x) {
+    function stringify5(x) {
       return new _Code(safeStringify(x));
     }
-    exports2.stringify = stringify4;
+    exports2.stringify = stringify5;
     function safeStringify(x) {
       return JSON.stringify(x).replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
     }
@@ -633,17 +633,17 @@ var require_codegen = __commonJS2({
       }
     };
     var ForRange = class extends For {
-      constructor(varKind, name, from, to) {
+      constructor(varKind, name, from2, to) {
         super();
         this.varKind = varKind;
         this.name = name;
-        this.from = from;
+        this.from = from2;
         this.to = to;
       }
       render(opts) {
         const varKind = opts.es5 ? scope_1.varKinds.var : this.varKind;
-        const { name, from, to } = this;
-        return `for(${varKind} ${name}=${from}; ${name}<${to}; ${name}++)` + super.render(opts);
+        const { name, from: from2, to } = this;
+        return `for(${varKind} ${name}=${from2}; ${name}<${to}; ${name}++)` + super.render(opts);
       }
       get names() {
         const names = addExprNames(super.names, this.from);
@@ -862,9 +862,9 @@ var require_codegen = __commonJS2({
         return this._for(new ForLoop(iteration), forBody);
       }
       // `for` statement for a range of values
-      forRange(nameOrPrefix, from, to, forBody, varKind = this.opts.es5 ? scope_1.varKinds.var : scope_1.varKinds.let) {
+      forRange(nameOrPrefix, from2, to, forBody, varKind = this.opts.es5 ? scope_1.varKinds.var : scope_1.varKinds.let) {
         const name = this._scope.toName(nameOrPrefix);
-        return this._for(new ForRange(varKind, name, from, to), () => forBody(name));
+        return this._for(new ForRange(varKind, name, from2, to), () => forBody(name));
       }
       // `for-of` statement (in es5 mode replace with a normal for loop)
       forOf(nameOrPrefix, iterable, forBody, varKind = scope_1.varKinds.const) {
@@ -1003,13 +1003,13 @@ var require_codegen = __commonJS2({
       }
     };
     exports2.CodeGen = CodeGen;
-    function addNames(names, from) {
-      for (const n in from)
-        names[n] = (names[n] || 0) + (from[n] || 0);
+    function addNames(names, from2) {
+      for (const n in from2)
+        names[n] = (names[n] || 0) + (from2[n] || 0);
       return names;
     }
-    function addExprNames(names, from) {
-      return from instanceof code_1._CodeOrName ? addNames(names, from.names) : names;
+    function addExprNames(names, from2) {
+      return from2 instanceof code_1._CodeOrName ? addNames(names, from2.names) : names;
     }
     function optimizeExpr(expr2, names, constants) {
       if (expr2 instanceof code_1.Name)
@@ -1036,9 +1036,9 @@ var require_codegen = __commonJS2({
         return e instanceof code_1._Code && e._items.some((c) => c instanceof code_1.Name && names[c.str] === 1 && constants[c.str] !== void 0);
       }
     }
-    function subtractNames(names, from) {
-      for (const n in from)
-        names[n] = (names[n] || 0) - (from[n] || 0);
+    function subtractNames(names, from2) {
+      for (const n in from2)
+        names[n] = (names[n] || 0) - (from2[n] || 0);
     }
     function not(x) {
       return typeof x == "boolean" || typeof x == "number" || x === null ? !x : (0, code_1._)`!${par(x)}`;
@@ -1156,31 +1156,31 @@ var require_util = __commonJS2({
     }
     exports2.eachItem = eachItem;
     function makeMergeEvaluated({ mergeNames, mergeToName, mergeValues: mergeValues3, resultToName }) {
-      return (gen, from, to, toName) => {
-        const res = to === void 0 ? from : to instanceof codegen_1.Name ? (from instanceof codegen_1.Name ? mergeNames(gen, from, to) : mergeToName(gen, from, to), to) : from instanceof codegen_1.Name ? (mergeToName(gen, to, from), from) : mergeValues3(from, to);
+      return (gen, from2, to, toName) => {
+        const res = to === void 0 ? from2 : to instanceof codegen_1.Name ? (from2 instanceof codegen_1.Name ? mergeNames(gen, from2, to) : mergeToName(gen, from2, to), to) : from2 instanceof codegen_1.Name ? (mergeToName(gen, to, from2), from2) : mergeValues3(from2, to);
         return toName === codegen_1.Name && !(res instanceof codegen_1.Name) ? resultToName(gen, res) : res;
       };
     }
     exports2.mergeEvaluated = {
       props: makeMergeEvaluated({
-        mergeNames: (gen, from, to) => gen.if((0, codegen_1._)`${to} !== true && ${from} !== undefined`, () => {
-          gen.if((0, codegen_1._)`${from} === true`, () => gen.assign(to, true), () => gen.assign(to, (0, codegen_1._)`${to} || {}`).code((0, codegen_1._)`Object.assign(${to}, ${from})`));
+        mergeNames: (gen, from2, to) => gen.if((0, codegen_1._)`${to} !== true && ${from2} !== undefined`, () => {
+          gen.if((0, codegen_1._)`${from2} === true`, () => gen.assign(to, true), () => gen.assign(to, (0, codegen_1._)`${to} || {}`).code((0, codegen_1._)`Object.assign(${to}, ${from2})`));
         }),
-        mergeToName: (gen, from, to) => gen.if((0, codegen_1._)`${to} !== true`, () => {
-          if (from === true) {
+        mergeToName: (gen, from2, to) => gen.if((0, codegen_1._)`${to} !== true`, () => {
+          if (from2 === true) {
             gen.assign(to, true);
           } else {
             gen.assign(to, (0, codegen_1._)`${to} || {}`);
-            setEvaluated(gen, to, from);
+            setEvaluated(gen, to, from2);
           }
         }),
-        mergeValues: (from, to) => from === true ? true : { ...from, ...to },
+        mergeValues: (from2, to) => from2 === true ? true : { ...from2, ...to },
         resultToName: evaluatedPropsToName
       }),
       items: makeMergeEvaluated({
-        mergeNames: (gen, from, to) => gen.if((0, codegen_1._)`${to} !== true && ${from} !== undefined`, () => gen.assign(to, (0, codegen_1._)`${from} === true ? true : ${to} > ${from} ? ${to} : ${from}`)),
-        mergeToName: (gen, from, to) => gen.if((0, codegen_1._)`${to} !== true`, () => gen.assign(to, from === true ? true : (0, codegen_1._)`${to} > ${from} ? ${to} : ${from}`)),
-        mergeValues: (from, to) => from === true ? true : Math.max(from, to),
+        mergeNames: (gen, from2, to) => gen.if((0, codegen_1._)`${to} !== true && ${from2} !== undefined`, () => gen.assign(to, (0, codegen_1._)`${from2} === true ? true : ${to} > ${from2} ? ${to} : ${from2}`)),
+        mergeToName: (gen, from2, to) => gen.if((0, codegen_1._)`${to} !== true`, () => gen.assign(to, from2 === true ? true : (0, codegen_1._)`${to} > ${from2} ? ${to} : ${from2}`)),
+        mergeValues: (from2, to) => from2 === true ? true : Math.max(from2, to),
         resultToName: (gen, items) => gen.var("items", items)
       })
     };
@@ -3848,7 +3848,7 @@ var require_fast_uri = __commonJS2({
         normalizeString(uri, options2);
       } else if (typeof uri === "object") {
         uri = /** @type {T} */
-        parse7(serialize2(uri, options2), options2);
+        parse8(serialize2(uri, options2), options2);
       }
       return uri;
     }
@@ -3888,8 +3888,8 @@ var require_fast_uri = __commonJS2({
     function resolveComponent(base, relative2, options2, skipNormalization) {
       const target = {};
       if (!skipNormalization) {
-        base = parse7(serialize2(base, options2), options2);
-        relative2 = parse7(serialize2(relative2, options2), options2);
+        base = parse8(serialize2(base, options2), options2);
+        relative2 = parse8(serialize2(relative2, options2), options2);
       }
       options2 = options2 || {};
       if (!options2.tolerant && relative2.scheme) {
@@ -4188,7 +4188,7 @@ var require_fast_uri = __commonJS2({
       }
       return { parsed, malformedAuthorityOrPort, malformedPercentEncoding, malformedSchemeSpecific, malformedHost, malformedScheme };
     }
-    function parse7(uri, opts) {
+    function parse8(uri, opts) {
       return parseWithStatus(uri, opts).parsed;
     }
     function normalizeString(uri, opts) {
@@ -4225,7 +4225,7 @@ var require_fast_uri = __commonJS2({
       resolveComponent,
       equal,
       serialize: serialize2,
-      parse: parse7
+      parse: parse8
     };
     module3.exports = fastUri;
     module3.exports.default = fastUri;
@@ -4725,11 +4725,11 @@ var require_core = __commonJS2({
     Ajv2.ValidationError = validation_error_1.default;
     Ajv2.MissingRefError = ref_error_1.default;
     exports2.default = Ajv2;
-    function checkOptions(checkOpts, options2, msg, log4 = "error") {
+    function checkOptions(checkOpts, options2, msg, log5 = "error") {
       for (const key in checkOpts) {
         const opt = key;
         if (opt in options2)
-          this.logger[log4](`${msg}: option ${key}. ${checkOpts[opt]}`);
+          this.logger[log5](`${msg}: option ${key}. ${checkOpts[opt]}`);
       }
     }
     function getSchEnv(keyRef) {
@@ -8680,7 +8680,7 @@ var require_stringify = __commonJS2({
         props.push(doc.directives.tagString(tag));
       return props.join(" ");
     }
-    function stringify4(item, ctx, onComment, onChompKeep) {
+    function stringify5(item, ctx, onComment, onChompKeep) {
       if (identity.isPair(item))
         return item.toString(ctx, onComment, onChompKeep);
       if (identity.isAlias(item)) {
@@ -8709,7 +8709,7 @@ var require_stringify = __commonJS2({
 ${ctx.indent}${str}`;
     }
     exports2.createStringifyContext = createStringifyContext;
-    exports2.stringify = stringify4;
+    exports2.stringify = stringify5;
   }
 });
 
@@ -8719,7 +8719,7 @@ var require_stringifyPair = __commonJS2({
     "use strict";
     var identity = require_identity();
     var Scalar = require_Scalar();
-    var stringify4 = require_stringify();
+    var stringify5 = require_stringify();
     var stringifyComment = require_stringifyComment();
     function stringifyPair({ key, value: value2 }, ctx, onComment, onChompKeep) {
       const { allNullValues, doc, indent: indent2, indentStep, options: { commentString, indentSeq, simpleKeys } } = ctx;
@@ -8741,7 +8741,7 @@ var require_stringifyPair = __commonJS2({
       });
       let keyCommentDone = false;
       let chompKeep = false;
-      let str = stringify4.stringify(key, ctx, () => keyCommentDone = true, () => chompKeep = true);
+      let str = stringify5.stringify(key, ctx, () => keyCommentDone = true, () => chompKeep = true);
       if (!explicitKey && !ctx.inFlow && str.length > 1024) {
         if (simpleKeys)
           throw new Error("With simple keys, single line scalar must not span more than 1024 characters");
@@ -8793,7 +8793,7 @@ ${indent2}:`;
         ctx.indent = ctx.indent.substring(2);
       }
       let valueCommentDone = false;
-      const valueStr = stringify4.stringify(value2, ctx, () => valueCommentDone = true, () => chompKeep = true);
+      const valueStr = stringify5.stringify(value2, ctx, () => valueCommentDone = true, () => chompKeep = true);
       let ws4 = " ";
       if (keyComment || vsb || vcb) {
         ws4 = vsb ? "\n" : "";
@@ -8932,9 +8932,9 @@ var require_merge = __commonJS2({
 var require_addPairToJSMap = __commonJS2({
   "node_modules/yaml/dist/nodes/addPairToJSMap.js"(exports2) {
     "use strict";
-    var log4 = require_log();
+    var log5 = require_log();
     var merge2 = require_merge();
-    var stringify4 = require_stringify();
+    var stringify5 = require_stringify();
     var identity = require_identity();
     var toJS = require_toJS();
     function addPairToJSMap(ctx, map2, { key, value: value2 }) {
@@ -8970,7 +8970,7 @@ var require_addPairToJSMap = __commonJS2({
       if (typeof jsKey !== "object")
         return String(jsKey);
       if (identity.isNode(key) && ctx?.doc) {
-        const strCtx = stringify4.createStringifyContext(ctx.doc, {});
+        const strCtx = stringify5.createStringifyContext(ctx.doc, {});
         strCtx.anchors = /* @__PURE__ */ new Set();
         for (const node2 of ctx.anchors.keys())
           strCtx.anchors.add(node2.anchor);
@@ -8981,7 +8981,7 @@ var require_addPairToJSMap = __commonJS2({
           let jsonStr = JSON.stringify(strKey);
           if (jsonStr.length > 40)
             jsonStr = jsonStr.substring(0, 36) + '..."';
-          log4.warn(ctx.doc.options.logLevel, `Keys with collection values will be stringified due to JS Object restrictions: ${jsonStr}. Set mapAsMap: true to use object keys.`);
+          log5.warn(ctx.doc.options.logLevel, `Keys with collection values will be stringified due to JS Object restrictions: ${jsonStr}. Set mapAsMap: true to use object keys.`);
           ctx.mapKeyWarned = true;
         }
         return strKey;
@@ -9037,12 +9037,12 @@ var require_stringifyCollection = __commonJS2({
   "node_modules/yaml/dist/stringify/stringifyCollection.js"(exports2) {
     "use strict";
     var identity = require_identity();
-    var stringify4 = require_stringify();
+    var stringify5 = require_stringify();
     var stringifyComment = require_stringifyComment();
     function stringifyCollection(collection, ctx, options2) {
       const flow = ctx.inFlow ?? collection.flow;
-      const stringify5 = flow ? stringifyFlowCollection : stringifyBlockCollection;
-      return stringify5(collection, ctx, options2);
+      const stringify6 = flow ? stringifyFlowCollection : stringifyBlockCollection;
+      return stringify6(collection, ctx, options2);
     }
     function stringifyBlockCollection({ comment, items }, ctx, { blockItemPrefix, flowChars, itemIndent, onChompKeep, onComment }) {
       const { indent: indent2, options: { commentString } } = ctx;
@@ -9067,7 +9067,7 @@ var require_stringifyCollection = __commonJS2({
           }
         }
         chompKeep = false;
-        let str2 = stringify4.stringify(item, itemCtx, () => comment2 = null, () => chompKeep = true);
+        let str2 = stringify5.stringify(item, itemCtx, () => comment2 = null, () => chompKeep = true);
         if (comment2)
           str2 += stringifyComment.lineComment(str2, itemIndent, commentString(comment2));
         if (chompKeep && comment2)
@@ -9134,7 +9134,7 @@ ${indent2}${line}` : "\n";
         }
         if (comment)
           reqNewline = true;
-        let str = stringify4.stringify(item, itemCtx, () => comment = null);
+        let str = stringify5.stringify(item, itemCtx, () => comment = null);
         reqNewline || (reqNewline = lines.length > linesAtValue || str.includes("\n"));
         if (i < items.length - 1) {
           str += ",";
@@ -9555,9 +9555,9 @@ var require_stringifyNumber = __commonJS2({
     function stringifyNumber({ format, minFractionDigits, tag, value: value2 }) {
       if (typeof value2 === "bigint")
         return String(value2);
-      const num = typeof value2 === "number" ? value2 : Number(value2);
-      if (!isFinite(num))
-        return isNaN(num) ? ".nan" : num < 0 ? "-.inf" : ".inf";
+      const num2 = typeof value2 === "number" ? value2 : Number(value2);
+      if (!isFinite(num2))
+        return isNaN(num2) ? ".nan" : num2 < 0 ? "-.inf" : ".inf";
       let n = Object.is(value2, -0) ? "-0" : JSON.stringify(value2);
       if (!format && minFractionDigits && (!tag || tag === "tag:yaml.org,2002:float") && /^-?\d/.test(n) && !n.includes("e")) {
         let i = n.indexOf(".");
@@ -9597,8 +9597,8 @@ var require_float = __commonJS2({
       test: /^[-+]?(?:\.[0-9]+|[0-9]+(?:\.[0-9]*)?)[eE][-+]?[0-9]+$/,
       resolve: (str) => parseFloat(str),
       stringify(node2) {
-        const num = Number(node2.value);
-        return isFinite(num) ? num.toExponential() : stringifyNumber.stringifyNumber(node2);
+        const num2 = Number(node2.value);
+        return isFinite(num2) ? num2.toExponential() : stringifyNumber.stringifyNumber(node2);
       }
     };
     var float = {
@@ -10037,8 +10037,8 @@ var require_float2 = __commonJS2({
       test: /^[-+]?(?:[0-9][0-9_]*)?(?:\.[0-9_]*)?[eE][-+]?[0-9]+$/,
       resolve: (str) => parseFloat(str.replace(/_/g, "")),
       stringify(node2) {
-        const num = Number(node2.value);
-        return isFinite(num) ? num.toExponential() : stringifyNumber.stringifyNumber(node2);
+        const num2 = Number(node2.value);
+        return isFinite(num2) ? num2.toExponential() : stringifyNumber.stringifyNumber(node2);
       }
     };
     var float = {
@@ -10240,23 +10240,23 @@ var require_timestamp = __commonJS2({
     function parseSexagesimal(str, asBigInt) {
       const sign = str[0];
       const parts = sign === "-" || sign === "+" ? str.substring(1) : str;
-      const num = (n) => asBigInt ? BigInt(n) : Number(n);
-      const res = parts.replace(/_/g, "").split(":").reduce((res2, p) => res2 * num(60) + num(p), num(0));
-      return sign === "-" ? num(-1) * res : res;
+      const num2 = (n) => asBigInt ? BigInt(n) : Number(n);
+      const res = parts.replace(/_/g, "").split(":").reduce((res2, p) => res2 * num2(60) + num2(p), num2(0));
+      return sign === "-" ? num2(-1) * res : res;
     }
     function stringifySexagesimal(node2) {
       let { value: value2 } = node2;
-      let num = (n) => n;
+      let num2 = (n) => n;
       if (typeof value2 === "bigint")
-        num = (n) => BigInt(n);
+        num2 = (n) => BigInt(n);
       else if (isNaN(value2) || !isFinite(value2))
         return stringifyNumber.stringifyNumber(node2);
       let sign = "";
       if (value2 < 0) {
         sign = "-";
-        value2 *= num(-1);
+        value2 *= num2(-1);
       }
-      const _60 = num(60);
+      const _60 = num2(60);
       const parts = [value2 % _60];
       if (value2 < 60) {
         parts.unshift(0);
@@ -10495,7 +10495,7 @@ var require_stringifyDocument = __commonJS2({
   "node_modules/yaml/dist/stringify/stringifyDocument.js"(exports2) {
     "use strict";
     var identity = require_identity();
-    var stringify4 = require_stringify();
+    var stringify5 = require_stringify();
     var stringifyComment = require_stringifyComment();
     function stringifyDocument(doc, options2) {
       const lines = [];
@@ -10510,7 +10510,7 @@ var require_stringifyDocument = __commonJS2({
       }
       if (hasDirectives)
         lines.push("---");
-      const ctx = stringify4.createStringifyContext(doc, options2);
+      const ctx = stringify5.createStringifyContext(doc, options2);
       const { commentString } = ctx.options;
       if (doc.commentBefore) {
         if (lines.length !== 1)
@@ -10532,7 +10532,7 @@ var require_stringifyDocument = __commonJS2({
           contentComment = doc.contents.comment;
         }
         const onChompKeep = contentComment ? void 0 : () => chompKeep = true;
-        let body = stringify4.stringify(doc.contents, ctx, () => contentComment = null, onChompKeep);
+        let body = stringify5.stringify(doc.contents, ctx, () => contentComment = null, onChompKeep);
         if (contentComment)
           body += stringifyComment.lineComment(body, "", commentString(contentComment));
         if ((body[0] === "|" || body[0] === ">") && lines[lines.length - 1] === "---") {
@@ -10540,7 +10540,7 @@ var require_stringifyDocument = __commonJS2({
         } else
           lines.push(body);
       } else {
-        lines.push(stringify4.stringify(doc.contents, ctx));
+        lines.push(stringify5.stringify(doc.contents, ctx));
       }
       if (doc.directives?.docEnd) {
         if (doc.comment) {
@@ -12676,7 +12676,7 @@ var require_cst_scalar = __commonJS2({
 var require_cst_stringify = __commonJS2({
   "node_modules/yaml/dist/parse/cst-stringify.js"(exports2) {
     "use strict";
-    var stringify4 = (cst) => "type" in cst ? stringifyToken(cst) : stringifyItem(cst);
+    var stringify5 = (cst) => "type" in cst ? stringifyToken(cst) : stringifyItem(cst);
     function stringifyToken(token) {
       switch (token.type) {
         case "block-scalar": {
@@ -12729,7 +12729,7 @@ var require_cst_stringify = __commonJS2({
         res += stringifyToken(value2);
       return res;
     }
-    exports2.stringify = stringify4;
+    exports2.stringify = stringify5;
   }
 });
 
@@ -14398,7 +14398,7 @@ var require_public_api = __commonJS2({
     var composer = require_composer();
     var Document = require_Document();
     var errors2 = require_errors2();
-    var log4 = require_log();
+    var log5 = require_log();
     var identity = require_identity();
     var lineCounter = require_line_counter();
     var parser = require_parser();
@@ -14440,7 +14440,7 @@ var require_public_api = __commonJS2({
       }
       return doc;
     }
-    function parse7(src, reviver, options2) {
+    function parse8(src, reviver, options2) {
       let _reviver = void 0;
       if (typeof reviver === "function") {
         _reviver = reviver;
@@ -14450,7 +14450,7 @@ var require_public_api = __commonJS2({
       const doc = parseDocument(src, options2);
       if (!doc)
         return null;
-      doc.warnings.forEach((warning) => log4.warn(doc.options.logLevel, warning));
+      doc.warnings.forEach((warning) => log5.warn(doc.options.logLevel, warning));
       if (doc.errors.length > 0) {
         if (doc.options.logLevel !== "silent")
           throw doc.errors[0];
@@ -14459,7 +14459,7 @@ var require_public_api = __commonJS2({
       }
       return doc.toJS(Object.assign({ reviver: _reviver }, options2));
     }
-    function stringify4(value2, replacer, options2) {
+    function stringify5(value2, replacer, options2) {
       let _replacer = null;
       if (typeof replacer === "function" || Array.isArray(replacer)) {
         _replacer = replacer;
@@ -14481,10 +14481,10 @@ var require_public_api = __commonJS2({
         return value2.toString(options2);
       return new Document.Document(value2, _replacer, options2).toString(options2);
     }
-    exports2.parse = parse7;
+    exports2.parse = parse8;
     exports2.parseAllDocuments = parseAllDocuments;
     exports2.parseDocument = parseDocument;
-    exports2.stringify = stringify4;
+    exports2.stringify = stringify5;
   }
 });
 
@@ -14552,11 +14552,11 @@ var require_bootstrap = __commonJS2({
       for (var name in all)
         __defProp3(target, name, { get: all[name], enumerable: true });
     };
-    var __copyProps3 = (to, from, except, desc) => {
-      if (from && typeof from === "object" || typeof from === "function") {
-        for (let key of __getOwnPropNames3(from))
+    var __copyProps3 = (to, from2, except, desc) => {
+      if (from2 && typeof from2 === "object" || typeof from2 === "function") {
+        for (let key of __getOwnPropNames3(from2))
           if (!__hasOwnProp3.call(to, key) && key !== except)
-            __defProp3(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc3(from, key)) || desc.enumerable });
+            __defProp3(to, key, { get: () => from2[key], enumerable: !(desc = __getOwnPropDesc3(from2, key)) || desc.enumerable });
       }
       return to;
     };
@@ -14712,11 +14712,11 @@ var require_utilsBundle = __commonJS2({
       for (var name in all)
         __defProp3(target, name, { get: all[name], enumerable: true });
     };
-    var __copyProps3 = (to, from, except, desc) => {
-      if (from && typeof from === "object" || typeof from === "function") {
-        for (let key of __getOwnPropNames3(from))
+    var __copyProps3 = (to, from2, except, desc) => {
+      if (from2 && typeof from2 === "object" || typeof from2 === "function") {
+        for (let key of __getOwnPropNames3(from2))
           if (!__hasOwnProp3.call(to, key) && key !== except)
-            __defProp3(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc3(from, key)) || desc.enumerable });
+            __defProp3(to, key, { get: () => from2[key], enumerable: !(desc = __getOwnPropDesc3(from2, key)) || desc.enumerable });
       }
       return to;
     };
@@ -15941,7 +15941,7 @@ var require_utilsBundle = __commonJS2({
         var tty = __require("tty");
         var util22 = __require("util");
         exports22.init = init;
-        exports22.log = log4;
+        exports22.log = log5;
         exports22.formatArgs = formatArgs;
         exports22.save = save2;
         exports22.load = load2;
@@ -16076,7 +16076,7 @@ var require_utilsBundle = __commonJS2({
           }
           return (/* @__PURE__ */ new Date()).toISOString() + " ";
         }
-        function log4(...args) {
+        function log5(...args) {
           return process.stderr.write(util22.formatWithOptions(exports22.inspectOpts, ...args) + "\n");
         }
         function save2(namespaces) {
@@ -25803,26 +25803,26 @@ var require_utilsBundle = __commonJS2({
                 value2 = value2[0];
                 if (key === "client_max_window_bits") {
                   if (value2 !== true) {
-                    const num = +value2;
-                    if (!Number.isInteger(num) || num < 8 || num > 15) {
+                    const num2 = +value2;
+                    if (!Number.isInteger(num2) || num2 < 8 || num2 > 15) {
                       throw new TypeError(
                         `Invalid value for parameter "${key}": ${value2}`
                       );
                     }
-                    value2 = num;
+                    value2 = num2;
                   } else if (!this._isServer) {
                     throw new TypeError(
                       `Invalid value for parameter "${key}": ${value2}`
                     );
                   }
                 } else if (key === "server_max_window_bits") {
-                  const num = +value2;
-                  if (!Number.isInteger(num) || num < 8 || num > 15) {
+                  const num2 = +value2;
+                  if (!Number.isInteger(num2) || num2 < 8 || num2 > 15) {
                     throw new TypeError(
                       `Invalid value for parameter "${key}": ${value2}`
                     );
                   }
-                  value2 = num;
+                  value2 = num2;
                 } else if (key === "client_no_context_takeover" || key === "server_no_context_takeover") {
                   if (value2 !== true) {
                     throw new TypeError(
@@ -26531,8 +26531,8 @@ var require_utilsBundle = __commonJS2({
               return;
             }
             const buf = this.consume(8);
-            const num = buf.readUInt32BE(0);
-            if (num > Math.pow(2, 53 - 32) - 1) {
+            const num2 = buf.readUInt32BE(0);
+            if (num2 > Math.pow(2, 53 - 32) - 1) {
               const error512 = this.createError(
                 RangeError,
                 "Unsupported WebSocket frame: payload length > 2^53 - 1",
@@ -26543,7 +26543,7 @@ var require_utilsBundle = __commonJS2({
               cb(error512);
               return;
             }
-            this._payloadLength = num * Math.pow(2, 32) + buf.readUInt32BE(4);
+            this._payloadLength = num2 * Math.pow(2, 32) + buf.readUInt32BE(4);
             this.haveLength(cb);
           }
           /**
@@ -30561,7 +30561,7 @@ ${indent2}`);
             props.push(doc.directives.tagString(tag));
           return props.join(" ");
         }
-        function stringify4(item, ctx, onComment, onChompKeep) {
+        function stringify5(item, ctx, onComment, onChompKeep) {
           if (identity2.isPair(item))
             return item.toString(ctx, onComment, onChompKeep);
           if (identity2.isAlias(item)) {
@@ -30590,7 +30590,7 @@ ${indent2}`);
 ${ctx.indent}${str}`;
         }
         exports22.createStringifyContext = createStringifyContext;
-        exports22.stringify = stringify4;
+        exports22.stringify = stringify5;
       }
     });
     var require_stringifyPair2 = __commonJS3({
@@ -30598,7 +30598,7 @@ ${ctx.indent}${str}`;
         "use strict";
         var identity2 = require_identity2();
         var Scalar = require_Scalar2();
-        var stringify4 = require_stringify2();
+        var stringify5 = require_stringify2();
         var stringifyComment = require_stringifyComment2();
         function stringifyPair({ key, value: value2 }, ctx, onComment, onChompKeep) {
           const { allNullValues, doc, indent: indent2, indentStep, options: { commentString, indentSeq, simpleKeys } } = ctx;
@@ -30620,7 +30620,7 @@ ${ctx.indent}${str}`;
           });
           let keyCommentDone = false;
           let chompKeep = false;
-          let str = stringify4.stringify(key, ctx, () => keyCommentDone = true, () => chompKeep = true);
+          let str = stringify5.stringify(key, ctx, () => keyCommentDone = true, () => chompKeep = true);
           if (!explicitKey && !ctx.inFlow && str.length > 1024) {
             if (simpleKeys)
               throw new Error("With simple keys, single line scalar must not span more than 1024 characters");
@@ -30672,7 +30672,7 @@ ${indent2}:`;
             ctx.indent = ctx.indent.substring(2);
           }
           let valueCommentDone = false;
-          const valueStr = stringify4.stringify(value2, ctx, () => valueCommentDone = true, () => chompKeep = true);
+          const valueStr = stringify5.stringify(value2, ctx, () => valueCommentDone = true, () => chompKeep = true);
           let ws22 = " ";
           if (keyComment || vsb || vcb) {
             ws22 = vsb ? "\n" : "";
@@ -30805,9 +30805,9 @@ ${ctx.indent}`;
     var require_addPairToJSMap2 = __commonJS3({
       "node_modules/yaml/dist/nodes/addPairToJSMap.js"(exports22) {
         "use strict";
-        var log4 = require_log2();
+        var log5 = require_log2();
         var merge22 = require_merge2();
-        var stringify4 = require_stringify2();
+        var stringify5 = require_stringify2();
         var identity2 = require_identity2();
         var toJS = require_toJS2();
         function addPairToJSMap(ctx, map22, { key, value: value2 }) {
@@ -30843,7 +30843,7 @@ ${ctx.indent}`;
           if (typeof jsKey !== "object")
             return String(jsKey);
           if (identity2.isNode(key) && ctx?.doc) {
-            const strCtx = stringify4.createStringifyContext(ctx.doc, {});
+            const strCtx = stringify5.createStringifyContext(ctx.doc, {});
             strCtx.anchors = /* @__PURE__ */ new Set();
             for (const node2 of ctx.anchors.keys())
               strCtx.anchors.add(node2.anchor);
@@ -30854,7 +30854,7 @@ ${ctx.indent}`;
               let jsonStr = JSON.stringify(strKey);
               if (jsonStr.length > 40)
                 jsonStr = jsonStr.substring(0, 36) + '..."';
-              log4.warn(ctx.doc.options.logLevel, `Keys with collection values will be stringified due to JS Object restrictions: ${jsonStr}. Set mapAsMap: true to use object keys.`);
+              log5.warn(ctx.doc.options.logLevel, `Keys with collection values will be stringified due to JS Object restrictions: ${jsonStr}. Set mapAsMap: true to use object keys.`);
               ctx.mapKeyWarned = true;
             }
             return strKey;
@@ -30906,7 +30906,7 @@ ${ctx.indent}`;
       "node_modules/yaml/dist/stringify/stringifyCollection.js"(exports22) {
         "use strict";
         var identity2 = require_identity2();
-        var stringify4 = require_stringify2();
+        var stringify5 = require_stringify2();
         var stringifyComment = require_stringifyComment2();
         function stringifyCollection(collection, ctx, options2) {
           const flow = ctx.inFlow ?? collection.flow;
@@ -30936,7 +30936,7 @@ ${ctx.indent}`;
               }
             }
             chompKeep = false;
-            let str2 = stringify4.stringify(item, itemCtx, () => comment2 = null, () => chompKeep = true);
+            let str2 = stringify5.stringify(item, itemCtx, () => comment2 = null, () => chompKeep = true);
             if (comment2)
               str2 += stringifyComment.lineComment(str2, itemIndent, commentString(comment2));
             if (chompKeep && comment2)
@@ -31003,7 +31003,7 @@ ${indent2}${line}` : "\n";
             }
             if (comment)
               reqNewline = true;
-            let str = stringify4.stringify(item, itemCtx, () => comment = null);
+            let str = stringify5.stringify(item, itemCtx, () => comment = null);
             reqNewline || (reqNewline = lines.length > linesAtValue || str.includes("\n"));
             if (i2 < items.length - 1) {
               str += ",";
@@ -31408,9 +31408,9 @@ ${indent2}${end}`;
         function stringifyNumber({ format, minFractionDigits, tag, value: value2 }) {
           if (typeof value2 === "bigint")
             return String(value2);
-          const num = typeof value2 === "number" ? value2 : Number(value2);
-          if (!isFinite(num))
-            return isNaN(num) ? ".nan" : num < 0 ? "-.inf" : ".inf";
+          const num2 = typeof value2 === "number" ? value2 : Number(value2);
+          if (!isFinite(num2))
+            return isNaN(num2) ? ".nan" : num2 < 0 ? "-.inf" : ".inf";
           let n2 = Object.is(value2, -0) ? "-0" : JSON.stringify(value2);
           if (!format && minFractionDigits && (!tag || tag === "tag:yaml.org,2002:float") && /^-?\d/.test(n2) && !n2.includes("e")) {
             let i2 = n2.indexOf(".");
@@ -31448,8 +31448,8 @@ ${indent2}${end}`;
           test: /^[-+]?(?:\.[0-9]+|[0-9]+(?:\.[0-9]*)?)[eE][-+]?[0-9]+$/,
           resolve: (str) => parseFloat(str),
           stringify(node2) {
-            const num = Number(node2.value);
-            return isFinite(num) ? num.toExponential() : stringifyNumber.stringifyNumber(node2);
+            const num2 = Number(node2.value);
+            return isFinite(num2) ? num2.toExponential() : stringifyNumber.stringifyNumber(node2);
           }
         };
         var float = {
@@ -31872,8 +31872,8 @@ ${cn.comment}` : item.comment;
           test: /^[-+]?(?:[0-9][0-9_]*)?(?:\.[0-9_]*)?[eE][-+]?[0-9]+$/,
           resolve: (str) => parseFloat(str.replace(/_/g, "")),
           stringify(node2) {
-            const num = Number(node2.value);
-            return isFinite(num) ? num.toExponential() : stringifyNumber.stringifyNumber(node2);
+            const num2 = Number(node2.value);
+            return isFinite(num2) ? num2.toExponential() : stringifyNumber.stringifyNumber(node2);
           }
         };
         var float = {
@@ -32069,23 +32069,23 @@ ${cn.comment}` : item.comment;
         function parseSexagesimal(str, asBigInt) {
           const sign = str[0];
           const parts = sign === "-" || sign === "+" ? str.substring(1) : str;
-          const num = (n2) => asBigInt ? BigInt(n2) : Number(n2);
-          const res = parts.replace(/_/g, "").split(":").reduce((res2, p) => res2 * num(60) + num(p), num(0));
-          return sign === "-" ? num(-1) * res : res;
+          const num2 = (n2) => asBigInt ? BigInt(n2) : Number(n2);
+          const res = parts.replace(/_/g, "").split(":").reduce((res2, p) => res2 * num2(60) + num2(p), num2(0));
+          return sign === "-" ? num2(-1) * res : res;
         }
         function stringifySexagesimal(node2) {
           let { value: value2 } = node2;
-          let num = (n2) => n2;
+          let num2 = (n2) => n2;
           if (typeof value2 === "bigint")
-            num = (n2) => BigInt(n2);
+            num2 = (n2) => BigInt(n2);
           else if (isNaN(value2) || !isFinite(value2))
             return stringifyNumber.stringifyNumber(node2);
           let sign = "";
           if (value2 < 0) {
             sign = "-";
-            value2 *= num(-1);
+            value2 *= num2(-1);
           }
-          const _60 = num(60);
+          const _60 = num2(60);
           const parts = [value2 % _60];
           if (value2 < 60) {
             parts.unshift(0);
@@ -32316,7 +32316,7 @@ ${cn.comment}` : item.comment;
       "node_modules/yaml/dist/stringify/stringifyDocument.js"(exports22) {
         "use strict";
         var identity2 = require_identity2();
-        var stringify4 = require_stringify2();
+        var stringify5 = require_stringify2();
         var stringifyComment = require_stringifyComment2();
         function stringifyDocument(doc, options2) {
           const lines = [];
@@ -32331,7 +32331,7 @@ ${cn.comment}` : item.comment;
           }
           if (hasDirectives)
             lines.push("---");
-          const ctx = stringify4.createStringifyContext(doc, options2);
+          const ctx = stringify5.createStringifyContext(doc, options2);
           const { commentString } = ctx.options;
           if (doc.commentBefore) {
             if (lines.length !== 1)
@@ -32353,7 +32353,7 @@ ${cn.comment}` : item.comment;
               contentComment = doc.contents.comment;
             }
             const onChompKeep = contentComment ? void 0 : () => chompKeep = true;
-            let body = stringify4.stringify(doc.contents, ctx, () => contentComment = null, onChompKeep);
+            let body = stringify5.stringify(doc.contents, ctx, () => contentComment = null, onChompKeep);
             if (contentComment)
               body += stringifyComment.lineComment(body, "", commentString(contentComment));
             if ((body[0] === "|" || body[0] === ">") && lines[lines.length - 1] === "---") {
@@ -32361,7 +32361,7 @@ ${cn.comment}` : item.comment;
             } else
               lines.push(body);
           } else {
-            lines.push(stringify4.stringify(doc.contents, ctx));
+            lines.push(stringify5.stringify(doc.contents, ctx));
           }
           if (doc.directives?.docEnd) {
             if (doc.comment) {
@@ -34456,7 +34456,7 @@ ${end.comment}` : end.comment;
     var require_cst_stringify2 = __commonJS3({
       "node_modules/yaml/dist/parse/cst-stringify.js"(exports22) {
         "use strict";
-        var stringify4 = (cst) => "type" in cst ? stringifyToken(cst) : stringifyItem(cst);
+        var stringify5 = (cst) => "type" in cst ? stringifyToken(cst) : stringifyItem(cst);
         function stringifyToken(token) {
           switch (token.type) {
             case "block-scalar": {
@@ -34509,7 +34509,7 @@ ${end.comment}` : end.comment;
             res += stringifyToken(value2);
           return res;
         }
-        exports22.stringify = stringify4;
+        exports22.stringify = stringify5;
       }
     });
     var require_cst_visit2 = __commonJS3({
@@ -36166,7 +36166,7 @@ ${end.comment}` : end.comment;
         var composer = require_composer2();
         var Document = require_Document2();
         var errors2 = require_errors3();
-        var log4 = require_log2();
+        var log5 = require_log2();
         var identity2 = require_identity2();
         var lineCounter = require_line_counter2();
         var parser = require_parser22();
@@ -36218,7 +36218,7 @@ ${end.comment}` : end.comment;
           const doc = parseDocument(src, options2);
           if (!doc)
             return null;
-          doc.warnings.forEach((warning) => log4.warn(doc.options.logLevel, warning));
+          doc.warnings.forEach((warning) => log5.warn(doc.options.logLevel, warning));
           if (doc.errors.length > 0) {
             if (doc.options.logLevel !== "silent")
               throw doc.errors[0];
@@ -36227,7 +36227,7 @@ ${end.comment}` : end.comment;
           }
           return doc.toJS(Object.assign({ reviver: _reviver }, options2));
         }
-        function stringify4(value2, replacer, options2) {
+        function stringify5(value2, replacer, options2) {
           let _replacer = null;
           if (typeof replacer === "function" || Array.isArray(replacer)) {
             _replacer = replacer;
@@ -36252,7 +36252,7 @@ ${end.comment}` : end.comment;
         exports22.parse = parse32;
         exports22.parseAllDocuments = parseAllDocuments;
         exports22.parseDocument = parseDocument;
-        exports22.stringify = stringify4;
+        exports22.stringify = stringify5;
       }
     });
     var require_dist3 = __commonJS3({
@@ -37182,7 +37182,7 @@ ${end.comment}` : end.comment;
     var require_stringify22 = __commonJS3({
       "node_modules/json5/lib/stringify.js"(exports22, module22) {
         var util22 = require_util22();
-        module22.exports = function stringify4(value2, replacer, space) {
+        module22.exports = function stringify5(value2, replacer, space) {
           const stack = [];
           let indent2 = "";
           let propertyList;
@@ -37399,10 +37399,10 @@ ${end.comment}` : end.comment;
     var require_lib = __commonJS3({
       "node_modules/json5/lib/index.js"(exports22, module22) {
         var parse32 = require_parse();
-        var stringify4 = require_stringify22();
+        var stringify5 = require_stringify22();
         var JSON5 = {
           parse: parse32,
-          stringify: stringify4
+          stringify: stringify5
         };
         module22.exports = JSON5;
       }
@@ -41535,8 +41535,8 @@ ${end.comment}` : end.comment;
           }
           number(n2) {
             this.num += n2;
-            let number42 = (num) => {
-              let i2 = Number(num);
+            let number42 = (num2) => {
+              let i2 = Number(num2);
               if (i2 > this.choices.length - 1) return this.alert();
               let focused = this.focused;
               let choice = this.choices.find((ch) => i2 === ch.index);
@@ -41562,17 +41562,17 @@ ${end.comment}` : end.comment;
             clearTimeout(this.numberTimeout);
             return new Promise((resolve32) => {
               let len = this.choices.length;
-              let num = this.num;
+              let num2 = this.num;
               let handle = (val = false, res) => {
                 clearTimeout(this.numberTimeout);
-                if (val) res = number42(num);
+                if (val) res = number42(num2);
                 this.num = "";
                 resolve32(res);
               };
-              if (num === "0" || num.length === 1 && Number(num + "0") > len) {
+              if (num2 === "0" || num2.length === 1 && Number(num2 + "0") > len) {
                 return handle(true);
               }
-              if (Number(num) > len) {
+              if (Number(num2) > len) {
                 return handle(false, this.alert());
               }
               this.numberTimeout = setTimeout(() => handle(true), this.delay);
@@ -41814,8 +41814,8 @@ ${end.comment}` : end.comment;
           get visible() {
             return (this.state.visible || this.choices).slice(0, this.limit);
           }
-          set limit(num) {
-            this.state.limit = num;
+          set limit(num2) {
+            this.state.limit = num2;
           }
           get limit() {
             let { state, options: options2, choices } = this;
@@ -42913,16 +42913,16 @@ ${end.comment}` : end.comment;
           }
           up(number42) {
             let step = number42 || this.minor;
-            let num = this.toNumber(this.input);
-            if (num > this.max + step) return this.alert();
-            this.input = `${num + step}`;
+            let num2 = this.toNumber(this.input);
+            if (num2 > this.max + step) return this.alert();
+            this.input = `${num2 + step}`;
             return this.render();
           }
           down(number42) {
             let step = number42 || this.minor;
-            let num = this.toNumber(this.input);
-            if (num < this.min - step) return this.alert();
-            this.input = `${num - step}`;
+            let num2 = this.toNumber(this.input);
+            if (num2 < this.min - step) return this.alert();
+            this.input = `${num2 - step}`;
             return this.render();
           }
           shiftDown() {
@@ -43651,14 +43651,14 @@ ${end.comment}` : end.comment;
             let ln = this.symbols.line.repeat(n2);
             let sp = " ".repeat(n2 + (isHyper ? 0 : 1));
             let dot = (enabled) => (enabled ? this.styles.success("\u25C9") : "\u25EF") + s;
-            let num = i2 + 1 + ".";
+            let num2 = i2 + 1 + ".";
             let color = focused ? this.styles.heading : this.styles.noop;
             let msg = await this.resolve(item.message, this.state, item, i2);
             let indent2 = this.indent(item);
             let scale = indent2 + item.scale.map((e, i3) => dot(i3 === item.scaleIdx)).join(ln);
             let val = (i3) => i3 === item.scaleIdx ? color(i3) : i3;
             let next = indent2 + item.scale.map((e, i3) => val(i3)).join(sp);
-            let line = () => [num, msg].filter(Boolean).join(" ");
+            let line = () => [num2, msg].filter(Boolean).join(" ");
             let lines = () => [line(), scale, next, " "].filter(Boolean).join("\n");
             if (focused) {
               scale = this.styles.cyan(scale);
@@ -44378,9 +44378,9 @@ ${end.comment}` : end.comment;
             throw new Error("input must be buffer, number, or string, received " + typeof input2);
           }
         }
-        function bufferizeInt(num) {
+        function bufferizeInt(num2) {
           const tmp = ensureBuffer(4);
-          tmp.writeInt32BE(num, 0);
+          tmp.writeInt32BE(num2, 0);
           return tmp;
         }
         function _crc32(buf, previous) {
@@ -46447,15 +46447,15 @@ ${end.comment}` : end.comment;
           }
           if (platform2 === "win32") {
             fs7.rename = typeof fs7.rename !== "function" ? fs7.rename : (function(fs$rename) {
-              function rename(from, to, cb) {
+              function rename(from2, to, cb) {
                 var start3 = Date.now();
                 var backoff = 0;
-                fs$rename(from, to, function CB(er) {
+                fs$rename(from2, to, function CB(er) {
                   if (er && (er.code === "EACCES" || er.code === "EPERM" || er.code === "EBUSY") && Date.now() - start3 < 6e4) {
                     setTimeout(function() {
                       fs7.stat(to, function(stater, st) {
                         if (stater && stater.code === "ENOENT")
-                          fs$rename(from, to, CB);
+                          fs$rename(from2, to, CB);
                         else
                           cb(er);
                       });
@@ -47499,10 +47499,10 @@ ${end.comment}` : end.comment;
         function interpolate(x) {
           return typeof x == "number" || typeof x == "boolean" || x === null ? x : safeStringify(Array.isArray(x) ? x.join(",") : x);
         }
-        function stringify4(x) {
+        function stringify5(x) {
           return new _Code(safeStringify(x));
         }
-        exports22.stringify = stringify4;
+        exports22.stringify = stringify5;
         function safeStringify(x) {
           return JSON.stringify(x).replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
         }
@@ -47956,17 +47956,17 @@ ${end.comment}` : end.comment;
           }
         };
         var ForRange = class extends For {
-          constructor(varKind, name, from, to) {
+          constructor(varKind, name, from2, to) {
             super();
             this.varKind = varKind;
             this.name = name;
-            this.from = from;
+            this.from = from2;
             this.to = to;
           }
           render(opts) {
             const varKind = opts.es5 ? scope_1.varKinds.var : this.varKind;
-            const { name, from, to } = this;
-            return `for(${varKind} ${name}=${from}; ${name}<${to}; ${name}++)` + super.render(opts);
+            const { name, from: from2, to } = this;
+            return `for(${varKind} ${name}=${from2}; ${name}<${to}; ${name}++)` + super.render(opts);
           }
           get names() {
             const names = addExprNames(super.names, this.from);
@@ -48185,9 +48185,9 @@ ${end.comment}` : end.comment;
             return this._for(new ForLoop(iteration), forBody);
           }
           // `for` statement for a range of values
-          forRange(nameOrPrefix, from, to, forBody, varKind = this.opts.es5 ? scope_1.varKinds.var : scope_1.varKinds.let) {
+          forRange(nameOrPrefix, from2, to, forBody, varKind = this.opts.es5 ? scope_1.varKinds.var : scope_1.varKinds.let) {
             const name = this._scope.toName(nameOrPrefix);
-            return this._for(new ForRange(varKind, name, from, to), () => forBody(name));
+            return this._for(new ForRange(varKind, name, from2, to), () => forBody(name));
           }
           // `for-of` statement (in es5 mode replace with a normal for loop)
           forOf(nameOrPrefix, iterable, forBody, varKind = scope_1.varKinds.const) {
@@ -48326,13 +48326,13 @@ ${end.comment}` : end.comment;
           }
         };
         exports22.CodeGen = CodeGen;
-        function addNames(names, from) {
-          for (const n2 in from)
-            names[n2] = (names[n2] || 0) + (from[n2] || 0);
+        function addNames(names, from2) {
+          for (const n2 in from2)
+            names[n2] = (names[n2] || 0) + (from2[n2] || 0);
           return names;
         }
-        function addExprNames(names, from) {
-          return from instanceof code_1._CodeOrName ? addNames(names, from.names) : names;
+        function addExprNames(names, from2) {
+          return from2 instanceof code_1._CodeOrName ? addNames(names, from2.names) : names;
         }
         function optimizeExpr(expr2, names, constants) {
           if (expr2 instanceof code_1.Name)
@@ -48359,9 +48359,9 @@ ${end.comment}` : end.comment;
             return e instanceof code_1._Code && e._items.some((c3) => c3 instanceof code_1.Name && names[c3.str] === 1 && constants[c3.str] !== void 0);
           }
         }
-        function subtractNames(names, from) {
-          for (const n2 in from)
-            names[n2] = (names[n2] || 0) - (from[n2] || 0);
+        function subtractNames(names, from2) {
+          for (const n2 in from2)
+            names[n2] = (names[n2] || 0) - (from2[n2] || 0);
         }
         function not(x) {
           return typeof x == "boolean" || typeof x == "number" || x === null ? !x : (0, code_1._)`!${par(x)}`;
@@ -48477,31 +48477,31 @@ ${end.comment}` : end.comment;
         }
         exports22.eachItem = eachItem;
         function makeMergeEvaluated({ mergeNames, mergeToName, mergeValues: mergeValues32, resultToName }) {
-          return (gen, from, to, toName) => {
-            const res = to === void 0 ? from : to instanceof codegen_1.Name ? (from instanceof codegen_1.Name ? mergeNames(gen, from, to) : mergeToName(gen, from, to), to) : from instanceof codegen_1.Name ? (mergeToName(gen, to, from), from) : mergeValues32(from, to);
+          return (gen, from2, to, toName) => {
+            const res = to === void 0 ? from2 : to instanceof codegen_1.Name ? (from2 instanceof codegen_1.Name ? mergeNames(gen, from2, to) : mergeToName(gen, from2, to), to) : from2 instanceof codegen_1.Name ? (mergeToName(gen, to, from2), from2) : mergeValues32(from2, to);
             return toName === codegen_1.Name && !(res instanceof codegen_1.Name) ? resultToName(gen, res) : res;
           };
         }
         exports22.mergeEvaluated = {
           props: makeMergeEvaluated({
-            mergeNames: (gen, from, to) => gen.if((0, codegen_1._)`${to} !== true && ${from} !== undefined`, () => {
-              gen.if((0, codegen_1._)`${from} === true`, () => gen.assign(to, true), () => gen.assign(to, (0, codegen_1._)`${to} || {}`).code((0, codegen_1._)`Object.assign(${to}, ${from})`));
+            mergeNames: (gen, from2, to) => gen.if((0, codegen_1._)`${to} !== true && ${from2} !== undefined`, () => {
+              gen.if((0, codegen_1._)`${from2} === true`, () => gen.assign(to, true), () => gen.assign(to, (0, codegen_1._)`${to} || {}`).code((0, codegen_1._)`Object.assign(${to}, ${from2})`));
             }),
-            mergeToName: (gen, from, to) => gen.if((0, codegen_1._)`${to} !== true`, () => {
-              if (from === true) {
+            mergeToName: (gen, from2, to) => gen.if((0, codegen_1._)`${to} !== true`, () => {
+              if (from2 === true) {
                 gen.assign(to, true);
               } else {
                 gen.assign(to, (0, codegen_1._)`${to} || {}`);
-                setEvaluated(gen, to, from);
+                setEvaluated(gen, to, from2);
               }
             }),
-            mergeValues: (from, to) => from === true ? true : { ...from, ...to },
+            mergeValues: (from2, to) => from2 === true ? true : { ...from2, ...to },
             resultToName: evaluatedPropsToName
           }),
           items: makeMergeEvaluated({
-            mergeNames: (gen, from, to) => gen.if((0, codegen_1._)`${to} !== true && ${from} !== undefined`, () => gen.assign(to, (0, codegen_1._)`${from} === true ? true : ${to} > ${from} ? ${to} : ${from}`)),
-            mergeToName: (gen, from, to) => gen.if((0, codegen_1._)`${to} !== true`, () => gen.assign(to, from === true ? true : (0, codegen_1._)`${to} > ${from} ? ${to} : ${from}`)),
-            mergeValues: (from, to) => from === true ? true : Math.max(from, to),
+            mergeNames: (gen, from2, to) => gen.if((0, codegen_1._)`${to} !== true && ${from2} !== undefined`, () => gen.assign(to, (0, codegen_1._)`${from2} === true ? true : ${to} > ${from2} ? ${to} : ${from2}`)),
+            mergeToName: (gen, from2, to) => gen.if((0, codegen_1._)`${to} !== true`, () => gen.assign(to, from2 === true ? true : (0, codegen_1._)`${to} > ${from2} ? ${to} : ${from2}`)),
+            mergeValues: (from2, to) => from2 === true ? true : Math.max(from2, to),
             resultToName: (gen, items) => gen.var("items", items)
           })
         };
@@ -51999,11 +51999,11 @@ ${end.comment}` : end.comment;
         Ajv2.ValidationError = validation_error_1.default;
         Ajv2.MissingRefError = ref_error_1.default;
         exports22.default = Ajv2;
-        function checkOptions(checkOpts, options2, msg, log4 = "error") {
+        function checkOptions(checkOpts, options2, msg, log5 = "error") {
           for (const key in checkOpts) {
             const opt = key;
             if (opt in options2)
-              this.logger[log4](`${msg}: option ${key}. ${checkOpts[opt]}`);
+              this.logger[log5](`${msg}: option ${key}. ${checkOpts[opt]}`);
           }
         }
         function getSchEnv(keyRef) {
@@ -54412,10 +54412,10 @@ ${end.comment}` : end.comment;
         function interpolate(x) {
           return typeof x == "number" || typeof x == "boolean" || x === null ? x : safeStringify(Array.isArray(x) ? x.join(",") : x);
         }
-        function stringify4(x) {
+        function stringify5(x) {
           return new _Code(safeStringify(x));
         }
-        exports22.stringify = stringify4;
+        exports22.stringify = stringify5;
         function safeStringify(x) {
           return JSON.stringify(x).replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
         }
@@ -54869,17 +54869,17 @@ ${end.comment}` : end.comment;
           }
         };
         var ForRange = class extends For {
-          constructor(varKind, name, from, to) {
+          constructor(varKind, name, from2, to) {
             super();
             this.varKind = varKind;
             this.name = name;
-            this.from = from;
+            this.from = from2;
             this.to = to;
           }
           render(opts) {
             const varKind = opts.es5 ? scope_1.varKinds.var : this.varKind;
-            const { name, from, to } = this;
-            return `for(${varKind} ${name}=${from}; ${name}<${to}; ${name}++)` + super.render(opts);
+            const { name, from: from2, to } = this;
+            return `for(${varKind} ${name}=${from2}; ${name}<${to}; ${name}++)` + super.render(opts);
           }
           get names() {
             const names = addExprNames(super.names, this.from);
@@ -55098,9 +55098,9 @@ ${end.comment}` : end.comment;
             return this._for(new ForLoop(iteration), forBody);
           }
           // `for` statement for a range of values
-          forRange(nameOrPrefix, from, to, forBody, varKind = this.opts.es5 ? scope_1.varKinds.var : scope_1.varKinds.let) {
+          forRange(nameOrPrefix, from2, to, forBody, varKind = this.opts.es5 ? scope_1.varKinds.var : scope_1.varKinds.let) {
             const name = this._scope.toName(nameOrPrefix);
-            return this._for(new ForRange(varKind, name, from, to), () => forBody(name));
+            return this._for(new ForRange(varKind, name, from2, to), () => forBody(name));
           }
           // `for-of` statement (in es5 mode replace with a normal for loop)
           forOf(nameOrPrefix, iterable, forBody, varKind = scope_1.varKinds.const) {
@@ -55239,13 +55239,13 @@ ${end.comment}` : end.comment;
           }
         };
         exports22.CodeGen = CodeGen;
-        function addNames(names, from) {
-          for (const n2 in from)
-            names[n2] = (names[n2] || 0) + (from[n2] || 0);
+        function addNames(names, from2) {
+          for (const n2 in from2)
+            names[n2] = (names[n2] || 0) + (from2[n2] || 0);
           return names;
         }
-        function addExprNames(names, from) {
-          return from instanceof code_1._CodeOrName ? addNames(names, from.names) : names;
+        function addExprNames(names, from2) {
+          return from2 instanceof code_1._CodeOrName ? addNames(names, from2.names) : names;
         }
         function optimizeExpr(expr2, names, constants) {
           if (expr2 instanceof code_1.Name)
@@ -55272,9 +55272,9 @@ ${end.comment}` : end.comment;
             return e instanceof code_1._Code && e._items.some((c3) => c3 instanceof code_1.Name && names[c3.str] === 1 && constants[c3.str] !== void 0);
           }
         }
-        function subtractNames(names, from) {
-          for (const n2 in from)
-            names[n2] = (names[n2] || 0) - (from[n2] || 0);
+        function subtractNames(names, from2) {
+          for (const n2 in from2)
+            names[n2] = (names[n2] || 0) - (from2[n2] || 0);
         }
         function not(x) {
           return typeof x == "boolean" || typeof x == "number" || x === null ? !x : (0, code_1._)`!${par(x)}`;
@@ -55390,31 +55390,31 @@ ${end.comment}` : end.comment;
         }
         exports22.eachItem = eachItem;
         function makeMergeEvaluated({ mergeNames, mergeToName, mergeValues: mergeValues32, resultToName }) {
-          return (gen, from, to, toName) => {
-            const res = to === void 0 ? from : to instanceof codegen_1.Name ? (from instanceof codegen_1.Name ? mergeNames(gen, from, to) : mergeToName(gen, from, to), to) : from instanceof codegen_1.Name ? (mergeToName(gen, to, from), from) : mergeValues32(from, to);
+          return (gen, from2, to, toName) => {
+            const res = to === void 0 ? from2 : to instanceof codegen_1.Name ? (from2 instanceof codegen_1.Name ? mergeNames(gen, from2, to) : mergeToName(gen, from2, to), to) : from2 instanceof codegen_1.Name ? (mergeToName(gen, to, from2), from2) : mergeValues32(from2, to);
             return toName === codegen_1.Name && !(res instanceof codegen_1.Name) ? resultToName(gen, res) : res;
           };
         }
         exports22.mergeEvaluated = {
           props: makeMergeEvaluated({
-            mergeNames: (gen, from, to) => gen.if((0, codegen_1._)`${to} !== true && ${from} !== undefined`, () => {
-              gen.if((0, codegen_1._)`${from} === true`, () => gen.assign(to, true), () => gen.assign(to, (0, codegen_1._)`${to} || {}`).code((0, codegen_1._)`Object.assign(${to}, ${from})`));
+            mergeNames: (gen, from2, to) => gen.if((0, codegen_1._)`${to} !== true && ${from2} !== undefined`, () => {
+              gen.if((0, codegen_1._)`${from2} === true`, () => gen.assign(to, true), () => gen.assign(to, (0, codegen_1._)`${to} || {}`).code((0, codegen_1._)`Object.assign(${to}, ${from2})`));
             }),
-            mergeToName: (gen, from, to) => gen.if((0, codegen_1._)`${to} !== true`, () => {
-              if (from === true) {
+            mergeToName: (gen, from2, to) => gen.if((0, codegen_1._)`${to} !== true`, () => {
+              if (from2 === true) {
                 gen.assign(to, true);
               } else {
                 gen.assign(to, (0, codegen_1._)`${to} || {}`);
-                setEvaluated(gen, to, from);
+                setEvaluated(gen, to, from2);
               }
             }),
-            mergeValues: (from, to) => from === true ? true : { ...from, ...to },
+            mergeValues: (from2, to) => from2 === true ? true : { ...from2, ...to },
             resultToName: evaluatedPropsToName
           }),
           items: makeMergeEvaluated({
-            mergeNames: (gen, from, to) => gen.if((0, codegen_1._)`${to} !== true && ${from} !== undefined`, () => gen.assign(to, (0, codegen_1._)`${from} === true ? true : ${to} > ${from} ? ${to} : ${from}`)),
-            mergeToName: (gen, from, to) => gen.if((0, codegen_1._)`${to} !== true`, () => gen.assign(to, from === true ? true : (0, codegen_1._)`${to} > ${from} ? ${to} : ${from}`)),
-            mergeValues: (from, to) => from === true ? true : Math.max(from, to),
+            mergeNames: (gen, from2, to) => gen.if((0, codegen_1._)`${to} !== true && ${from2} !== undefined`, () => gen.assign(to, (0, codegen_1._)`${from2} === true ? true : ${to} > ${from2} ? ${to} : ${from2}`)),
+            mergeToName: (gen, from2, to) => gen.if((0, codegen_1._)`${to} !== true`, () => gen.assign(to, from2 === true ? true : (0, codegen_1._)`${to} > ${from2} ? ${to} : ${from2}`)),
+            mergeValues: (from2, to) => from2 === true ? true : Math.max(from2, to),
             resultToName: (gen, items) => gen.var("items", items)
           })
         };
@@ -57767,11 +57767,11 @@ ${end.comment}` : end.comment;
         Ajv2.ValidationError = validation_error_1.default;
         Ajv2.MissingRefError = ref_error_1.default;
         exports22.default = Ajv2;
-        function checkOptions(checkOpts, options2, msg, log4 = "error") {
+        function checkOptions(checkOpts, options2, msg, log5 = "error") {
           for (const key in checkOpts) {
             const opt = key;
             if (opt in options2)
-              this.logger[log4](`${msg}: option ${key}. ${checkOpts[opt]}`);
+              this.logger[log5](`${msg}: option ${key}. ${checkOpts[opt]}`);
           }
         }
         function getSchEnv(keyRef) {
@@ -64329,7 +64329,7 @@ ${end.comment}` : end.comment;
     var qmark = "[^/]";
     var star = qmark + "*?";
     var starNoEmpty = qmark + "+?";
-    var ID = 0;
+    var ID2 = 0;
     var AST = class {
       type;
       #root;
@@ -64345,7 +64345,7 @@ ${end.comment}` : end.comment;
       // set to true if it's an extglob with no children
       // (which really means one child of '')
       #emptyExt = false;
-      id = ++ID;
+      id = ++ID2;
       get depth() {
         return (this.#parent?.depth ?? -1) + 1;
       }
@@ -65726,7 +65726,7 @@ ${end.comment}` : end.comment;
     minimatch.escape = escape22;
     minimatch.unescape = unescape2;
     var import_node_process7 = __toESM3(__require("node:process"), 1);
-    var import_node_path10 = __toESM3(__require("node:path"), 1);
+    var import_node_path11 = __toESM3(__require("node:path"), 1);
     var import_node_url = __require("node:url");
     var import_node_child_process7 = __toESM3(__require("node:child_process"), 1);
     var import_promises2 = __toESM3(__require("node:fs/promises"), 1);
@@ -65737,11 +65737,11 @@ ${end.comment}` : end.comment;
     var import_node_os = __toESM3(__require("node:os"), 1);
     var import_node_fs32 = __toESM3(__require("node:fs"), 1);
     var import_node_fs22 = __toESM3(__require("node:fs"), 1);
-    var import_node_fs10 = __toESM3(__require("node:fs"), 1);
+    var import_node_fs11 = __toESM3(__require("node:fs"), 1);
     var isDockerCached;
     function hasDockerEnv() {
       try {
-        import_node_fs10.default.statSync("/.dockerenv");
+        import_node_fs11.default.statSync("/.dockerenv");
         return true;
       } catch {
         return false;
@@ -65749,7 +65749,7 @@ ${end.comment}` : end.comment;
     }
     function hasDockerCGroup() {
       try {
-        return import_node_fs10.default.readFileSync("/proc/self/cgroup", "utf8").includes("docker");
+        return import_node_fs11.default.readFileSync("/proc/self/cgroup", "utf8").includes("docker");
       } catch {
         return false;
       }
@@ -66027,8 +66027,8 @@ tell application "System Events" to get value of property list item "CFBundleNam
     var is_in_ssh_default = isInSsh;
     var import_meta = {};
     var fallbackAttemptSymbol = /* @__PURE__ */ Symbol("fallbackAttempt");
-    var __dirname2 = import_meta.url ? import_node_path10.default.dirname((0, import_node_url.fileURLToPath)(import_meta.url)) : "";
-    var localXdgOpenPath = import_node_path10.default.join(__dirname2, "xdg-open");
+    var __dirname2 = import_meta.url ? import_node_path11.default.dirname((0, import_node_url.fileURLToPath)(import_meta.url)) : "";
+    var localXdgOpenPath = import_node_path11.default.join(__dirname2, "xdg-open");
     var { platform, arch } = import_node_process7.default;
     var tryEachApp = async (apps2, opener) => {
       if (apps2.length === 0) {
@@ -69823,7 +69823,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
     var import_websocket = __toESM3(require_websocket(), 1);
     var import_websocket_server = __toESM3(require_websocket_server(), 1);
     var wrapper_default = import_websocket.default;
-    var import_yaml6 = __toESM3(require_dist3());
+    var import_yaml7 = __toESM3(require_dist3());
     var import_json5 = __toESM3(require_lib());
     var import_source_map_support = __toESM3(require_source_map_support());
     var import_enquirer = __toESM3(require_enquirer());
@@ -69977,10 +69977,10 @@ Expecting one of '${allowedValues.join("', '")}'`);
       }
       async _formatEntry(dirent, path4) {
         let entry;
-        const basename3 = this._isDirent ? dirent.name : dirent;
+        const basename32 = this._isDirent ? dirent.name : dirent;
         try {
-          const fullPath = (0, import_node_path32.resolve)((0, import_node_path32.join)(path4, basename3));
-          entry = { path: (0, import_node_path32.relative)(this._root, fullPath), fullPath, basename: basename3 };
+          const fullPath = (0, import_node_path32.resolve)((0, import_node_path32.join)(path4, basename32));
+          entry = { path: (0, import_node_path32.relative)(this._root, fullPath), fullPath, basename: basename32 };
           entry[this._statsProp] = this._isDirent ? dirent : await this._stat(fullPath);
         } catch (err) {
           this._onError(err);
@@ -70517,9 +70517,9 @@ Expecting one of '${allowedValues.join("', '")}'`);
       _watchWithNodeFs(path4, listener) {
         const opts = this.fsw.options;
         const directory = sysPath.dirname(path4);
-        const basename3 = sysPath.basename(path4);
+        const basename32 = sysPath.basename(path4);
         const parent = this.fsw._getWatchedDir(directory);
-        parent.add(basename3);
+        parent.add(basename32);
         const absolutePath = sysPath.resolve(path4);
         const options2 = {
           persistent: opts.persistent
@@ -70529,7 +70529,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
         let closer;
         if (opts.usePolling) {
           const enableBin = opts.interval !== opts.binaryInterval;
-          options2.interval = enableBin && isBinaryPath(basename3) ? opts.binaryInterval : opts.interval;
+          options2.interval = enableBin && isBinaryPath(basename32) ? opts.binaryInterval : opts.interval;
           closer = setFsWatchFileListener(path4, absolutePath, options2, {
             listener,
             rawEmitter: this.fsw._emitRaw
@@ -70552,10 +70552,10 @@ Expecting one of '${allowedValues.join("', '")}'`);
           return;
         }
         const dirname3 = sysPath.dirname(file22);
-        const basename3 = sysPath.basename(file22);
+        const basename32 = sysPath.basename(file22);
         const parent = this.fsw._getWatchedDir(dirname3);
         let prevStats = stats;
-        if (parent.has(basename3))
+        if (parent.has(basename32))
           return;
         const listener = async (path4, newStats) => {
           if (!this.fsw._throttle(THROTTLE_MODE_WATCH, file22, 5))
@@ -70580,9 +70580,9 @@ Expecting one of '${allowedValues.join("', '")}'`);
                 prevStats = newStats2;
               }
             } catch (error512) {
-              this.fsw._remove(dirname3, basename3);
+              this.fsw._remove(dirname3, basename32);
             }
-          } else if (parent.has(basename3)) {
+          } else if (parent.has(basename32)) {
             const at = newStats.atimeMs;
             const mt = newStats.mtimeMs;
             if (!at || at <= mt || mt !== prevStats.mtimeMs) {
@@ -72894,7 +72894,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
       isValidJWT: () => isValidJWT3,
       locales: () => locales_exports2,
       meta: () => meta3,
-      parse: () => parse7,
+      parse: () => parse8,
       parseAsync: () => parseAsync3,
       prettifyError: () => prettifyError2,
       process: () => process11,
@@ -73831,7 +73831,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
       }
       return result2.value;
     };
-    var parse7 = /* @__PURE__ */ _parse3($ZodRealError2);
+    var parse8 = /* @__PURE__ */ _parse3($ZodRealError2);
     var _parseAsync3 = (_Err) => async (schema, value2, _ctx, params2) => {
       const ctx = _ctx ? { ..._ctx, async: true } : { async: true };
       let result2 = schema._zod.run({ value: value2, issues: [] }, ctx);
@@ -76613,10 +76613,10 @@ Expecting one of '${allowedValues.join("', '")}'`);
           throw new Error("implement() must be called with a function");
         }
         return function(...args) {
-          const parsedArgs = inst._def.input ? parse7(inst._def.input, args) : args;
+          const parsedArgs = inst._def.input ? parse8(inst._def.input, args) : args;
           const result2 = Reflect.apply(func, this, parsedArgs);
           if (inst._def.output) {
-            return parse7(inst._def.output, result2);
+            return parse8(inst._def.output, result2);
           }
           return result2;
         };
@@ -99425,7 +99425,7 @@ data:
     var wsServer3 = import_websocket_server.default;
     var wsReceiver = import_receiver.default;
     var wsSender = import_sender.default;
-    var yaml3 = import_yaml6.default;
+    var yaml3 = import_yaml7.default;
     var json5 = import_json5.default;
     var sourceMapSupport = import_source_map_support.default;
     var enquirer = import_enquirer.default;
@@ -99473,11 +99473,11 @@ var require_coreBundle = __commonJS2({
       for (var name in all)
         __defProp(target, name, { get: all[name], enumerable: true });
     };
-    var __copyProps = (to, from, except, desc) => {
-      if (from && typeof from === "object" || typeof from === "function") {
-        for (let key of __getOwnPropNames(from))
+    var __copyProps = (to, from2, except, desc) => {
+      if (from2 && typeof from2 === "object" || typeof from2 === "function") {
+        for (let key of __getOwnPropNames(from2))
           if (!__hasOwnProp.call(to, key) && key !== except)
-            __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+            __defProp(to, key, { get: () => from2[key], enumerable: !(desc = __getOwnPropDesc(from2, key)) || desc.enumerable });
       }
       return to;
     };
@@ -99695,7 +99695,7 @@ var require_coreBundle = __commonJS2({
         normalized: normalizeWhitespace(value2)
       };
     }
-    function findNewNode(from, to) {
+    function findNewNode(from2, to) {
       function fillMap(root, map2, position) {
         let size = 1;
         let childPosition = position + size;
@@ -99722,8 +99722,8 @@ var require_coreBundle = __commonJS2({
         return size;
       }
       const fromMap = /* @__PURE__ */ new Map();
-      if (from)
-        fillMap(from, fromMap, 0);
+      if (from2)
+        fillMap(from2, fromMap, 0);
       const toMap = /* @__PURE__ */ new Map();
       fillMap(to, toMap, 0);
       const result2 = [];
@@ -100439,11 +100439,11 @@ ${escaped2}
         for (let x = 0; x < size.width; x++) {
           const to = (y * size.width + x) * 4;
           if (y < image.height && x < image.width) {
-            const from = (y * image.width + x) * 4;
-            buffer[to] = image.data[from];
-            buffer[to + 1] = image.data[from + 1];
-            buffer[to + 2] = image.data[from + 2];
-            buffer[to + 3] = image.data[from + 3];
+            const from2 = (y * image.width + x) * 4;
+            buffer[to] = image.data[from2];
+            buffer[to + 1] = image.data[from2 + 1];
+            buffer[to + 2] = image.data[from2 + 2];
+            buffer[to + 3] = image.data[from2 + 3];
           } else {
             buffer[to] = 0;
             buffer[to + 1] = 0;
@@ -100777,22 +100777,22 @@ ${escaped2}
           return -1;
         return str[i2];
       };
-      const next = function(num) {
-        if (num === void 0)
-          num = 1;
-        if (num > 3)
+      const next = function(num2) {
+        if (num2 === void 0)
+          num2 = 1;
+        if (num2 > 3)
           throw "Spec Error: no more than three codepoints of lookahead.";
-        return codepoint(i + num);
+        return codepoint(i + num2);
       };
-      const consume = function(num) {
-        if (num === void 0)
-          num = 1;
-        i += num;
+      const consume = function(num2) {
+        if (num2 === void 0)
+          num2 = 1;
+        i += num2;
         code = codepoint(i);
         if (newline(code))
           incrLineno();
         else
-          column += num;
+          column += num2;
         return true;
       };
       const reconsume = function() {
@@ -100968,25 +100968,25 @@ ${escaped2}
         }
       };
       const consumeANumericToken = function() {
-        const num = consumeANumber();
+        const num2 = consumeANumber();
         if (wouldStartAnIdentifier(next(1), next(2), next(3))) {
           const token = new DimensionToken();
-          token.value = num.value;
-          token.repr = num.repr;
-          token.type = num.type;
+          token.value = num2.value;
+          token.repr = num2.repr;
+          token.type = num2.type;
           token.unit = consumeAName();
           return token;
         } else if (next() === 37) {
           consume();
           const token = new PercentageToken();
-          token.value = num.value;
-          token.repr = num.repr;
+          token.value = num2.value;
+          token.repr = num2.repr;
           return token;
         } else {
           const token = new NumberToken();
-          token.value = num.value;
-          token.repr = num.repr;
-          token.type = num.type;
+          token.value = num2.value;
+          token.repr = num2.repr;
+          token.type = num2.type;
           return token;
         }
       };
@@ -101315,8 +101315,8 @@ ${escaped2}
     var init_cssTokenizer = __esm({
       "packages/isomorphic/cssTokenizer.ts"() {
         "use strict";
-        between = function(num, first, last) {
-          return num >= first && num <= last;
+        between = function(num2, first, last) {
+          return num2 >= first && num2 <= last;
         };
         maximumallowedcodepoint = 1114111;
         InvalidCharacterError = class extends Error {
@@ -108500,8 +108500,8 @@ ${escaped2}
       }
       return resolved === "/";
     }
-    async function copyFileAndMakeWritable(from, to) {
-      await import_fs3.default.promises.copyFile(from, to);
+    async function copyFileAndMakeWritable(from2, to) {
+      await import_fs3.default.promises.copyFile(from2, to);
       await import_fs3.default.promises.chmod(to, 436);
     }
     function addSuffixToFilePath(filePath, suffix) {
@@ -109713,10 +109713,10 @@ ${lines.join("\n")}`;
             this._buffers.delete(file2);
             this._appendOperation({ op: "appendFile", file: file2, content });
           }
-          copyFile(from, to) {
-            this._flushFile(from);
+          copyFile(from2, to) {
+            this._flushFile(from2);
             this._buffers.delete(to);
-            this._appendOperation({ op: "copyFile", from, to });
+            this._appendOperation({ op: "copyFile", from: from2, to });
           }
           async sync() {
             for (const file2 of this._buffers.keys())
@@ -133075,12 +133075,12 @@ ${details.join("\n")}`;
       }
       throw new Error("\n" + wrapInASCIIBox(errorLines.join("\n"), 1));
     }
-    function isSharedLib(basename3) {
+    function isSharedLib(basename4) {
       switch (import_os6.default.platform()) {
         case "linux":
-          return basename3.endsWith(".so") || basename3.includes(".so.");
+          return basename4.endsWith(".so") || basename4.includes(".so.");
         case "win32":
-          return basename3.endsWith(".dll");
+          return basename4.endsWith(".dll");
         default:
           return false;
       }
@@ -133092,8 +133092,8 @@ ${details.join("\n")}`;
       const allStats = await Promise.all(allPaths.map((aPath) => import_fs15.default.promises.stat(aPath)));
       const filePaths = allPaths.filter((aPath, index) => allStats[index].isFile());
       const executablersOrLibraries = (await Promise.all(filePaths.map(async (filePath) => {
-        const basename3 = import_path16.default.basename(filePath).toLowerCase();
-        if (isSharedLib(basename3))
+        const basename4 = import_path16.default.basename(filePath).toLowerCase();
+        if (isSharedLib(basename4))
           return filePath;
         if (await checkExecutable(filePath))
           return filePath;
@@ -140542,8 +140542,8 @@ ${Buffer.concat(chunks)}` : errorPrefix;
         };
       }
     });
-    function copyTestHooks(from, to) {
-      for (const [key, value2] of Object.entries(from)) {
+    function copyTestHooks(from2, to) {
+      for (const [key, value2] of Object.entries(from2)) {
         if (key.startsWith("__testHook"))
           to[key] = value2;
       }
@@ -164190,11 +164190,11 @@ ${value2}`;
           async tap(point) {
             await this._device._channel.inputTap({ point }, kNoTimeout);
           }
-          async swipe(from, segments, steps) {
-            await this._device._channel.inputSwipe({ segments: [from, ...segments], steps }, kNoTimeout);
+          async swipe(from2, segments, steps) {
+            await this._device._channel.inputSwipe({ segments: [from2, ...segments], steps }, kNoTimeout);
           }
-          async drag(from, to, steps) {
-            await this._device._channel.inputDrag({ from, to, steps }, kNoTimeout);
+          async drag(from2, to, steps) {
+            await this._device._channel.inputDrag({ from: from2, to, steps }, kNoTimeout);
           }
         };
         AndroidWebView = class extends EventEmitter2 {
@@ -173889,9 +173889,9 @@ to start the browser session.`);
       const trimmed = value2.trim();
       if (trimmed === "")
         return trimmed;
-      const num = Number(trimmed);
-      if (!isNaN(num))
-        return num;
+      const num2 = Number(trimmed);
+      if (!isNaN(num2))
+        return num2;
       return value2;
     }
     function setNestedValue(obj, dotPath, value2) {
@@ -183129,18 +183129,18 @@ var validateAsync = async (schema, value2, _ctx) => {
   return result2.issues.length === 0;
 };
 var _encode = (_Err) => {
-  const parse7 = _parse(_Err);
+  const parse8 = _parse(_Err);
   const fn = (schema, value2, _ctx, _params) => {
     const ctx = _ctx ? { ..._ctx, direction: "backward" } : { direction: "backward" };
-    return parse7(schema, value2, ctx, finalizeParams(fn, _params));
+    return parse8(schema, value2, ctx, finalizeParams(fn, _params));
   };
   return fn;
 };
 var encode = /* @__PURE__ */ _encode($ZodRealError);
 var _decode = (_Err) => {
-  const parse7 = _parse(_Err);
+  const parse8 = _parse(_Err);
   const fn = (schema, value2, _ctx, _params) => {
-    return parse7(schema, value2, _ctx, finalizeParams(fn, _params));
+    return parse8(schema, value2, _ctx, finalizeParams(fn, _params));
   };
   return fn;
 };
@@ -184635,7 +184635,7 @@ function capSize(inst, size) {
   if (!caps.length)
     return;
   const cap = Math.min(...caps.map((c) => c[0]));
-  const parse7 = inst._zod.parse;
+  const parse8 = inst._zod.parse;
   inst._zod.parse = (payload, ctx) => {
     const n = size(payload.value);
     if (n > cap && !ctx?.skipChecks && ctx?.direction !== "backward") {
@@ -184649,7 +184649,7 @@ function capSize(inst, size) {
         }
       }
     }
-    return parse7(payload, ctx);
+    return parse8(payload, ctx);
   };
 }
 var arraySize = (input2) => Array.isArray(input2) ? input2.length : -1;
@@ -207030,9 +207030,9 @@ var StdioServerTransport2 = class {
 };
 
 // src/server.ts
-var import_yaml5 = __toESM2(require_dist2(), 1);
-import { appendFileSync, existsSync as existsSync8, readFileSync as readFileSync6, statSync } from "node:fs";
-import { join as join9 } from "node:path";
+var import_yaml6 = __toESM2(require_dist2(), 1);
+import { appendFileSync, existsSync as existsSync9, readFileSync as readFileSync7, statSync } from "node:fs";
+import { join as join10 } from "node:path";
 import { parseArgs, parseEnv as parseEnv2 } from "node:util";
 
 // src/schema.ts
@@ -207113,42 +207113,6 @@ var request2 = import_index2.default.request;
 var _electron = import_index2.default._electron;
 var _android = import_index2.default._android;
 
-// node_modules/playwright-core/package.json
-var package_default = {
-  name: "playwright-core",
-  version: "1.64.1",
-  description: "A high-level API to automate web browsers",
-  repository: {
-    type: "git",
-    url: "git+https://github.com/microsoft/playwright.git"
-  },
-  homepage: "https://playwright.dev",
-  engines: {
-    node: ">=20"
-  },
-  author: {
-    name: "Microsoft Corporation"
-  },
-  license: "Apache-2.0",
-  exports: {
-    ".": {
-      types: "./index.d.ts",
-      import: "./index.mjs",
-      require: "./index.js",
-      default: "./index.js"
-    },
-    "./package.json": "./package.json",
-    "./lib/bootstrap": "./lib/bootstrap.js",
-    "./lib/coreBundle": "./lib/coreBundle.js",
-    "./lib/utilsBundle": "./lib/utilsBundle.js",
-    "./lib/tools/cli-client/program": "./lib/tools/cli-client/program.js"
-  },
-  bin: {
-    "playwright-core": "cli.js"
-  },
-  types: "types/types.d.ts"
-};
-
 // src/accounts.ts
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -207198,6 +207162,66 @@ function redactDeep(msg, redact2) {
   return walk(msg);
 }
 
+// node_modules/playwright-core/package.json
+var package_default = {
+  name: "playwright-core",
+  version: "1.64.1",
+  description: "A high-level API to automate web browsers",
+  repository: {
+    type: "git",
+    url: "git+https://github.com/microsoft/playwright.git"
+  },
+  homepage: "https://playwright.dev",
+  engines: {
+    node: ">=20"
+  },
+  author: {
+    name: "Microsoft Corporation"
+  },
+  license: "Apache-2.0",
+  exports: {
+    ".": {
+      types: "./index.d.ts",
+      import: "./index.mjs",
+      require: "./index.js",
+      default: "./index.js"
+    },
+    "./package.json": "./package.json",
+    "./lib/bootstrap": "./lib/bootstrap.js",
+    "./lib/coreBundle": "./lib/coreBundle.js",
+    "./lib/utilsBundle": "./lib/utilsBundle.js",
+    "./lib/tools/cli-client/program": "./lib/tools/cli-client/program.js"
+  },
+  bin: {
+    "playwright-core": "cli.js"
+  },
+  types: "types/types.d.ts"
+};
+
+// src/chrome.ts
+var log2 = (...a) => console.error((/* @__PURE__ */ new Date()).toISOString(), ...a);
+async function launchChrome(open6) {
+  const channel = process.env.JEYNA_BROWSER_CHANNEL ?? "chrome";
+  let why;
+  try {
+    const b = await open6(channel);
+    log2(`launched channel ${channel}`);
+    return b;
+  } catch (e) {
+    why = e.message.split("\n")[0];
+    log2(`${channel} launch failed:`, why);
+  }
+  try {
+    const b = await open6(void 0);
+    log2("using Playwright's Chromium");
+    return b;
+  } catch {
+    throw new Error(
+      `No browser found. Google Chrome (channel "${channel}") did not launch: ${why}. Install Google Chrome, or install Playwright's Chromium: npx playwright install chromium (if it still is not found, pin the version Jeyna bundles: npx playwright@${package_default.version} install chromium).`
+    );
+  }
+}
+
 // src/shared.ts
 import { existsSync as existsSync2 } from "node:fs";
 import { dirname, join as join2, resolve } from "node:path";
@@ -207227,19 +207251,19 @@ function runDirOf(root, run) {
   return dir;
 }
 function findProjectRoot(...candidates) {
-  const from = process.cwd();
+  const from2 = process.cwd();
   for (const c of candidates) if (typeof c === "string" && c !== "" && !c.includes("${")) return resolve(c);
-  for (let dir = from; ; dir = dirname(dir)) {
+  for (let dir = from2; ; dir = dirname(dir)) {
     if (existsSync2(join2(dir, ".jeyna"))) return dir;
     if (dirname(dir) === dir) break;
   }
   throw new Error(
-    "Jeyna could not find the project root: no --project argument, no CLAUDE_PROJECT_DIR, and no .jeyna/ folder above " + from + ". Start Claude Code in your project folder."
+    "Jeyna could not find the project root: no --project argument, no CLAUDE_PROJECT_DIR, and no .jeyna/ folder above " + from2 + ". Start Claude Code in your project folder."
   );
 }
 
 // src/browser.ts
-var log2 = (...a) => console.error((/* @__PURE__ */ new Date()).toISOString(), ...a);
+var log3 = (...a) => console.error((/* @__PURE__ */ new Date()).toISOString(), ...a);
 var browser;
 function getBrowser(headed) {
   if (browser) return browser;
@@ -207247,7 +207271,7 @@ function getBrowser(headed) {
     (b) => {
       b.on("disconnected", () => {
         if (browser !== launching) return;
-        log2("browser disconnected; the next browser call launches a new one");
+        log3("browser disconnected; the next browser call launches a new one");
         browser = void 0;
         pages.clear();
       });
@@ -207261,25 +207285,9 @@ function getBrowser(headed) {
   return browser = launching;
 }
 async function launch(headed) {
-  const channel = process.env.JEYNA_BROWSER_CHANNEL ?? "chrome";
-  let why;
-  try {
-    const b = await chromium.launch({ channel, headless: !headed });
-    log2(`launched channel ${channel}, version ${b.version()}`);
-    return b;
-  } catch (e) {
-    why = e.message.split("\n")[0];
-    log2(`${channel} launch failed:`, why);
-  }
-  try {
-    const b = await chromium.launch({ headless: !headed });
-    log2("using Playwright's Chromium");
-    return b;
-  } catch {
-    throw new Error(
-      `No browser found. Google Chrome (channel "${channel}") did not launch: ${why}. Install Google Chrome, or install Playwright's Chromium: npx playwright install chromium (if it still is not found, pin the version Jeyna bundles: npx playwright@${package_default.version} install chromium).`
-    );
-  }
+  const b = await launchChrome((channel) => chromium.launch({ channel, headless: !headed }));
+  log3(`browser version ${b.version()}`);
+  return b;
 }
 var pages = /* @__PURE__ */ new Map();
 var shots = /* @__PURE__ */ new Map();
@@ -207927,14 +207935,117 @@ function registerFindingTools(server3) {
 }
 
 // src/finish.ts
-var import_yaml4 = __toESM2(require_dist2(), 1);
-import { existsSync as existsSync7, readFileSync as readFileSync5, writeFileSync as writeFileSync5 } from "node:fs";
-import { basename as basename2, join as join8, relative, resolve as resolve2 } from "node:path";
+var import_yaml5 = __toESM2(require_dist2(), 1);
+import { existsSync as existsSync8, readFileSync as readFileSync6, writeFileSync as writeFileSync6 } from "node:fs";
+import { basename as basename3, join as join9, relative, resolve as resolve2 } from "node:path";
+
+// src/feedback.ts
+var import_yaml3 = __toESM2(require_dist2(), 1);
+import { existsSync as existsSync6, mkdirSync as mkdirSync4, readdirSync as readdirSync4, readFileSync as readFileSync4, rmSync, writeFileSync as writeFileSync5 } from "node:fs";
+import { basename as basename2, join as join7 } from "node:path";
+
+// src/recording.ts
+var MAX_FRAMES = 40;
+
+// src/feedback.ts
+var FEEDBACK_STATUSES = ["open", "processed", "done", "wontfix"];
+var ID = /^FB-\d{3,}$/;
+var PNG4 = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+var Viewport = external_exports.strictObject({ width: external_exports.number().int().positive(), height: external_exports.number().int().positive(), dpr: external_exports.number().positive() });
+var FeedbackFront = external_exports.strictObject({
+  schema: external_exports.literal(1),
+  id: external_exports.string(),
+  status: external_exports.enum(FEEDBACK_STATUSES),
+  note: external_exports.string().optional(),
+  capture: external_exports.enum(["snap", "recording"]),
+  // ms: time since the recording started, for flipbook playback. A snap is one frame at 0.
+  frames: external_exports.array(external_exports.strictObject({ file: external_exports.string(), ms: external_exports.number().int().min(0) })).min(1).max(MAX_FRAMES),
+  // Where it was captured: the Live page, or an evidence image of a run (with the finding it was opened from).
+  source: external_exports.enum(["live", "evidence"]),
+  run: external_exports.string().optional(),
+  evidence: external_exports.string().optional(),
+  finding: external_exports.string().optional(),
+  url: external_exports.string().optional(),
+  viewport: Viewport.optional(),
+  created: external_exports.string()
+});
+var feedbackDir = (root) => join7(root, ".jeyna", "feedback");
+function itemFile(root, id) {
+  if (!ID.test(id)) throw new Error(`A feedback id looks like FB-001, not ${id || "an empty string"}.`);
+  const path = join7(feedbackDir(root), `${id}.md`);
+  if (!existsSync6(path)) throw new Error(`No feedback ${id} under .jeyna/feedback/.`);
+  return path;
+}
+function readFeedback(root) {
+  const dir = feedbackDir(root);
+  if (!existsSync6(dir)) return [];
+  return readdirSync4(dir).filter((f) => /^FB-\d{3,}\.md$/.test(f)).sort((a, b) => num(a) - num(b)).map((file2) => {
+    const source14 = readFileSync4(join7(dir, file2), "utf8");
+    const item = { path: file2, id: file2.slice(0, -3), text: "", source: source14, errors: [] };
+    const m = splitFront(source14);
+    if (!m) return { ...item, errors: ["no YAML frontmatter between --- lines"] };
+    item.text = m[2].trim();
+    let raw;
+    try {
+      raw = (0, import_yaml3.parse)(m[1]);
+    } catch (e) {
+      return { ...item, errors: [`frontmatter is not valid YAML: ${e.message.split("\n")[0]}`] };
+    }
+    const r = FeedbackFront.safeParse(raw);
+    if (!r.success) return { ...item, errors: r.error.issues.map((i) => `frontmatter ${i.path.join(".") || "(root)"}: ${i.message}`) };
+    const front = item.front = r.data;
+    if (front.id !== item.id) item.errors.push(`id ${front.id} does not match the file name`);
+    if (front.capture === "snap" && front.frames.length !== 1) item.errors.push("a snap has exactly one frame");
+    if (front.source === "evidence" && !(front.run && front.evidence)) item.errors.push("feedback on evidence names its run and evidence");
+    for (const f of front.frames) if (!existsSync6(join7(dir, f.file))) item.errors.push(`capture ${f.file} does not exist in .jeyna/feedback/`);
+    if (!item.text) item.errors.push("no feedback text");
+    return item;
+  });
+}
+var num = (file2) => Number(/^FB-(\d+)/.exec(file2)?.[1] ?? 0);
+var NewFeedback = external_exports.strictObject({
+  text: external_exports.string().trim().min(1, "write what should change"),
+  capture: external_exports.enum(["snap", "recording"]),
+  // PNG bytes as base64, in order.
+  frames: external_exports.array(external_exports.strictObject({ png: external_exports.string().min(1), ms: external_exports.number().int().min(0) })).min(1).max(MAX_FRAMES),
+  source: external_exports.enum(["live", "evidence"]),
+  run: external_exports.string().optional(),
+  evidence: external_exports.string().optional(),
+  finding: external_exports.string().optional(),
+  url: external_exports.string().url().optional(),
+  viewport: Viewport.optional()
+});
+function updateFeedback(root, id, change) {
+  const path = itemFile(root, id);
+  const m = splitFront(readFileSync4(path, "utf8"));
+  const r = m ? FeedbackFront.safeParse((0, import_yaml3.parse)(m[1])) : void 0;
+  if (!m || !r?.success) throw new Error(`.jeyna/feedback/${id}.md has no readable frontmatter; fix it by hand.`);
+  const front = r.data;
+  let text2 = m[2].trim();
+  if (change.text !== void 0) {
+    if (front.status !== "open") throw new Error(`${id} is ${front.status}; only an open item's text can change. Reopen it first.`);
+    text2 = change.text.trim();
+    if (!text2) throw new Error("write what should change");
+  }
+  const note2 = change.status ? change.note : front.note;
+  const next = {};
+  for (const [k, v] of Object.entries(front)) {
+    if (k === "note") continue;
+    next[k] = k === "status" ? change.status ?? v : v;
+    if (k === "status" && note2) next.note = note2;
+  }
+  writeFileSync5(path, `---
+${(0, import_yaml3.stringify)(next)}---
+
+${text2}
+`);
+  return next;
+}
 
 // src/validate.ts
-var import_yaml3 = __toESM2(require_dist2(), 1);
-import { existsSync as existsSync6, readdirSync as readdirSync4, readFileSync as readFileSync4 } from "node:fs";
-import { join as join7 } from "node:path";
+var import_yaml4 = __toESM2(require_dist2(), 1);
+import { existsSync as existsSync7, readdirSync as readdirSync5, readFileSync as readFileSync5 } from "node:fs";
+import { join as join8 } from "node:path";
 var SEVERITIES = FindingInput.shape.severity.options;
 var KINDS = FindingInput.shape.kind.options;
 var STATUSES = ["open", "duplicate", "wontfix", "fixed"];
@@ -207959,16 +208070,16 @@ var FindingFront = external_exports.strictObject({
   evidence: external_exports.array(external_exports.string())
 });
 function readFindings(runDir, session) {
-  const dir = join7(runDir, "findings");
-  if (!existsSync6(dir)) return [];
-  return readdirSync4(dir).filter((f) => f.endsWith(".md")).sort().map((file2) => {
-    const text2 = readFileSync4(join7(dir, file2), "utf8");
+  const dir = join8(runDir, "findings");
+  if (!existsSync7(dir)) return [];
+  return readdirSync5(dir).filter((f) => f.endsWith(".md")).sort().map((file2) => {
+    const text2 = readFileSync5(join8(dir, file2), "utf8");
     const f = { path: `findings/${file2}`, id: file2.slice(0, -3), source: text2, errors: [] };
     const m = splitFront(text2);
     if (!m) return { ...f, errors: ["no YAML frontmatter between --- lines"] };
     let raw;
     try {
-      raw = (0, import_yaml3.parse)(m[1]);
+      raw = (0, import_yaml4.parse)(m[1]);
     } catch (e) {
       return { ...f, errors: [`frontmatter is not valid YAML: ${e.message.split("\n")[0]}`] };
     }
@@ -207982,17 +208093,17 @@ function readFindings(runDir, session) {
     if (!session.cases.some((c) => c.id === front.case)) f.errors.push(`case ${front.case} is not a case of this run`);
     if (!f.title) f.errors.push("missing the # title line");
     for (const s of SECTIONS) if (!new RegExp(`^## ${s}$`, "m").test(m[2])) f.errors.push(`missing the ## ${s} section`);
-    for (const e of front.evidence) if (!existsSync6(join7(runDir, "evidence", e))) f.errors.push(`evidence ${e} does not exist in evidence/`);
+    for (const e of front.evidence) if (!existsSync7(join8(runDir, "evidence", e))) f.errors.push(`evidence ${e} does not exist in evidence/`);
     if (front.kind === "bug" && !front.evidence.length) f.errors.push("a bug needs evidence");
     if (front.status === "duplicate" && !front.of) f.errors.push("status duplicate needs of: PT-\u2026");
     return f;
   });
 }
 function readSession(runDir) {
-  if (!existsSync6(join7(runDir, "session.json"))) throw new Error(`${runDir} is not a run folder: it has no session.json.`);
+  if (!existsSync7(join8(runDir, "session.json"))) throw new Error(`${runDir} is not a run folder: it has no session.json.`);
   let raw;
   try {
-    raw = JSON.parse(readFileSync4(join7(runDir, "session.json"), "utf8"));
+    raw = JSON.parse(readFileSync5(join8(runDir, "session.json"), "utf8"));
   } catch (e) {
     throw new Error(`session.json is not valid JSON: ${e.message}`);
   }
@@ -208019,12 +208130,12 @@ function validateRun(runDir) {
     if (!v) errors2.push(`session.json: case ${c.id} has no verdict`);
     for (const id of v?.findings ?? []) if (!ids.has(id)) errors2.push(`session.json: verdict of ${c.id} lists ${id}, which has no file in findings/`);
   }
-  if (session.status === "done" && !existsSync6(join7(runDir, "report.md"))) errors2.push("report.md: missing, but the run is done");
+  if (session.status === "done" && !existsSync7(join8(runDir, "report.md"))) errors2.push("report.md: missing, but the run is done");
   return errors2;
 }
 function runs(root) {
-  const dir = join7(root, ".jeyna", "playtests");
-  if (!existsSync6(dir)) return [];
+  const dir = join8(root, ".jeyna", "playtests");
+  if (!existsSync7(dir)) return [];
   const started = (d) => {
     try {
       return readSession(d).started;
@@ -208032,13 +208143,13 @@ function runs(root) {
       return "";
     }
   };
-  return readdirSync4(dir).map((d) => join7(dir, d)).filter((d) => started(d)).sort((a, b) => started(b).localeCompare(started(a)));
+  return readdirSync5(dir).map((d) => join8(dir, d)).filter((d) => started(d)).sort((a, b) => started(b).localeCompare(started(a)));
 }
 function previousRun(runDir, session) {
-  const dir = join7(runDir, "..");
-  return readdirSync4(dir).flatMap((d) => {
+  const dir = join8(runDir, "..");
+  return readdirSync5(dir).flatMap((d) => {
     try {
-      return [readSession(join7(dir, d))];
+      return [readSession(join8(dir, d))];
     } catch {
       return [];
     }
@@ -208139,15 +208250,15 @@ ${table(["Scenario", "Viewport", "Was", "Now"], diff2.changed.map((c) => row([c.
       )
     ) : "No findings.")
   ].join("\n\n");
-  writeFileSync5(join8(runDir, "report.md"), md + "\n");
+  writeFileSync6(join9(runDir, "report.md"), md + "\n");
   return { counts, since: diff2 ?? null };
 }
 function validateCli(arg2, root) {
   try {
     const dir = arg2 ? resolve2(arg2) : runs(root())[0];
-    if (!dir) throw new Error(`No run folders in ${join8(root(), ".jeyna", "playtests")}.`);
+    if (!dir) throw new Error(`No run folders in ${join9(root(), ".jeyna", "playtests")}.`);
     const errors2 = validateRun(dir);
-    for (const e of errors2) console.log(relative(process.cwd(), join8(dir, e.slice(0, e.indexOf(": ")))) + e.slice(e.indexOf(": ")));
+    for (const e of errors2) console.log(relative(process.cwd(), join9(dir, e.slice(0, e.indexOf(": ")))) + e.slice(e.indexOf(": ")));
     console.error(errors2.length ? `${errors2.length} errors in ${dir}` : `ok: ${dir}`);
     return errors2.length ? 1 : 0;
   } catch (e) {
@@ -208168,7 +208279,7 @@ function registerFinishTools(server3, getContext2) {
         const root = getContext2().root;
         const dir = run !== void 0 ? runDirOf(root, run) : current?.runDir ?? runs(root)[0];
         if (!dir) throw new Error("No run to validate: no run is running and .jeyna/playtests/ has none.");
-        if (!existsSync7(dir)) throw new Error(`No run folder ${dir}.`);
+        if (!existsSync8(dir)) throw new Error(`No run folder ${dir}.`);
         return ok({ run: dir, errors: validateRun(dir) });
       } catch (e) {
         return fail(e);
@@ -208197,7 +208308,7 @@ ${errors2.join("\n")}`);
         save(runDir, session);
         endRun();
         await closeContexts();
-        return ok({ reportPath: join8(runDir, "report.md"), counts, since: since2, elapsedSeconds: elapsed(session), testers: session.testers.length });
+        return ok({ reportPath: join9(runDir, "report.md"), counts, since: since2, elapsedSeconds: elapsed(session), testers: session.testers.length });
       } catch (e) {
         return fail(e);
       }
@@ -208206,10 +208317,10 @@ ${errors2.join("\n")}`);
   server3.registerTool(
     "update_status",
     {
-      description: "Change a finding's status (the only mutable field, D11). During a run, mark a cross-scenario duplicate with status duplicate and of: the finding it repeats. wontfix and fixed are for later sessions. Looks in `run` if given, else the current run; with no run running, the one run holding the id. Ids repeat across runs of the same flow, so when several runs hold it, it refuses and lists them: give run.",
+      description: "Change a finding's status (the only mutable field, D11). During a run, mark a cross-scenario duplicate with status duplicate and of: the finding it repeats. wontfix and fixed are for later sessions. Looks in `run` if given, else the current run; with no run running, the one run holding the id. Ids repeat across runs of the same flow, so when several runs hold it, it refuses and lists them: give run. Also a feedback item's status (FB-001): open, processed (you implemented it; the developer still checks it), done (only on the developer's explicit OK), wontfix (D36).",
       inputSchema: {
-        id: external_exports.string().describe("Finding id, e.g. PT-login-003"),
-        status: external_exports.enum(STATUSES),
+        id: external_exports.string().describe("Finding id, e.g. PT-login-003, or feedback id, e.g. FB-007"),
+        status: external_exports.enum([.../* @__PURE__ */ new Set([...STATUSES, ...FEEDBACK_STATUSES])]),
         of: external_exports.string().optional().describe("Required for duplicate: the id of the finding this one repeats"),
         note: external_exports.string().min(1).optional(),
         run: external_exports.string().min(1).optional().describe("Run id holding the finding, e.g. 2026-10-15-login; needed when several runs hold the id")
@@ -208217,9 +208328,16 @@ ${errors2.join("\n")}`);
     },
     async ({ id, status, of, note: note2, run }) => {
       try {
+        if (id.startsWith("FB-")) {
+          if (!FEEDBACK_STATUSES.includes(status)) throw new Error(`A feedback item's status is one of ${FEEDBACK_STATUSES.join(", ")}, not ${status}.`);
+          if (of || run) throw new Error("of and run are for findings, not feedback.");
+          updateFeedback(getContext2().root, id, { status, note: note2 });
+          return ok({ id, status, path: `.jeyna/feedback/${id}.md` });
+        }
+        if (!STATUSES.includes(status)) throw new Error(`A finding's status is one of ${STATUSES.join(", ")}, not ${status}.`);
         if (status === "duplicate" && !of) throw new Error(`A duplicate needs of: the id of the finding ${id} repeats.`);
         if (status !== "duplicate" && of) throw new Error("of is only for status duplicate.");
-        const holds = (d) => existsSync7(join8(d, "findings", `${id}.md`));
+        const holds = (d) => existsSync8(join9(d, "findings", `${id}.md`));
         let runDir;
         if (run !== void 0) {
           runDir = runDirOf(getContext2().root, run);
@@ -208230,16 +208348,16 @@ ${errors2.join("\n")}`);
           const all = runs(getContext2().root).filter(holds);
           if (!all.length) throw new Error(`No finding ${id} in any run under .jeyna/playtests/.`);
           if (all.length > 1) {
-            const ids = all.map((d) => basename2(d));
+            const ids = all.map((d) => basename3(d));
             throw new Error(`${all.length} runs hold a finding ${id}: ${ids.join(", ")} (newest first). Call update_status again with run set to one of them.`);
           }
           runDir = all[0];
         }
         if (of === id) throw new Error("A finding cannot be a duplicate of itself.");
-        if (of && !existsSync7(join8(runDir, "findings", `${of}.md`))) throw new Error(`No finding ${of} in ${runDir}; of must name a finding of the same run.`);
-        const path = join8(runDir, "findings", `${id}.md`);
-        const m = splitFront(readFileSync5(path, "utf8"));
-        const front = m && (0, import_yaml4.parse)(m[1]);
+        if (of && !existsSync8(join9(runDir, "findings", `${of}.md`))) throw new Error(`No finding ${of} in ${runDir}; of must name a finding of the same run.`);
+        const path = join9(runDir, "findings", `${id}.md`);
+        const m = splitFront(readFileSync6(path, "utf8"));
+        const front = m && (0, import_yaml5.parse)(m[1]);
         if (!m || !front || typeof front !== "object") throw new Error(`${path} has no readable frontmatter; fix it by hand.`);
         const next = {};
         for (const [k, v] of Object.entries(front)) {
@@ -208247,8 +208365,8 @@ ${errors2.join("\n")}`);
           next[k] = k === "status" ? status : v;
           if (k === "status") Object.assign(next, of && { of }, note2 && { note: note2 });
         }
-        writeFileSync5(path, `---
-${(0, import_yaml4.stringify)(next)}---
+        writeFileSync6(path, `---
+${(0, import_yaml5.stringify)(next)}---
 ${m[2]}`);
         return ok({ id, status, ...of && { of }, path });
       } catch (e) {
@@ -208256,20 +208374,76 @@ ${m[2]}`);
       }
     }
   );
+  server3.registerTool(
+    "get_feedback",
+    {
+      description: "The developer's feedback from Jeyna studio (D36). No arguments: the items still to do, oldest first (open, and processed ones awaiting the developer's check), one line each, no images. id: that item in full: its text, every capture frame as an image (a recording's frames in order, with their time); for feedback on Live the page url and viewport it was captured at, and for feedback on evidence the finding's file and the whole evidence image. next: the same for the oldest open item.",
+      inputSchema: {
+        id: external_exports.string().optional().describe("Feedback id, e.g. FB-007"),
+        next: external_exports.boolean().optional().describe("Load the oldest open item")
+      },
+      annotations: { readOnlyHint: true }
+    },
+    async ({ id, next }) => {
+      try {
+        if (id && next) throw new Error("Give id or next, not both.");
+        const root = getContext2().root;
+        const items = readFeedback(root);
+        if (!id && !next) {
+          return ok({
+            todo: items.filter((i) => i.front?.status === "open" || i.front?.status === "processed").map((i) => ({
+              id: i.id,
+              status: i.front.status,
+              title: i.text.split("\n")[0],
+              capture: i.front.capture,
+              frames: i.front.frames.length,
+              from: from(i)
+            })),
+            broken: items.filter((i) => !i.front).map((i) => ({ id: i.id, errors: i.errors }))
+          });
+        }
+        const item = next ? items.find((i) => i.front?.status === "open") : items.find((i) => i.id === id);
+        if (!item) throw new Error(next ? "No open feedback under .jeyna/feedback/." : `No feedback ${id} under .jeyna/feedback/.`);
+        const fr = item.front;
+        if (!fr) throw new Error(`.jeyna/feedback/${item.path} does not parse: ${item.errors.join("; ")}. The developer fixes or deletes it in the studio.`);
+        const png = (path) => ({ type: "image", data: readFileSync6(path).toString("base64"), mimeType: "image/png" });
+        const content = [
+          { type: "text", text: JSON.stringify({ id: item.id, status: fr.status, ...fr.note && { note: fr.note }, capture: fr.capture, from: from(item), ...fr.url && { url: fr.url }, ...fr.viewport && { viewport: fr.viewport }, created: fr.created, text: item.text, path: `.jeyna/feedback/${item.path}`, ...item.errors.length && { errors: item.errors } }) }
+        ];
+        fr.frames.forEach((f, i) => {
+          if (fr.capture === "recording") content.push({ type: "text", text: `Frame ${i + 1} of ${fr.frames.length} at ${(f.ms / 1e3).toFixed(1)} s` });
+          if (existsSync8(join9(feedbackDir(root), f.file))) content.push(png(join9(feedbackDir(root), f.file)));
+        });
+        if (fr.source === "evidence") {
+          const run = runDirOf(root, fr.run);
+          const finding = fr.finding && join9(run, "findings", `${basename3(fr.finding)}.md`);
+          if (finding && existsSync8(finding)) content.push({ type: "text", text: `The finding this was given on, ${fr.finding} (run ${fr.run}):
+
+${readFileSync6(finding, "utf8")}` });
+          const evidence = join9(run, "evidence", basename3(fr.evidence));
+          if (existsSync8(evidence)) content.push({ type: "text", text: `The whole evidence image ${fr.evidence}; the capture above is cropped from it:` }, png(evidence));
+        }
+        return { content };
+      } catch (e) {
+        return fail(e);
+      }
+    }
+  );
 }
+var from = (i) => i.front?.source === "evidence" ? `${i.front.finding ?? i.front.run} \xB7 ${i.front.evidence}` : "Live";
 
 // src/server.ts
-var log3 = (...a) => console.error((/* @__PURE__ */ new Date()).toISOString(), ...a);
-process.on("unhandledRejection", (e) => log3("unhandledRejection", e));
+var log4 = (...a) => console.error((/* @__PURE__ */ new Date()).toISOString(), ...a);
+process.on("unhandledRejection", (e) => log4("unhandledRejection", e));
 var { values, positionals } = parseArgs({ options: { project: { type: "string" } }, strict: false });
 var projectRoot = () => findProjectRoot(values.project, process.env.CLAUDE_PROJECT_DIR);
 function getContext() {
   const root = projectRoot();
-  const file2 = join9(root, ".jeyna", "jeyna.config.yaml");
-  if (!existsSync8(file2)) throw new Error(`No ${file2}. Run /jeyna:init in ${root} to create it.`);
+  const file2 = join10(root, ".jeyna", "jeyna.config.yaml");
+  if (!existsSync9(file2)) throw new Error(`No ${file2}. Run /jeyna:init in ${root} to create it.`);
   let raw;
   try {
-    raw = (0, import_yaml5.parse)(readFileSync6(file2, "utf8"));
+    raw = (0, import_yaml6.parse)(readFileSync7(file2, "utf8"));
   } catch (e) {
     throw new Error(`.jeyna/jeyna.config.yaml is not valid YAML: ${e.message}`);
   }
@@ -208281,8 +208455,8 @@ ${external_exports.prettifyError(parsed.error)}`);
   return { root, config: parsed.data, secrets: secretSources(root, parsed.data) };
 }
 function secretSources(root, config2) {
-  const file2 = join9(root, ".jeyna", ".env");
-  const dotenv3 = existsSync8(file2) ? parseEnv2(readFileSync6(file2, "utf8")) : {};
+  const file2 = join10(root, ".jeyna", ".env");
+  const dotenv3 = existsSync9(file2) ? parseEnv2(readFileSync7(file2, "utf8")) : {};
   const names = config2.accounts.flatMap((a) => [a.user_env, a.pass_env]);
   return Object.fromEntries(names.map((n) => [n, process.env[n] ? "env" : dotenv3[n] ? ".env" : "missing"]));
 }
@@ -208292,7 +208466,7 @@ function currentRedactor() {
   let stamp = "no root";
   try {
     const root = projectRoot();
-    const files = [join9(root, ".jeyna", "jeyna.config.yaml"), join9(root, ".jeyna", ".env")];
+    const files = [join10(root, ".jeyna", "jeyna.config.yaml"), join10(root, ".jeyna", ".env")];
     stamp = [root, ...files.map((f) => {
       const st = statSync(f, { throwIfNoEntry: false });
       return st ? `${st.mtimeMs}:${st.size}` : "-";
@@ -208322,10 +208496,10 @@ server2.registerTool = ((name, config2, handler) => register(name, config2, (asy
   const what = `call ${id} ${name} ${a[0]?.case ?? "-"}`;
   const runDir = current?.runDir;
   const record2 = (line) => {
-    log3(line);
+    log4(line);
     const dir = current?.runDir ?? runDir;
     if (dir) try {
-      appendFileSync(join9(dir, "server.log"), `${(/* @__PURE__ */ new Date()).toISOString()} ${line}
+      appendFileSync(join10(dir, "server.log"), `${(/* @__PURE__ */ new Date()).toISOString()} ${line}
 `);
     } catch {
     }
@@ -208360,10 +208534,10 @@ server2.registerTool(
   async () => {
     try {
       const ctx = getContext();
-      const conventions = join9(ctx.root, ".jeyna", "CONVENTIONS.md");
+      const conventions = join10(ctx.root, ".jeyna", "CONVENTIONS.md");
       const text2 = JSON.stringify({
         ...ctx,
-        conventions: existsSync8(conventions) ? readFileSync6(conventions, "utf8") : null,
+        conventions: existsSync9(conventions) ? readFileSync7(conventions, "utf8") : null,
         flows: listFlows(ctx.root)
       });
       return { content: [{ type: "text", text: text2 }] };
@@ -208382,7 +208556,7 @@ var transport = new StdioServerTransport2();
 var send = transport.send.bind(transport);
 transport.send = (msg) => send(redactDeep(msg, currentRedactor()));
 await server2.connect(transport);
-log3("jeyna-mcp ready", process.argv.slice(2).join(" "));
+log4("jeyna-mcp ready", process.argv.slice(2).join(" "));
 /*! Bundled license information:
 
 playwright-core/lib/utilsBundle.js:

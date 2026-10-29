@@ -174,7 +174,9 @@ export function Anchor() {
   );
 }
 
-export function TopBar({ app, run, findingId, generated, connected }: { app?: string; run?: Session | null; findingId?: string; generated?: string; connected: boolean }) {
+export type Section = "playtests" | "live" | "feedback";
+
+export function TopBar({ app, section, run, findingId, feedbackId, todo, generated, connected }: { app?: string; section: Section; run?: Session | null; findingId?: string; feedbackId?: string; todo: number; generated?: string; connected: boolean }) {
   const now = useNow();
   return (
     <header className="top">
@@ -182,12 +184,25 @@ export function TopBar({ app, run, findingId, generated, connected }: { app?: st
         <Anchor />
         <span>Jeyna studio</span>
       </Link>
+      <nav aria-label="Sections" className="tabs">
+        <Link to="/" aria-current={section === "playtests" ? "page" : undefined}>Playtests</Link>
+        <Link to="/live" aria-current={section === "live" ? "page" : undefined}>Live</Link>
+        <Link to="/feedback" aria-current={section === "feedback" ? "page" : undefined}>
+          Feedback{todo ? <span className="n">{todo}</span> : null}
+        </Link>
+      </nav>
       <nav aria-label="Breadcrumb" className="crumbs">
         {app && (
           <>
             <Link to="/">{app}</Link>
             <span className="sep">/</span>
-            <Link to="/">playtests</Link>
+            {section === "feedback" && feedbackId ? <Link to="/feedback">feedback</Link> : section === "playtests" ? <Link to="/">playtests</Link> : <span className="here">{section}</span>}
+          </>
+        )}
+        {feedbackId && (
+          <>
+            <span className="sep">/</span>
+            <span className="here">{feedbackId}</span>
           </>
         )}
         {run && (

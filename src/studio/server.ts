@@ -1,6 +1,7 @@
-// Jeyna studio sidecar: watches .jeyna/playtests/, reads every run with the server's own validate.ts, keeps a
-// derived .jeyna/index.json, serves evidence as files and pushes the index over SSE to the UI in plugin/studio/.
-// Read-only: it never writes under playtests/ and never drops a file it cannot parse (the UI shows those as needs attention).
+// Jeyna studio sidecar: watches .jeyna/, reads every run with the server's own validate.ts and every feedback item
+// with feedback.ts, keeps a derived .jeyna/index.json, serves evidence and captures as files and pushes the index over
+// SSE to the UI in plugin/studio/. It never writes under playtests/ and never drops a file it cannot parse (the UI shows
+// those as needs attention). It writes only feedback items, under .jeyna/feedback/, on the UI's request (D36).
 // Usage: node jeyna-studio.mjs [--project <root>] [--port 4710]
 import { createReadStream, existsSync, readdirSync, readFileSync, renameSync, statSync, watch, writeFileSync, type FSWatcher } from "node:fs";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
@@ -13,10 +14,13 @@ import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
 import { parse as parseYaml } from "yaml";
+import { z } from "zod";
 import { Config } from "../schema.js";
+import { createFeedback, deleteFeedback, FEEDBACK_STATUSES, feedbackFile, NewFeedback, readFeedback, updateFeedback } from "../feedback.js";
 import { findProjectRoot, runDirOf, splitFront } from "../shared.js";
 import { type Finding, previousRun, readFindings, readSession, since, validateRun } from "../validate.js";
 import type { StudioFinding, StudioIndex, StudioRun } from "./types.js";
+import { liveWindow } from "./window.js";
 
 const log = (...a: unknown[]) => console.error(new Date().toISOString(), ...a);
 
@@ -107,7 +111,17 @@ function scan(): StudioIndex {
         .map((d) => scanRun(join(playtests, d)))
     : [];
   runs.sort((a, b) => (b.session?.started ?? "").localeCompare(a.session?.started ?? "") || b.id.localeCompare(a.id));
-  return { schema: 1, generated: new Date().toISOString(), root, app: readApp(), runs };
+  return { schema: 1, generated: new Date().toISOString(), root, app: readApp(), runs, feedback: readFeedback(root), window: live?.state() ?? CLOSED };
+}
+
+// --- The Live window (D37), made on first open for the app.url of that moment.
+const CLOSED = { open: false, url: null, openedAt: null, capturing: false, recording: false, draft: null };
+let live: ReturnType<typeof liveWindow> | undefined;
+let liveFor = "";
+function windowFor(app: string) {
+  if (live && liveFor !== app && !live.state().open) live = undefined; // app.url changed while the window was closed
+  liveFor = app;
+  return (live ??= liveWindow({ root, app, script: readFileSync(join(assets, "overlay.js"), "utf8"), onChange: () => changed() }));
 }
 
 let index = scan();
@@ -127,33 +141,28 @@ function writeIndex() {
 // ponytail: any event rescans every run; per-run rescans if a project ever holds hundreds of them.
 const clients = new Set<ServerResponse>();
 let timer: NodeJS.Timeout | undefined;
+function rescan() {
+  clearTimeout(timer);
+  index = scan();
+  payload = JSON.stringify(index);
+  writeIndex();
+  for (const res of clients) res.write(`event: index\ndata: ${payload}\n\n`);
+  log(`rescanned: ${index.runs.length} runs, ${index.feedback.length} feedback, ${clients.size} clients`);
+}
 function changed() {
   clearTimeout(timer);
-  timer = setTimeout(() => {
-    index = scan();
-    payload = JSON.stringify(index);
-    writeIndex();
-    for (const res of clients) res.write(`event: index\ndata: ${payload}\n\n`);
-    log(`rescanned: ${index.runs.length} runs, ${clients.size} clients`);
-  }, 150);
+  timer = setTimeout(rescan, 150);
 }
 
+// One recursive watch on .jeyna/ covers playtests/ (even before it exists) and feedback/. index.json is ours, and
+// chrome-profile/ is the Live window's, which Chrome writes to all the time: both ignored.
 let watcher: FSWatcher | undefined;
 function startWatch() {
-  if (existsSync(playtests)) {
-    watcher?.close();
-    watcher = watch(playtests, { recursive: true }, changed);
-    log("watching", playtests);
-  } else {
-    // No run yet: watch .jeyna/ until playtests/ appears, then switch to the recursive watch.
-    watcher = watch(jeyna, () => {
-      if (existsSync(playtests)) {
-        startWatch();
-        changed();
-      }
-    });
-    log("waiting for", playtests);
-  }
+  watcher = watch(jeyna, { recursive: true }, (_, file) => {
+    const f = String(file ?? "");
+    if (!f.startsWith("index.json") && !f.startsWith("chrome-profile")) changed();
+  });
+  log("watching", jeyna);
 }
 
 // --- HTTP: the API, evidence files, the built UI, and the SPA fallback.
@@ -172,8 +181,92 @@ function notFound(res: ServerResponse) {
   res.writeHead(404, { "content-type": "text/plain" }).end("not found");
 }
 
+// --- Feedback writes (D36). The sidecar listens on 127.0.0.1, but any page the developer has open can still send it a
+// request: a write must come from the studio's own page (Origin) at a local host name (Host, against DNS rebinding).
+function fromStudio(req: IncomingMessage) {
+  const host = req.headers.host ?? "";
+  return /^(localhost|127\.0\.0\.1)(:\d+)?$/.test(host) && req.headers.origin === `http://${host}`;
+}
+
+// ponytail: the whole body in memory; 40 full-tab PNG frames stay well under the cap.
+const MAX_BODY = 200 * 1024 * 1024;
+async function body(req: IncomingMessage): Promise<unknown> {
+  const chunks: Buffer[] = [];
+  let size = 0;
+  for await (const c of req) {
+    size += (c as Buffer).length;
+    if (size > MAX_BODY) throw new Error("request too large");
+    chunks.push(c as Buffer);
+  }
+  return JSON.parse(Buffer.concat(chunks).toString("utf8"));
+}
+
+const Change = z.strictObject({ status: z.enum(FEEDBACK_STATUSES).optional(), text: z.string().optional() });
+
+const WindowAction = z.discriminatedUnion("action", [
+  z.strictObject({ action: z.enum(["open", "close", "stop", "discard-draft"]) }),
+  z.strictObject({ action: z.literal("save-draft"), text: z.string(), pngs: z.array(z.string()).optional() }),
+]);
+
+// Open (or bring to the front) and close the Live window, stop its recording, and finish or let go of the unsaved
+// feedback a closed window left, from the studio page only.
+async function windowAction(req: IncomingMessage, res: ServerResponse) {
+  if (!fromStudio(req)) return json(res, 403, { error: "the window opens from the studio page only" });
+  if (req.method !== "POST") return json(res, 405, { error: "method not allowed" });
+  try {
+    const a = WindowAction.parse(await body(req));
+    const app = readApp();
+    if (!app) throw new Error("No app.url: .jeyna/jeyna.config.yaml is missing or does not parse.");
+    let saved: string | undefined;
+    if (a.action === "open") await windowFor(app.url).open();
+    else if (a.action === "stop") live?.stop();
+    else if (a.action === "close") await live?.close();
+    else if (a.action === "discard-draft") live?.discardDraft();
+    else if (a.action === "save-draft") {
+      if (!live) throw new Error("No unsaved feedback from the app window.");
+      saved = live.saveDraft(a.text, a.pngs).id;
+    }
+    rescan();
+    return json(res, 200, { window: live?.state() ?? CLOSED, ...(saved && { id: saved }) });
+  } catch (e) {
+    const msg = e instanceof z.ZodError ? "send { action: open | close | stop | discard-draft }, or { action: save-draft, text, pngs? }" : (e as Error).message.split("\n")[0];
+    log("window action refused:", msg);
+    return json(res, 400, { error: msg });
+  }
+}
+
+const json = (res: ServerResponse, status: number, data: unknown) =>
+  res.writeHead(status, { "content-type": TYPES[".json"], "cache-control": "no-cache" }).end(JSON.stringify(data));
+
+async function feedbackWrite(req: IncomingMessage, res: ServerResponse, id: string | undefined) {
+  if (!fromStudio(req)) return json(res, 403, { error: "writes come from the studio page only" });
+  if (!/^application\/json\b/.test(req.headers["content-type"] ?? "") && req.method !== "DELETE") return json(res, 415, { error: "send JSON" });
+  try {
+    let out: unknown;
+    if (req.method === "POST" && !id) out = createFeedback(root, NewFeedback.parse(await body(req)));
+    else if (req.method === "PATCH" && id) out = updateFeedback(root, id, Change.parse(await body(req)));
+    else if (req.method === "DELETE" && id) out = (deleteFeedback(root, id), { id, deleted: true });
+    else return json(res, 405, { error: "method not allowed" });
+    rescan(); // so the page's next index already holds its own write
+    return json(res, 200, out);
+  } catch (e) {
+    const msg = e instanceof z.ZodError ? e.issues.map((i) => `${i.path.join(".") || "body"}: ${i.message}`).join("; ") : (e as Error).message;
+    log("feedback write refused:", msg);
+    return json(res, 400, { error: msg });
+  }
+}
+
 function handle(req: IncomingMessage, res: ServerResponse) {
   const url = new URL(req.url ?? "/", "http://localhost");
+  const item = /^\/api\/feedback(?:\/([^/]+))?$/.exec(url.pathname);
+  if (item) return void feedbackWrite(req, res, item[1] && decodeURIComponent(item[1]));
+  if (url.pathname === "/api/window") return void windowAction(req, res);
+  const draft = /^\/api\/window\/draft\/(\d+)\.png$/.exec(url.pathname);
+  if (draft) {
+    const png = live?.draftFrame(Number(draft[1]));
+    if (!png) return notFound(res);
+    return res.writeHead(200, { "content-type": TYPES[".png"], "cache-control": "no-cache" }).end(png);
+  }
   if (req.method !== "GET" && req.method !== "HEAD") return res.writeHead(405).end();
   if (url.pathname === "/api/index") {
     return res.writeHead(200, { "content-type": TYPES[".json"], "cache-control": "no-cache" }).end(payload);
@@ -199,6 +292,14 @@ function handle(req: IncomingMessage, res: ServerResponse) {
       return notFound(res);
     }
   }
+  const capture = /^\/feedback-files\/([^/]+)$/.exec(url.pathname);
+  if (capture) {
+    try {
+      return sendFile(res, feedbackFile(root, decodeURIComponent(capture[1])));
+    } catch {
+      return notFound(res);
+    }
+  }
   const asset = basename(url.pathname);
   if (["app.js", "app.css", "anchor.svg"].includes(asset)) return sendFile(res, join(assets, asset));
   return sendFile(res, join(assets, "index.html")); // the UI routes /runs/… itself
@@ -210,7 +311,7 @@ server.listen(port, "127.0.0.1", () => {
   const { port } = server.address() as { port: number };
   writeIndex();
   startWatch();
-  console.log(`Jeyna studio: http://localhost:${port}/  (watching ${playtests})`);
+  console.log(`Jeyna studio: http://localhost:${port}/  (watching ${jeyna})`);
 });
 
 for (const sig of ["SIGINT", "SIGTERM"] as const) {

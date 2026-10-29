@@ -247,11 +247,13 @@ Todos keep exactly what was typed and chosen. Nothing about the sign-in form may
 
 ## Jeyna studio
 
-`/jeyna:studio [port]` starts the read-only viewer (default port 4710) and gives you the URL. It is a Node sidecar that watches `.jeyna/playtests/` recursively, validates every file with the same rules the server uses, renders finding bodies, and pushes one index over SSE after every change; the page follows a running playtest live, including "Since last run". It needs no install and no browser automation, edits nothing, and keeps its derived `.jeyna/index.json` gitignored.
+`/jeyna:studio [port]` starts the studio (default port 4710) and gives you the URL. It is a Node sidecar that watches `.jeyna/` recursively, validates every file with the same rules the server uses, renders finding bodies, and pushes one index over SSE after every change; the page follows a running playtest live, including "Since last run". It needs no install, never edits a playtest file, writes only feedback items under `.jeyna/feedback/`, and keeps its derived `.jeyna/index.json` gitignored.
 
 What it shows: the runs rail with status chips; per run, count chips that double as filters, the scenario x viewport matrix with verdicts and linked findings, Since last run, and the findings table with duplicates folded under the finding they duplicate (toggle "Show duplicates"). Per finding, Steps / Expected / Actual / Suggested next step, evidence at natural size, and the source file. Filters live in the URL (`?verdict=fail&severity=critical,major&kind=bug`), so a view is a link; `j` and `k` step through findings in the current filter.
 
 **Needs attention.** A finding or `session.json` that does not parse, or a check that fails, is listed in its own lane with its errors and its source. It never counts and is never dropped.
+
+**Feedback.** Show Claude what should change, on the pixels you see (D36, D37). **Live** opens your app in its own Chrome window, with this project's profile in the gitignored `.jeyna/chrome-profile/` so logins are kept. In that window, ⌥⇧S (Alt+Shift+S) freezes the page: drag over what matters, at full size, write what should change, ⌘↩. ⌥⇧R records an area while you use the app, a frame every half second for up to 20 s, then plays it back in place before you save. On a finding, **Give feedback** does the same over its evidence. Each item lands in `.jeyna/feedback/FB-<nnn>.md` with exactly the selected pixels, and Claude picks it up with `/jeyna:feedback` (what is to do, or one `FB-<nnn>`) or `/jeyna:feedback-next`. Claude marks an item `processed` when it has made the change, and `done` only on your OK.
 
 ## Jeyna's Watch
 

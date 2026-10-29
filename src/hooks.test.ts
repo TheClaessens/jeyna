@@ -19,6 +19,12 @@ test("Write into .jeyna/playtests/ is denied and points to the jeyna tools", () 
   expect(d.permissionDecisionReason).toMatch(/record_finding/);
 });
 
+test("Write or Edit in .jeyna/feedback/ is denied and points to update_status (D36)", () => {
+  const d = guard("Edit", { file_path: "/app/.jeyna/feedback/FB-001.md", old_string: "open", new_string: "done" });
+  expect(d.permissionDecision).toBe("deny");
+  expect(d.permissionDecisionReason).toMatch(/update_status/);
+});
+
 test("Edit on .jeyna/.env is denied and tells the agent the developer fills it", () => {
   const d = guard("Edit", { file_path: "/app/.jeyna/.env", old_string: "A=", new_string: "A=x" });
   expect(d.permissionDecision).toBe("deny");
