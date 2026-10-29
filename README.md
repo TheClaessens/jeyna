@@ -302,7 +302,7 @@ npm run check         # test + typecheck + scripts/check.mjs; the gate before ev
 npm run studio        # the studio against sample-app/
 ```
 
-`npm run check` fails when the committed bundles differ from a fresh build, so rebuild and commit `plugin/server/` and `plugin/studio/` with any source change. One known wart (D35): esbuild writes each bundled module's path as a comment, and those paths differ between an npm layout and a pnpm layout, so a bundle rebuilt with the other package manager differs in comments only. The v0.1.0 bundles were built from a pnpm install; reproduce them byte for byte with `pnpm install` (its lockfile is not committed and is regenerated), or accept a comments-only diff and recommit the bundle.
+`npm run check` fails when the committed bundles differ from a fresh build, so rebuild and commit `plugin/server/` and `plugin/studio/` with any source change. esbuild writes each bundled module's path into the bundle; `build.mjs` folds pnpm's `node_modules/.pnpm/<name>@<version>/node_modules/` to npm's `node_modules/`, so an npm and a pnpm install build the same bytes (D35).
 
 Repo layout:
 

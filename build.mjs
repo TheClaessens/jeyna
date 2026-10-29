@@ -1,7 +1,13 @@
 // Bundles src/server.ts into the committed plugin/server/jeyna-mcp.mjs (D13, probe P1), and the studio
 // (sidecar + UI) into plugin/studio/ (D34). Developers run neither npm nor a build: the plugin ships the output.
 import { build } from "esbuild";
-import { cpSync, mkdirSync } from "node:fs";
+import { cpSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+
+// esbuild writes each bundled module's path into the bundle, and pnpm nests packages under
+// node_modules/.pnpm/<name>@<version>/node_modules/: fold that to npm's node_modules/ so the committed
+// bundles are the same from either install (D35).
+const npmPaths = (f) =>
+  writeFileSync(f, readFileSync(f, "utf8").replaceAll(/node_modules\/\.pnpm\/[^/]+\/node_modules\//g, "node_modules/"));
 
 // A node bundle that carries playwright-core: the MCP server, and the studio sidecar for its Live window (D37).
 const withPlaywright = (entry, outfile) => build({
@@ -26,6 +32,7 @@ const withPlaywright = (entry, outfile) => build({
   },
   logLevel: "warning",
 }).then(() => {
+  npmPaths(outfile);
   const pw = `${outfile.slice(0, outfile.lastIndexOf("/"))}/pw`;
   mkdirSync(pw, { recursive: true });
   for (const f of ["package.json", "browsers.json"]) cpSync(`node_modules/playwright-core/${f}`, `${pw}/${f}`);
