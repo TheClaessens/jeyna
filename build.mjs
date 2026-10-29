@@ -41,7 +41,7 @@ const withPlaywright = (entry, outfile) => build({
 await withPlaywright("src/server.ts", "plugin/server/jeyna-mcp.mjs");
 
 // Jeyna studio (D34): the sidecar as one node bundle, the UI as one browser bundle plus its stylesheet, beside index.html
-// and the mark; and the capture script the sidecar injects into the Live window (D37), its stylesheet inlined as text.
+// the mark and the crab; and the capture script the sidecar injects into the Live window (D37), its stylesheet inlined as text.
 await withPlaywright("src/studio/server.ts", "plugin/studio/jeyna-studio.mjs");
 await build({
   entryPoints: { app: "src/studio/app/main.tsx" },
@@ -72,3 +72,4 @@ await build({
 });
 cpSync("src/studio/index.html", "plugin/studio/index.html");
 cpSync("docs/design/jeyna-anchor.svg", "plugin/studio/anchor.svg");
+cpSync("docs/design/jeyna-the-crab.svg", "plugin/studio/crab.svg");

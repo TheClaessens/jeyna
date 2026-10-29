@@ -203045,6 +203045,7 @@ function scanRun(dir) {
     errors: validateRun(dir),
     since: session ? since(session, previousRun(dir, session)) ?? null : null,
     report: existsSync4(join5(dir, "report.md")),
+    evidence: existsSync4(join5(dir, "evidence")) ? readdirSync3(join5(dir, "evidence")).sort() : [],
     findings
   };
 }
@@ -203111,6 +203112,7 @@ var TYPES = {
   ".webp": "image/webp",
   ".gif": "image/gif",
   ".svg": "image/svg+xml",
+  ".md": "text/plain; charset=utf-8",
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
   ".css": "text/css; charset=utf-8",
@@ -203215,6 +203217,14 @@ data: ${payload}
     });
     return;
   }
+  const report = /^\/runs\/([^/]+)\/report\.md$/.exec(url2.pathname);
+  if (report) {
+    try {
+      return sendFile(res, join5(runDirOf(root3, decodeURIComponent(report[1])), "report.md"));
+    } catch {
+      return notFound(res);
+    }
+  }
   const evidence = /^\/runs\/([^/]+)\/evidence\/([^/]+)$/.exec(url2.pathname);
   if (evidence) {
     const [run, file2] = [decodeURIComponent(evidence[1]), decodeURIComponent(evidence[2])];
@@ -203234,7 +203244,7 @@ data: ${payload}
     }
   }
   const asset = basename2(url2.pathname);
-  if (["app.js", "app.css", "anchor.svg"].includes(asset)) return sendFile(res, join5(assets, asset));
+  if (["app.js", "app.css", "anchor.svg", "crab.svg"].includes(asset)) return sendFile(res, join5(assets, asset));
   return sendFile(res, join5(assets, "index.html"));
 }
 var port = Number(values.port ?? process.env.JEYNA_STUDIO_PORT ?? 4710);

@@ -28,7 +28,7 @@ const run: StudioRun = {
     testers: [], cases: [{ id: "t1-390x844", scenario: "S", viewport: "390x844" }, { id: "t1-1440x900", scenario: "S", viewport: "1440x900" }],
     verdicts: [{ case: "t1-390x844", result: "fail", findings: ["PT-f-001"] }, { case: "t1-1440x900", result: "pass", findings: [] }],
   },
-  errors: [], since: null, report: true,
+  errors: [], since: null, report: true, evidence: [],
   findings: [
     finding("PT-f-001", "minor", "a11y"),
     finding("PT-f-002", "critical", "bug"),
