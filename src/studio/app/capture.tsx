@@ -7,7 +7,7 @@ import type { Rect } from "../overlay/geometry.js";
 import { cropPng, Overlay } from "../overlay/Overlay.js";
 import type { WindowState } from "../window.js";
 import { evidenceUrl } from "./run.js";
-import { CopyButton, CopyIcon } from "./ui.js";
+import { CopyButton } from "./ui.js";
 
 export const captureUrl = (file: string) => `/feedback-files/${encodeURIComponent(file)}`;
 export const prompt = (id?: string) => (id ? `/jeyna:feedback ${id}` : "/jeyna:feedback");
@@ -129,14 +129,16 @@ export function SavedToast({ id, onDone }: { id: string; onDone: () => void }) {
     <div className="toast" role="status">
       <span>Saved <Link to="/feedback/$feedbackId" params={{ feedbackId: id }}>{id}</Link></span>
       <code>{prompt(id)}</code>
-      <CopyButton text={prompt(id)} label="Copy prompt" icon={<CopyIcon />} />
-      <button type="button" className="btn icon" aria-label="Dismiss" onClick={onDone}>×</button>
+      <CopyButton text={prompt(id)} label="Copy prompt" />
+      <button type="button" className="btn ghost" aria-label="Dismiss" onClick={onDone}>×</button>
     </div>
   );
 }
 
-// A recording played back at its real timing: each frame stays up until the next one's ms.
-export function Flipbook({ frames }: { frames: { file: string; ms: number }[] }) {
+// A recording played back at its real timing on the item's stage: each frame stays up until the next one's ms.
+// Play, the time, the frame number, and a strip with one mark per frame (the current one in frost); the strip is a
+// slider for the keyboard (arrow keys, Home, End).
+export function Flipbook({ frames, alt }: { frames: { file: string; ms: number }[]; alt: string }) {
   const [i, setI] = useState(0);
   const [playing, setPlaying] = useState(false);
   useEffect(() => {
@@ -149,16 +151,32 @@ export function Flipbook({ frames }: { frames: { file: string; ms: number }[] })
     if (i >= frames.length - 1) setI(0);
     setPlaying(!playing);
   };
+  const to = (n: number) => (setPlaying(false), setI(Math.max(0, Math.min(frames.length - 1, n))));
+  const keys: Record<string, number> = { ArrowLeft: i - 1, ArrowDown: i - 1, ArrowRight: i + 1, ArrowUp: i + 1, Home: 0, End: frames.length - 1 };
+  const s = (ms: number) => `${(ms / 1000).toFixed(1)} s`;
   return (
-    <div className="flipbook">
-      <img src={captureUrl(frames[i].file)} alt={`Frame ${i + 1} of ${frames.length}`} />
+    <>
+      <img src={captureUrl(frames[i].file)} alt={`Frame ${i + 1} of ${frames.length} of ${alt}`} />
       {/* Every frame loaded up front, so playback does not stall on the network. */}
       <div hidden>{frames.map((f) => <img key={f.file} src={captureUrl(f.file)} alt="" />)}</div>
-      <div className="row">
-        <button type="button" className="btn" onClick={play}>{playing ? "Pause" : "Play"}</button>
-        <input type="range" min={0} max={frames.length - 1} value={i} onChange={(e) => (setPlaying(false), setI(Number(e.target.value)))} aria-label="Frame" />
-        <span className="mono muted">{i + 1} / {frames.length} · {(frames[i].ms / 1000).toFixed(1)} s</span>
+      <div className="scrub">
+        <button type="button" className="btn" onClick={play} aria-label={playing ? "Pause" : "Play"}>{playing ? "❚❚" : "▶"}</button>
+        <span>{s(frames[i].ms)} / {s(frames[frames.length - 1].ms)}</span>
+        <span className="grow" />
+        <span>frame {i + 1} of {frames.length}</span>
       </div>
-    </div>
+      <div
+        className="film"
+        role="slider"
+        tabIndex={0}
+        aria-label="Frame"
+        aria-valuemin={1}
+        aria-valuemax={frames.length}
+        aria-valuenow={i + 1}
+        onKeyDown={(e) => e.key in keys && (e.preventDefault(), to(keys[e.key]))}
+      >
+        {frames.map((f, n) => <i key={f.file} className={n === i ? "on" : ""} onClick={() => to(n)} />)}
+      </div>
+    </>
   );
 }

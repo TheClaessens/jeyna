@@ -1,15 +1,15 @@
 // Studio · Live (D37): the launcher of the Live window, the app in its own Chrome where the developer snaps and records
-// feedback in place. Open or bring it to the front, stop a recording, close it, the keys that work in it, and what was
-// captured since it opened.
+// feedback in place. One card holds every state (closed, opening, app down, open, recording, an unsaved draft), then
+// the keys that work in the window, and what was captured since it opened.
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import * as m from "../model.js";
 import type { StudioIndex } from "../types.js";
-import { DraftLightbox, SavedToast, windowApi } from "./capture.js";
-import { Card } from "./ui.js";
+import { captureUrl, DraftLightbox, SavedToast, windowApi } from "./capture.js";
+import { Crab, Vacant } from "./ui.js";
 
 const mac = /Mac|iPhone|iPad/.test(navigator.platform);
-const key = (k: string) => (mac ? `⌥⇧${k}` : `Alt+Shift+${k}`);
+const caps = (k: string) => (mac ? ["⌥", "⇧", k] : ["Alt", "Shift", k]);
 
 export function LiveScreen({ index }: { index: StudioIndex }) {
   const app = index.app;
@@ -40,41 +40,35 @@ export function LiveScreen({ index }: { index: StudioIndex }) {
     }
   };
 
-  if (!app) return <p className="empty-state">No app.url: .jeyna/jeyna.config.yaml is missing or does not parse.</p>;
+  if (!app) return <Vacant title="No app to open">No app.url: .jeyna/jeyna.config.yaml is missing or does not parse.</Vacant>;
   const page = w.url ? (w.url.startsWith(app.url) ? w.url.slice(app.url.replace(/\/$/, "").length) || "/" : w.url) : null;
   const captured = w.openedAt ? index.feedback.filter((i) => i.front?.source === "live" && i.front.created >= w.openedAt!).reverse() : [];
 
   return (
-    <div className="center">
-      <main className="feedback live">
-        <section className="head">
-          <div className="title"><h1>Live</h1></div>
-          <p className="summary">Use {app.name} in its own Chrome window and snap or record feedback right where you see it. It lands in <Link to="/feedback">Feedback</Link>.</p>
-        </section>
-
-        {w.draft && (
-          <Card className="launcher draft">
-            <div className="row">
+    <>
+      <section className="launch">
+        <Crab />
+        <div className="words">
+          <h1 className="h1" style={{ fontSize: 52 }}>Take the helm.</h1>
+          <p className="lead">Open {app.name} in its own Chrome window. Snap or record right where you see something; it lands in <Link to="/feedback">Feedback</Link>.</p>
+          {w.draft && (
+            <div className="draft">
               <span>
                 The app window closed with unsaved feedback: {w.draft.capture === "snap" ? "a snap" : `a recording of ${w.draft.frames} frames`}
                 {w.draft.text.trim() && <>, “<b>{w.draft.text.trim().split("\n")[0]}</b>”</>}.
               </span>
-              <span className="grow" />
-              <button type="button" className="btn primary" onClick={() => setFinishing(true)}>Finish it here</button>
-              <button type="button" className="btn" onClick={act("discard-draft")} disabled={busy}>Discard</button>
+              <div className="acts">
+                <button type="button" className="btn primary" onClick={() => setFinishing(true)}>Finish it here</button>
+                <button type="button" className="btn" onClick={act("discard-draft")} disabled={busy}>Discard</button>
+              </div>
             </div>
-          </Card>
-        )}
-        {finishing && w.draft && <DraftLightbox draft={w.draft} onClose={() => setFinishing(false)} onSaved={setSaved} />}
-        {saved && <SavedToast id={saved} onDone={() => setSaved(undefined)} />}
-
-        <Card className="launcher">
+          )}
           {w.open ? (
-            <div className="row">
-              <span className={`dot ${w.recording ? "rec" : "on"}`} aria-hidden="true" />
-              <span>
+            <div className="acts">
+              <span className="state">
+                <span className={`lamp ${w.recording ? "rec" : ""}`} aria-hidden="true" />
                 {w.recording ? "Recording in the app window" : "App window open"}{page && <> · <span className="mono">{page}</span></>}
-                {w.capturing && <span className="muted"> · capturing</span>}
+                {w.capturing && <span className="meta"> · capturing</span>}
               </span>
               <span className="grow" />
               {w.recording && <button type="button" className="btn primary" onClick={act("stop")} disabled={busy}>Stop recording</button>}
@@ -82,46 +76,53 @@ export function LiveScreen({ index }: { index: StudioIndex }) {
               <button type="button" className="btn" onClick={act("close")} disabled={busy}>Close</button>
             </div>
           ) : up === false ? (
-            <div className="row">
+            <div className="acts">
               <span>Nothing answers at <span className="mono">{app.url}</span>. Start your app, then try again.</span>
-              <span className="grow" />
-              <button type="button" className="btn" onClick={probe}>Try again</button>
-              <button type="button" className="btn" onClick={act("open")} disabled={busy}>Open anyway</button>
+              <button type="button" className="btn primary big" onClick={probe}>Try again</button>
+              <button type="button" className="btn big" onClick={act("open")} disabled={busy}>Open anyway</button>
             </div>
           ) : (
-            <div className="row">
-              <button type="button" className="btn primary" onClick={act("open")} disabled={busy || up === null}>{busy ? "Opening…" : "Open app window"}</button>
-              <span className="mono">{app.url}</span>
+            <div className="acts">
+              <button type="button" className="btn primary big" onClick={act("open")} disabled={busy || up === null}>{busy ? "Opening…" : "Open app window"}</button>
+              <span className="mono meta">{app.url}</span>
             </div>
           )}
-          <p className="muted">Chrome, with this project's own profile in <span className="mono">.jeyna/chrome-profile/</span>, so logins are kept between sessions.</p>
           {error && <p className="error" role="alert">{error}</p>}
-        </Card>
+        </div>
+      </section>
+      {finishing && w.draft && <DraftLightbox draft={w.draft} onClose={() => setFinishing(false)} onSaved={setSaved} />}
+      {saved && <SavedToast id={saved} onDone={() => setSaved(undefined)} />}
 
-        <Card title="In the app window">
-          <dl className="keys">
-            <dt><kbd>{key("S")}</kbd></dt><dd>Snap: freeze the window, select what matters, write what should change. Or <b>Snap</b> on Jeyna's pill, bottom right.</dd>
-            <dt><kbd>{key("R")}</kbd></dt><dd>Record: choose an area, then use the app; a frame every half second, up to 20 s. {key("R")} again or Stop ends it, and you review it in place before saving. Or <b>Record</b> on the pill.</dd>
-            <dt><kbd>A</kbd></dt><dd>Select the whole window</dd>
-            <dt><kbd>{mac ? "⌘↩" : "Ctrl+↩"}</kbd></dt><dd>Save</dd>
-            <dt><kbd>Esc</kbd></dt><dd>Cancel; it asks first if you wrote something</dd>
-          </dl>
-        </Card>
+      <section aria-labelledby="keys-h">
+        <h2 className="h2" id="keys-h">In the app window</h2>
+        <div className="keys">
+          <div className="key"><span className="cap">{caps("S").map((k) => <span key={k}>{k}</span>)}</span><b>Snap</b><small>Freeze, select, write what should change</small></div>
+          <div className="key"><span className="cap">{caps("R").map((k) => <span key={k}>{k}</span>)}</span><b>Record</b><small>A frame every half second, up to 20 s</small></div>
+          <div className="key">
+            <span className="cap">{(mac ? ["⌘", "↩"] : ["Ctrl", "↩"]).map((k) => <span key={k}>{k}</span>)}</span>
+            <b>Save</b>
+            <small>Lands in Feedback · <kbd>A</kbd> selects the whole window · <kbd>Esc</kbd> cancels</small>
+          </div>
+        </div>
+      </section>
 
-        {!!captured.length && (
-          <Card title="Captured in this window" pad={false} className="fblist">
+      {!!captured.length && (
+        <section aria-labelledby="captured-h">
+          <h2 className="h2" id="captured-h"><span className="px">{captured.length}</span>captured in this window</h2>
+          <div className="rows">
             {captured.map((i) => (
-              <Link key={i.id} to="/feedback/$feedbackId" params={{ feedbackId: i.id }} className="row">
-                <span className="id">{i.id}</span>
-                <span className="ttl">
+              <Link key={i.id} to="/feedback/$feedbackId" params={{ feedbackId: i.id }} className="fb row">
+                <span className="shot"><img src={captureUrl(i.front!.frames[0].file)} alt="" /></span>
+                <span className="body">
                   <span className="t">{i.text.split("\n")[0]}</span>
-                  <span className="where">{i.front!.url ?? "Live"} · {m.dateTime(i.front!.created)}</span>
+                  <span className="m"><span className="mono">{i.id}</span><span>{i.front!.url ?? "Live"}</span><span>{m.hm(i.front!.created)}</span></span>
                 </span>
               </Link>
             ))}
-          </Card>
-        )}
-      </main>
-    </div>
+          </div>
+        </section>
+      )}
+      <p className="meta">Chrome uses this project’s own profile in <span className="mono">.jeyna/chrome-profile/</span>, so logins stay between sessions.</p>
+    </>
   );
 }

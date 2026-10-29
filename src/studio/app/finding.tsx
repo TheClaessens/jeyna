@@ -1,45 +1,41 @@
-// Studio · Finding: chips row, Steps / Expected / Actual, evidence at natural size, Suggested next step, the duplicates
-// of this finding, the source (frontmatter, or the whole file), Copy path and Copy id, j / k / esc. Give feedback on an
-// evidence image opens it full size to select a region and write what should change (D36, D37).
+// Studio · Finding: the case file. Expected and Actual are the hero, then the steps to reproduce, beside or above the
+// screenshot on its stage; the other findings of the same problem; the hand-off to Claude with the details behind it.
+// j / k step through the problems in the run screen's order, Esc goes back. Give feedback on a screenshot opens it
+// full size to select a region and write what should change (D36, D37).
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import * as m from "../model.js";
 import type { StudioFinding, StudioIndex, StudioRun } from "../types.js";
 import { EvidenceLightbox, SavedToast } from "./capture.js";
 import { Attention, evidenceUrl, filePath } from "./run.js";
-import { Arrow, Card, CopyButton, CopyIcon, Glyph, IdIcon, KindChip, Severity, StatusChip } from "./ui.js";
+import { Check, CopyButton, Cross, Sev } from "./ui.js";
 
-type Search = m.Filters & { view?: "source" };
-
-const Html = ({ html, className }: { html?: string; className?: string }) => (
-  <div className={`prose ${className ?? ""}`} dangerouslySetInnerHTML={{ __html: html ?? "" }} />
+const Html = ({ html, className = "" }: { html?: string; className?: string }) => (
+  <div className={`prose ${className}`} dangerouslySetInnerHTML={{ __html: html ?? "" }} />
 );
+const none = (html?: string) => !html || /^<p>None given\.?<\/p>$/.test(html.trim());
 
 export function FindingScreen({ index, run, finding }: { index: StudioIndex; run: StudioRun; finding: StudioFinding }) {
-  const search = useSearch({ strict: false }) as Search;
+  const { view } = useSearch({ strict: false }) as { view?: "source" };
   const navigate = useNavigate();
-  const [whole, setWhole] = useState(false);
   // Fixed when opened, so the item names this finding even if the page behind changes.
   const [lightbox, setLightbox] = useState<{ run: string; evidence: string; finding: string }>();
   const [saved, setSaved] = useState<string>();
-  const { view, ...filters } = search;
 
-  // Position among the rows the run screen shows with the same filters; a folded duplicate steps from its parent.
-  const rows = m.filterRows(m.rows(run), run.session, filters);
-  const own = rows.findIndex((r) => r.finding.id === finding.id);
-  const parent = own < 0 ? rows.findIndex((r) => r.duplicates.some((d) => d.id === finding.id)) : -1;
-  const base = own >= 0 ? own : parent;
-  const prev = base > 0 ? rows[base - 1] : undefined;
-  const next = base >= 0 ? rows[base + 1] : undefined;
-  const go = (id: string) => navigate({ to: "/runs/$runId/findings/$findingId", params: { runId: run.id, findingId: id }, search: (s: Search) => s } as never);
-  const back = () => navigate({ to: "/runs/$runId", params: { runId: run.id }, search: () => filters } as never);
+  const problems = m.problems(run);
+  const at = m.problemOf(problems, finding.id);
+  const prev = at > 0 ? problems[at - 1].lead : undefined;
+  const next = at >= 0 ? problems[at + 1]?.lead : undefined;
+  const go = (id: string) => navigate({ to: "/runs/$runId/findings/$findingId", params: { runId: run.id, findingId: id } });
+  const back = () => navigate({ to: "/runs/$runId", params: { runId: run.id } });
+  const setView = (v?: "source") => navigate({ to: ".", search: v ? { view: v } : {}, replace: true } as never);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement | null;
-      if (e.metaKey || e.ctrlKey || e.altKey || t?.tagName === "INPUT" || t?.tagName === "TEXTAREA" || document.querySelector("dialog[open]")) return;
-      if (e.key === "j" && next) go(next.finding.id);
-      else if (e.key === "k" && prev) go(prev.finding.id);
+      if (e.metaKey || e.ctrlKey || e.altKey || /^(INPUT|TEXTAREA|SELECT)$/.test(t?.tagName ?? "") || document.querySelector("dialog[open]")) return;
+      if (e.key === "j" && next) go(next.id);
+      else if (e.key === "k" && prev) go(prev.id);
       else if (e.key === "Escape") back();
       else return;
       e.preventDefault();
@@ -49,146 +45,147 @@ export function FindingScreen({ index, run, finding }: { index: StudioIndex; run
   });
 
   const fr = finding.front;
-  const path = filePath(index, run, finding.path);
-  const frontmatter = /^---\n[\s\S]*?\n---/.exec(finding.source)?.[0] ?? "";
-  const dupRows = fr ? run.findings.filter(m.parsed).filter((d) => d.front.status === "duplicate" && d.front.of === finding.id).sort(m.bySeverity) : [];
+  const s = run.session;
   const attention: StudioRun = { ...run, errors: run.errors.filter((e) => e.startsWith(`${finding.path}: `)) };
+  const others = at >= 0 ? problems[at].members.filter((f) => f.id !== finding.id) : [];
+  const vp = fr && m.viewport(fr.viewport);
+
+  const nav = (
+    <nav className="fnav" aria-label="Finding navigation">
+      <Link to="/runs/$runId" params={{ runId: run.id }} className="back">← {s ? `${m.flowName(s)} · ${m.day(s.started)}, ${m.hm(s.started)}` : run.id}</Link>
+      <span className="grow" />
+      <span className="meta">{at >= 0 ? `problem ${at + 1} of ${problems.length}` : "not in a problem"}</span>
+      <button type="button" className="btn" aria-label="Previous problem (k)" aria-disabled={!prev} onClick={() => prev && go(prev.id)}>↑</button>
+      <button type="button" className="btn" aria-label="Next problem (j)" aria-disabled={!next} onClick={() => next && go(next.id)}>
+        {next && <span className="mono">{next.id}</span>} ↓
+      </button>
+    </nav>
+  );
+
+  const head = (
+    <section className="fhead">
+      {fr && vp && (
+        <div className="row">
+          <Sev severity={fr.severity} />
+          <span className="tag">{fr.kind}</span>
+          <span className="mono">{finding.id}</span>
+          <span>{fr.scenario} · {vp.label.toLowerCase()} {vp.size} · <span className="mono">{fr.route}</span></span>
+          {fr.status !== "open" && (
+            <span>
+              {fr.status}
+              {fr.status === "duplicate" && fr.of && <> of <Link to="/runs/$runId/findings/$findingId" params={{ runId: run.id, findingId: fr.of }} className="mono link">{fr.of}</Link></>}
+            </span>
+          )}
+        </div>
+      )}
+      <h1 className="h1">{finding.title ?? finding.id}</h1>
+    </section>
+  );
+
+  if (view === "source" || !fr || !vp) {
+    return (
+      <>
+        {nav}
+        {head}
+        <Attention run={attention} />
+        <pre className="source">{finding.source}</pre>
+        {fr && <p><button type="button" className="textbtn" onClick={() => setView()}>View rendered</button></p>}
+      </>
+    );
+  }
+
+  const ea = (
+    <div className={`ea ${vp.tall ? "" : "cols"}`}>
+      <div className="box expected"><h3><Check />Expected</h3><Html html={finding.sections.Expected} /></div>
+      <div className="box actual"><h3><Cross />Actual</h3><Html html={finding.sections.Actual} /></div>
+    </div>
+  );
+  const steps = (
+    <div className={`steps ${vp.tall ? "" : "across"}`}>
+      <h3>Steps to reproduce</h3>
+      <Html html={finding.sections.Steps} />
+    </div>
+  );
+  const stage = (
+    <figure className={`stage ${vp.tall ? "" : "wide"}`}>
+      {fr.evidence.length ? (
+        fr.evidence.map((e) => (
+          <div key={e} className="shot">
+            <a href={evidenceUrl(run.id, e)} target="_blank" rel="noreferrer" style={{ width: vp.tall ? 340 : "100%", maxWidth: "100%" }}>
+              <img src={evidenceUrl(run.id, e)} alt={e} style={{ width: "100%" }} />
+            </a>
+            <figcaption className="cap"><span>{e}</span><span>{vp.size}</span></figcaption>
+            <button type="button" className="btn" style={vp.tall ? { alignSelf: "stretch", justifyContent: "center" } : undefined} onClick={() => setLightbox({ run: run.id, evidence: e, finding: finding.id })}>
+              Give feedback on this screenshot
+            </button>
+          </div>
+        ))
+      ) : (
+        <figcaption className="cap"><span>No screenshot.</span></figcaption>
+      )}
+    </figure>
+  );
+  const seen = !!others.length && (
+    <div className="seen">
+      <h3>{fr.status === "duplicate" ? "Same problem" : "Also seen in"}</h3>
+      {others.map((d) => (
+        <Link key={d.id} to="/runs/$runId/findings/$findingId" params={{ runId: run.id, findingId: d.id }}>
+          <span className="mono">{d.id}</span>
+          <span>{d.front.scenario}</span>
+          <span className="grow" />
+          <span className="meta">{m.viewport(d.front.viewport).label.toLowerCase()}</span>
+        </Link>
+      ))}
+    </div>
+  );
+  const hand = (
+    <div className="hand">
+      {!none(finding.sections["Suggested next step"]) && (
+        <div className="next"><h3>Suggested next step</h3><Html html={finding.sections["Suggested next step"]} /></div>
+      )}
+      <CopyButton text={filePath(index, run, finding.path)} label="Copy for Claude" className="primary" />
+      <span className="meta">pastes <span className="mono">.jeyna/playtests/…/{finding.id}.md</span>; Claude fixes, a retest closes it</span>
+      <span className="grow" />
+      <details className="more">
+        <summary>Details</summary>
+        <dl className="kv">
+          <dt>Case</dt><dd>{fr.case}</dd>
+          <dt>Browser</dt><dd>{fr.browser}</dd>
+          <dt>Build</dt><dd>{fr.build}</dd>
+          {fr.author && <><dt>Tester</dt><dd>{fr.author}</dd></>}
+          <dt>Created</dt><dd title={fr.created}>{m.dateTime(fr.created)}</dd>
+          <dt>Status</dt><dd>{fr.status}{fr.of ? ` of ${fr.of}` : ""} · changes through update_status</dd>
+          {index.app && <><dt>Route</dt><dd><a href={`${index.app.url.replace(/\/+$/, "")}${fr.route}`}>{fr.route}</a></dd></>}
+        </dl>
+        <code className="upd">update_status {`{id: "${finding.id}", run: "${run.id}", status: "fixed"}`}</code>
+        <p style={{ marginTop: 10 }}><button type="button" className="textbtn" onClick={() => setView("source")}>View source</button></p>
+      </details>
+    </div>
+  );
 
   return (
-    <div className="center">
-      <main className="finding">
-        <nav aria-label="Finding navigation" className="fnav">
-          <Link to="/runs/$runId" params={{ runId: run.id }} search={() => filters} className="back">
-            <Arrow dir="left" />Run <span className="mono">{run.id}</span>
-          </Link>
-          <div className="steps">
-            <span className="pos">{own >= 0 ? `${own + 1} of ${rows.length}` : parent >= 0 ? `duplicate of ${rows[parent].finding.id}` : "outside the current filter"}</span>
-            <button type="button" className="btn" aria-disabled={!prev} onClick={() => prev && go(prev.finding.id)}>
-              <Arrow dir="left" />{prev ? <span className="mono" style={{ fontSize: 13 }}>{prev.finding.id}</span> : "Previous"}
-            </button>
-            <button type="button" className="btn" aria-disabled={!next} onClick={() => next && go(next.finding.id)}>
-              {next ? <span className="mono" style={{ fontSize: 13 }}>{next.finding.id}</span> : "Next"}<Arrow />
-            </button>
-          </div>
-        </nav>
-
-        <section className="fhead">
-          <span className="id">{finding.id}</span>
-          <h1>{finding.title ?? finding.id}</h1>
-          {fr && (
-            <div className="chips">
-              <span className={`chip ${fr.severity}`}><Glyph kind="severity" />{fr.severity}</span>
-              <KindChip kind={fr.kind} sm={false} />
-              <StatusChip front={fr} runId={run.id} sm={false} />
-              <span className="vr" aria-hidden="true" />
-              <span className="chip meta">scenario <b>{fr.scenario}</b></span>
-              <span className="chip meta">viewport <b className="mono">{fr.viewport}</b></span>
-              <span className="chip meta">route {index.app ? <a className="mono" href={`${index.app.url.replace(/\/+$/, "")}${fr.route}`}>{fr.route}</a> : <b className="mono">{fr.route}</b>}</span>
-              <span className="chip meta">case <b className="mono">{fr.case}</b></span>
-              <span className="chip meta">browser <b className="mono">{fr.browser}</b></span>
-              <span className="chip meta">build <b className="mono">{fr.build}</b></span>
-              {fr.author && <span className="chip meta">author <b className="mono">{fr.author}</b></span>}
-              <span className="chip meta">created <b className="mono" title={fr.created}>{m.dateTime(fr.created)}</b></span>
-            </div>
-          )}
+    <>
+      {nav}
+      {head}
+      <Attention run={attention} />
+      {vp.tall ? (
+        <section className="case">
+          {stage}
+          <div className="repro">{ea}{steps}{seen}{hand}</div>
         </section>
-
-        <Attention run={attention} />
-
-        <section className="tools">
-          <div className="row">
-            <div role="group" aria-label="View" className="seg">
-              <button type="button" aria-pressed={view !== "source"} onClick={() => navigate({ to: ".", search: (s: Search) => ({ ...s, view: undefined }), replace: true } as never)}>Rendered</button>
-              <button type="button" aria-pressed={view === "source"} onClick={() => navigate({ to: ".", search: (s: Search) => ({ ...s, view: "source" }), replace: true } as never)}>Source</button>
-            </div>
-            <CopyButton text={path} label="Copy path" icon={<CopyIcon />} />
-            <CopyButton text={finding.id} label="Copy id" icon={<IdIcon />} />
-            <code>update_status {`{id: "${finding.id}", run: "${run.id}", status: "fixed"}`}</code>
-          </div>
-          {fr && (
-            <div className="legend">
-              <span className="label">Status after retest</span>
-              <span className="chip open sm">open</span>
-              <span className="dup-status">duplicate → <span className="mono">PT-…</span></span>
-              <span className="chip fixed outline sm"><Glyph kind="fixed" size={12} />fixed</span>
-              <span className="chip wontfix outline sm"><Glyph kind="wontfix" size={12} />wontfix</span>
-              <span>set by update_status; only status ever changes in a finding file</span>
-            </div>
-          )}
-        </section>
-
-        {view === "source" || !fr ? (
-          <Card className="source" title="Source" sub={<span className="mono">{finding.path} · whole file</span>}>
-            <pre>{finding.source}</pre>
-          </Card>
-        ) : (
-          <>
-            <section className="twocol">
-              <Card title="Steps" className="steps">
-                <Html html={finding.sections.Steps} />
-              </Card>
-              <div className="stack">
-                <Card title={<span className="verdict-h pass" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><Glyph kind="pass" size={16} /><span>Expected</span></span>}>
-                  <Html html={finding.sections.Expected} />
-                </Card>
-                <Card title={<span className="verdict-h fail" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><Glyph kind="fail" size={16} /><span>Actual</span></span>}>
-                  <Html html={finding.sections.Actual} />
-                </Card>
-              </div>
-            </section>
-
-            <Card title="Evidence" className="evidence">
-              {fr.evidence.length ? (
-                fr.evidence.map((e) => (
-                  <figure key={e}>
-                    <a href={evidenceUrl(run.id, e)} target="_blank" rel="noreferrer"><img src={evidenceUrl(run.id, e)} alt={e} /></a>
-                    <figcaption>
-                      <span>{e}</span><span className="dot">·</span><span className="vp">{fr.viewport}</span>
-                      <button type="button" className="btn sm" onClick={() => setLightbox({ run: run.id, evidence: e, finding: finding.id })}>Give feedback</button>
-                    </figcaption>
-                  </figure>
-                ))
-              ) : (
-                <p className="muted">None.</p>
-              )}
-            </Card>
-
-            <Card title="Suggested next step">
-              <Html html={finding.sections["Suggested next step"]} className={/None given\./.test(finding.sections["Suggested next step"] ?? "") ? "muted" : ""} />
-            </Card>
-
-            {!!dupRows.length && (
-              <Card className="duprows" pad={false} title="Duplicates of this finding" sub={`${dupRows.length} · each keeps its own severity in its file`}>
-                {dupRows.map((d) => (
-                  <div key={d.id} className="row">
-                    <Severity severity={d.front.severity} />
-                    <KindChip kind={d.front.kind} />
-                    <Link to="/runs/$runId/findings/$findingId" params={{ runId: run.id, findingId: d.id }} search={(s) => s} className="id">{d.id}</Link>
-                    <div className="ttl">
-                      <span className="t">{d.title}</span>
-                      <span className="where">{d.front.route} · {d.front.scenario} · {d.front.viewport} · {m.clock(d.front.created)}</span>
-                    </div>
-                  </div>
-                ))}
-              </Card>
-            )}
-
-            <Card className="source" title="Source" sub={<span className="mono">{finding.path} · {whole ? "whole file" : "frontmatter"}</span>}>
-              <pre>{whole ? finding.source : frontmatter}</pre>
-              <button type="button" className="more" onClick={() => setWhole(!whole)}>{whole ? "Show the frontmatter only" : "Show the whole file"}</button>
-            </Card>
-          </>
-        )}
-
-        {lightbox && <EvidenceLightbox {...lightbox} onClose={() => setLightbox(undefined)} onSaved={setSaved} />}
-        {saved && <SavedToast id={saved} onDone={() => setSaved(undefined)} />}
-
-        <footer className="foot-keys">
-          <span><kbd>j</kbd> / <kbd>k</kbd> next and previous finding</span>
-          <span>·</span>
-          <span><kbd>esc</kbd> back to the run</span>
-        </footer>
-      </main>
-    </div>
+      ) : (
+        <>
+          <section className="repro">{ea}{steps}</section>
+          {stage}
+          <section className="lower">{seen || <span />}{hand}</section>
+        </>
+      )}
+      <footer className="meta keysfoot">
+        <span><kbd>j</kbd> <kbd>k</kbd> next, previous problem</span>
+        <span><kbd>esc</kbd> back to the run</span>
+      </footer>
+      {lightbox && <EvidenceLightbox {...lightbox} onClose={() => setLightbox(undefined)} onSaved={setSaved} />}
+      {saved && <SavedToast id={saved} onDone={() => setSaved(undefined)} />}
+    </>
   );
 }
