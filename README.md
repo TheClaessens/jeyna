@@ -7,7 +7,7 @@
 <p align="center">Agentic playtesting for Claude Code</p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-0.1.0-1F5FA8" alt="version 0.1.0">
+  <img src="https://img.shields.io/badge/version-0.2.0-1F5FA8" alt="version 0.2.0">
   <img src="https://img.shields.io/badge/node-%E2%89%A5%2020-0E1F38" alt="Node 20 or later">
   <img src="https://img.shields.io/badge/install-committed%20bundles%2C%20no%20npm-0E1F38" alt="installs committed bundles, no npm">
   <img src="https://img.shields.io/badge/Claude%20Code-plugin-D97757" alt="Claude Code plugin">

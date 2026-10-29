@@ -1,6 +1,6 @@
 {
   "name": "jeyna",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Playtest a web app with Claude Code subagents, and turn feedback captured on it into changes",
   "author": {
     "name": "Thomas Claessens"
