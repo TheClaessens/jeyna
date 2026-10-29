@@ -40,6 +40,7 @@ The one glossary for Jeyna. Use these words in docs, code, issues and agent prom
 - **Studio**: the viewer of `.jeyna/playtests/` and the place feedback is captured, shipped in the plugin and started by `/jeyna:studio`. A sidecar watches the folder, validates every file with the server's rules and pushes an index to a browser page; it edits nothing outside `.jeyna/feedback/`. (D34, D36)
 - **Needs attention**: the studio's lane for what `validate` reports: a finding or session file that does not parse, or a check that fails. The file stays listed with its errors and its source; nothing is dropped. (D34)
 - **Fold**: in the studio, a finding with status `duplicate` sits under the finding its `of` names and leaves the counts. One whose target is not in the run stands on its own. (D34)
+- **Problem**: in the studio's run screen, a finding that stands on its own with every finding folded under it, shown as one card. It takes the highest severity of its members and lists the cases they were seen in; fixed and wontfix problems sort last. (D38)
 
 ## Feedback
 
