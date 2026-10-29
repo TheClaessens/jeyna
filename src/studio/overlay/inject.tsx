@@ -3,7 +3,7 @@
 // root and the top layer, so the app's CSS and z-index never reach them. It talks to the sidecar only through the
 // __jeyna binding, which answers on the app's origin, in the main frame; anywhere else this script stays out of the way.
 // The sidecar holds a recording, so after a navigation the new document picks it up where it is.
-import { type ReactNode, useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { MAX_FRAMES } from "../../recording.js";
 import { placeHud, type Rect, toImage } from "./geometry.js";
@@ -223,13 +223,19 @@ function Capture() {
   );
 }
 
-// The frozen frame, modal over the app: the app is inert and gets no keys while it is up.
+// The frozen frame, modal over the app: the app is inert and gets no keys while it is up. The overlay mounts once the
+// dialog is open, so it measures, places and focuses its panel in the same task: mounted in a closed dialog, its panel
+// measured nothing, showed a frame later, and keys typed in that frame were lost.
 function Frozen({ children }: { children: ReactNode }) {
   const dialog = useRef<HTMLDialogElement>(null);
-  useEffect(() => dialog.current?.showModal(), []);
+  const [open, setOpen] = useState(false);
+  useLayoutEffect(() => {
+    dialog.current?.showModal();
+    setOpen(true);
+  }, []);
   return (
     <dialog ref={dialog} className="jw-freeze" aria-label="New feedback" onCancel={(e) => e.preventDefault()}>
-      {children}
+      {open && children}
     </dialog>
   );
 }
