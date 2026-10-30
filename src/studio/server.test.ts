@@ -138,6 +138,8 @@ test("the index reads the run with the server's validation, sections rendered, a
   expect(run.findings[0].sections.Steps).toBe("<ol>\n<li>Open /login</li>\n</ol>");
   expect(run.findings[0].sections.Evidence).toContain('src="/runs/2026-10-17-todos/evidence/t1-390x844-1-login.png"');
   expect(run.since).toBeNull();
+  expect(run.evidence).toEqual(["t1-390x844-1-login.png"]); // the contact sheet picks each case's last screenshot
+  expect(run.report).toBe(false);
 });
 
 test("a finding written mid-run arrives over SSE; a hand-broken file is kept with its errors, not dropped", async () => {
@@ -166,6 +168,17 @@ test("evidence is served from the run folder and nothing outside it", async () =
   const page = await fetch(`${url}/runs/2026-10-17-todos/findings/PT-todos-001`);
   expect(page.headers.get("content-type")).toContain("text/html");
   expect(await page.text()).toContain('<script type="module" src="/app.js">');
+  // The crab ships beside the mark (empty and idle moments).
+  const crab = await fetch(`${url}/crab.svg`);
+  expect(crab.headers.get("content-type")).toBe("image/svg+xml");
+  expect(await crab.text()).toContain("Jeyna the Crab");
+  // report.md, when the run has one, as text; none is a 404, not the page.
+  expect((await fetch(`${url}/runs/2026-10-17-todos/report.md`)).status).toBe(404);
+  writeFileSync(join(runDir, "report.md"), "# Report\n");
+  const report = await fetch(`${url}/runs/2026-10-17-todos/report.md`);
+  expect(report.headers.get("content-type")).toBe("text/plain; charset=utf-8");
+  expect(await report.text()).toBe("# Report\n");
+  rmSync(join(runDir, "report.md"));
 });
 
 test("feedback: the studio page creates, edits and deletes items; the index carries them; other origins are refused (D36)", async () => {

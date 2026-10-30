@@ -1,255 +1,108 @@
-// Shared pieces: the glyph set (one, nowhere redrawn), the chip in its two sizes, and the top bar.
+// The shell and the shared marks: the sidebar (mark, project, sections, runs with their pips), the severity diamond,
+// the verdict dot, the crab, and the copy button.
 import { Link } from "@tanstack/react-router";
 import { type ReactNode, useState } from "react";
-import type { Session } from "../../schema.js";
 import type { FindingFront } from "../../validate.js";
-import { ago } from "../model.js";
-import { useNow } from "./store.js";
-
-export type Verdict = Session["verdicts"][number]["result"];
-export type GlyphKind = Verdict | "none" | "fixed" | "wontfix" | "running" | "aborted" | "severity";
-
-const ink = "#F3F6F9"; // the ground colour, for marks drawn on a filled glyph
-export function Glyph({ kind, size = 14 }: { kind: GlyphKind; size?: number }) {
-  const p = { width: size, height: size, viewBox: "0 0 24 24", "aria-hidden": true as const };
-  switch (kind) {
-    case "pass":
-    case "fixed":
-      return (
-        <svg {...p}>
-          <circle cx="12" cy="12" r="10" fill="currentColor" />
-          <path d="M8 12.5l2.5 2.5L16 9.5" fill="none" stroke={ink} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      );
-    case "fail":
-      return (
-        <svg {...p}>
-          <circle cx="12" cy="12" r="10" fill="currentColor" />
-          <path d="M9 9l6 6M15 9l-6 6" fill="none" stroke={ink} strokeWidth="2.5" strokeLinecap="round" />
-        </svg>
-      );
-    case "blocked":
-      return (
-        <svg {...p}>
-          <path d="M12 3L22 20H2z" fill="currentColor" />
-          <path d="M12 10v4M12 17v.5" fill="none" stroke={ink} strokeWidth="2.5" strokeLinecap="round" />
-        </svg>
-      );
-    case "skipped":
-      return (
-        <svg {...p}>
-          <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="2.5" strokeDasharray="4 3" />
-        </svg>
-      );
-    case "wontfix":
-    case "aborted":
-      return (
-        <svg {...p} fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-          <circle cx="12" cy="12" r="9" />
-          <path d="M7 17L17 7" />
-        </svg>
-      );
-    case "running":
-      return (
-        <svg {...p}>
-          <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="2.5" />
-          <circle cx="12" cy="12" r="3.5" fill="currentColor" />
-        </svg>
-      );
-    case "severity":
-      return (
-        <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
-          <rect width="10" height="10" rx="1" fill="currentColor" />
-        </svg>
-      );
-    default:
-      return (
-        <svg {...p}>
-          <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="2.5" />
-        </svg>
-      );
-  }
-}
-
-export const Arrow = ({ dir = "right", color }: { dir?: "left" | "right"; color?: string }) => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={color ?? "currentColor"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    {dir === "right" ? (
-      <>
-        <path d="M5 12h14" />
-        <path d="M13 6l6 6-6 6" />
-      </>
-    ) : (
-      <>
-        <path d="M19 12H5" />
-        <path d="M11 18l-6-6 6-6" />
-      </>
-    )}
-  </svg>
-);
-export const DupMark = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M6 4v8h12" />
-    <path d="M14 8l4 4-4 4" />
-  </svg>
-);
-export const CopyIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <rect x="9" y="9" width="13" height="13" rx="2" />
-    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-  </svg>
-);
-export const IdIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-    <path d="M4 7V4h16v3" />
-    <path d="M9 20h6" />
-    <path d="M12 4v16" />
-  </svg>
-);
-
-// Verdict or run-status chip: glyph plus word, always both. `sm` is the 22 px size for rails, matrix notes and sub-rows.
-export function VerdictChip({ kind, label, sm }: { kind: GlyphKind; label?: string; sm?: boolean }) {
-  const outline = kind === "none";
-  return (
-    <span className={`chip ${kind} ${sm ? "sm" : ""} ${outline ? "outline" : ""}`}>
-      <Glyph kind={kind} size={sm ? 12 : 14} />
-      {label ?? (kind === "none" ? "no verdict" : kind)}
-    </span>
-  );
-}
-
-export const RunStatusChip = ({ status, sm }: { status: Session["status"]; sm?: boolean }) => (
-  <VerdictChip kind={status === "done" ? "pass" : status} label={status} sm={sm} />
-);
-
-// Severity: colour and a square, no fill (the heat ramp). As a chip only in the counts row and the finding header.
-export const Severity = ({ severity }: { severity: FindingFront["severity"] }) => (
-  <span className={`sev ${severity}`}>
-    <Glyph kind="severity" />
-    {severity}
-  </span>
-);
-
-export const KindChip = ({ kind, sm = true }: { kind: string; sm?: boolean }) => <span className={`chip kind ${sm ? "sm" : ""}`}>{kind}</span>;
-
-// Status is the one field that changes in a finding file (D11): open · duplicate → id · fixed · wontfix.
-export function StatusChip({ front, runId, sm = true }: { front: FindingFront; runId: string; sm?: boolean }) {
-  if (front.status === "duplicate") {
-    return (
-      <span className="dup-status">
-        duplicate →{" "}
-        {front.of ? (
-          <Link to="/runs/$runId/findings/$findingId" params={{ runId, findingId: front.of }} search={(s) => s}>
-            {front.of}
-          </Link>
-        ) : (
-          <span className="mono">?</span>
-        )}
-      </span>
-    );
-  }
-  if (front.status === "open") return <span className={`chip open ${sm ? "sm" : ""}`}>open</span>;
-  return (
-    <span className={`chip ${front.status} outline ${sm ? "sm" : ""}`}>
-      <Glyph kind={front.status} size={sm ? 12 : 14} />
-      {front.status}
-    </span>
-  );
-}
-
-export function Anchor() {
-  return (
-    <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" role="img" aria-label="Jeyna">
-      <circle cx="32" cy="10.5" r="6.5" />
-      <path d="M32 7 L35.5 10.5 L32 14 L28.5 10.5 Z" fill="#8FD3FF" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M19 23 H45" />
-      <circle cx="16.5" cy="23" r="4.5" fill="currentColor" stroke="none" />
-      <circle cx="47.5" cy="23" r="4.5" fill="currentColor" stroke="none" />
-      <path d="M32 17 V53" />
-      <path d="M11 35 C12.5 46.5 21 53 32 53 C43 53 51.5 46.5 53 35" />
-      <path d="M11 35 C6.5 33.5 4 29.5 5 25.5" />
-      <path d="M11 35 C14 32 15.5 28.5 15 25" />
-      <path d="M53 35 C57.5 33.5 60 29.5 59 25.5" />
-      <path d="M53 35 C50 32 48.5 28.5 49 25" />
-    </svg>
-  );
-}
+import * as m from "../model.js";
+import type { StudioIndex, StudioRun } from "../types.js";
 
 export type Section = "playtests" | "live" | "feedback";
 
-export function TopBar({ app, section, run, findingId, feedbackId, todo, generated, connected }: { app?: string; section: Section; run?: Session | null; findingId?: string; feedbackId?: string; todo: number; generated?: string; connected: boolean }) {
-  const now = useNow();
+// Severity: a diamond in its colour and the word.
+export const Sev = ({ severity }: { severity: FindingFront["severity"] }) => <span className={`sev ${severity}`}>{severity}</span>;
+
+// A verdict: a dot in its colour and the word; outline and "no verdict" when the case has none.
+export const V = ({ result, children }: { result?: string; children?: ReactNode }) => (
+  <span className={`v ${result ?? "none"}`}>{children ?? (result ?? "no verdict")}</span>
+);
+
+// The crab keeps its own navy tile in both themes. Empty and idle moments only.
+export const Crab = ({ className }: { className?: string }) => <img src="/crab.svg" alt="" className={className} />;
+
+export const Check = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+);
+export const Cross = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17" /></svg>
+);
+
+export function Pips({ session }: { session: StudioRun["session"] }) {
+  const p = m.pips(session);
+  if ("bar" in p) {
+    return (
+      <span className="pipbar" title={p.title} aria-hidden="true">
+        {(Object.keys(p.bar) as m.Mark[]).map((k) => (p.bar[k] ? <i key={k} className={k} style={{ flex: p.bar[k] }} /> : null))}
+      </span>
+    );
+  }
   return (
-    <header className="top">
-      <Link to="/" className="mark">
-        <Anchor />
-        <span>Jeyna studio</span>
-      </Link>
-      <nav aria-label="Sections" className="tabs">
-        <Link to="/" aria-current={section === "playtests" ? "page" : undefined}>Playtests</Link>
-        <Link to="/live" aria-current={section === "live" ? "page" : undefined}>Live</Link>
-        <Link to="/feedback" aria-current={section === "feedback" ? "page" : undefined}>
-          Feedback{todo ? <span className="n">{todo}</span> : null}
-        </Link>
-      </nav>
-      <nav aria-label="Breadcrumb" className="crumbs">
-        {app && (
-          <>
-            <Link to="/">{app}</Link>
-            <span className="sep">/</span>
-            {section === "feedback" && feedbackId ? <Link to="/feedback">feedback</Link> : section === "playtests" ? <Link to="/">playtests</Link> : <span className="here">{section}</span>}
-          </>
-        )}
-        {feedbackId && (
-          <>
-            <span className="sep">/</span>
-            <span className="here">{feedbackId}</span>
-          </>
-        )}
-        {run && (
-          <>
-            <span className="sep">/</span>
-            {findingId ? (
-              <Link to="/runs/$runId" params={{ runId: run.id }} search={(s) => s}>
-                {run.id}
-              </Link>
-            ) : (
-              <span className="here">{run.id}</span>
-            )}
-          </>
-        )}
-        {findingId && (
-          <>
-            <span className="sep">/</span>
-            <span className="here">{findingId}</span>
-          </>
-        )}
-      </nav>
-      <div className="right">
-        <span className={`watch ${connected ? "" : "off"}`}>
-          {connected ? `watching .jeyna/${generated ? ` · last change ${ago(generated, now)}` : ""}` : "studio disconnected · retrying"}
-        </span>
-        {run && <RunStatusChip status={run.status} sm />}
-      </div>
-    </header>
+    <span className={`pips ${p.dense ? "dense" : ""}`} aria-hidden="true">
+      {p.marks.map((k, i) => <i key={i} className={`pip ${k}`} />)}
+    </span>
   );
 }
 
-export function Card({ title, sub, children, className = "", pad = true }: { title?: ReactNode; sub?: ReactNode; children: ReactNode; className?: string; pad?: boolean }) {
+const ICONS: Record<Section, ReactNode> = {
+  playtests: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><rect x="3" y="4" width="7" height="7" rx="1.5" /><rect x="14" y="4" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></svg>
+  ),
+  feedback: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z" strokeLinejoin="round" /></svg>
+  ),
+  live: (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="12" cy="12" r="8.5" /><circle cx="12" cy="12" r="3" fill="currentColor" /></svg>
+  ),
+};
+
+export function Sidebar({ index, connected, section, runId, todo }: { index: StudioIndex | null; connected: boolean; section: Section; runId?: string; todo: number }) {
+  const runs = index?.runs ?? [];
+  const idle = section === "live" && !!index && !index.window.open && !runs.some((r) => r.session?.status === "running");
+  const here = (s: Section) => (section === s ? ("page" as const) : undefined);
   return (
-    <section className={`card ${pad ? "pad" : ""} ${className}`}>
-      {title && (
-        <div className="cardhead" style={pad ? { padding: 0 } : undefined}>
-          <h2>{title}</h2>
-          {sub && <span className="sub">{sub}</span>}
+    <aside className="side">
+      <Link to="/" className="mark" aria-label="Jeyna, home">
+        <img src="/anchor.svg" alt="" />
+        <b>Jeyna</b>
+      </Link>
+      <span className="proj">
+        <span className={`diamond ${connected ? "" : "off"}`} aria-hidden="true" />
+        <span className="name">{index?.app?.name ?? "this project"}</span>
+        <span className="grow" />
+        <span className="mono">{connected ? "watching" : "reconnecting"}</span>
+      </span>
+      <nav className="navs" aria-label="Sections">
+        <Link to="/" aria-current={here("playtests")}>{ICONS.playtests}Playtests</Link>
+        <Link to="/feedback" aria-current={here("feedback")}>
+          {ICONS.feedback}Feedback{todo ? <span className="n" aria-label={`${todo} to do`}>{todo}</span> : null}
+        </Link>
+        <Link to="/live" aria-current={here("live")}>{ICONS.live}Live</Link>
+      </nav>
+      <h2 id="runs-h">Runs</h2>
+      <nav className="runs" aria-labelledby="runs-h">
+        {runs.map((r) => {
+          const s = r.session;
+          return (
+            <Link key={r.id} to="/runs/$runId" params={{ runId: r.id }} aria-current={r.id === runId ? "page" : undefined} title={r.id}>
+              <span className="when">{s ? `${m.day(s.started)} · ${m.hm(s.started)}` : r.id}</span>
+              <span className="flow">{s ? `${m.flowName(s)} · ${m.outcome(s).text}` : r.sessionError ? "session.json does not read" : "no session.json"}</span>
+              <Pips session={s} />
+            </Link>
+          );
+        })}
+        {index && !runs.length && <span className="meta" style={{ padding: "0 10px" }}>No runs yet.</span>}
+      </nav>
+      {idle && (
+        <div className="foot">
+          <Crab />
+          All quiet on deck.
         </div>
       )}
-      {children}
-    </section>
+    </aside>
   );
 }
 
 // Copies text and says so for a moment. Localhost is a secure context, so the clipboard API is available.
-export function CopyButton({ text, label, icon, ariaLabel }: { text: string; label?: string; icon: ReactNode; ariaLabel?: string }) {
+export function CopyButton({ text, label, className = "", ariaLabel }: { text: string; label: string; className?: string; ariaLabel?: string }) {
   const [done, setDone] = useState(false);
   const copy = () => {
     navigator.clipboard?.writeText(text).then(() => {
@@ -258,9 +111,17 @@ export function CopyButton({ text, label, icon, ariaLabel }: { text: string; lab
     });
   };
   return (
-    <button type="button" className={`btn ${label ? "" : "icon"}`} onClick={copy} aria-label={ariaLabel} title={text}>
-      {icon}
-      {label && (done ? "Copied" : label)}
+    <button type="button" className={`btn ${className}`} onClick={copy} title={text} aria-label={ariaLabel}>
+      {done ? "Copied" : label}
     </button>
   );
 }
+
+// An empty page: the crab, a display-font line and what to do next.
+export const Vacant = ({ title, children }: { title: string; children?: ReactNode }) => (
+  <div className="vacant page">
+    <Crab />
+    <b>{title}</b>
+    {children}
+  </div>
+);

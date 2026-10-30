@@ -91,6 +91,7 @@ function scanRun(dir: string): StudioRun {
     errors: validateRun(dir),
     since: session ? since(session, previousRun(dir, session)) ?? null : null,
     report: existsSync(join(dir, "report.md")),
+    evidence: existsSync(join(dir, "evidence")) ? readdirSync(join(dir, "evidence")).sort() : [],
     findings,
   };
 }
@@ -168,7 +169,7 @@ function startWatch() {
 // --- HTTP: the API, evidence files, the built UI, and the SPA fallback.
 const TYPES: Record<string, string> = {
   ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp", ".gif": "image/gif", ".svg": "image/svg+xml",
-  ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".json": "application/json; charset=utf-8",
+  ".md": "text/plain; charset=utf-8", ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".json": "application/json; charset=utf-8",
 };
 
 function sendFile(res: ServerResponse, path: string) {
@@ -282,6 +283,14 @@ function handle(req: IncomingMessage, res: ServerResponse) {
     });
     return;
   }
+  const report = /^\/runs\/([^/]+)\/report\.md$/.exec(url.pathname);
+  if (report) {
+    try {
+      return sendFile(res, join(runDirOf(root, decodeURIComponent(report[1])), "report.md"));
+    } catch {
+      return notFound(res);
+    }
+  }
   const evidence = /^\/runs\/([^/]+)\/evidence\/([^/]+)$/.exec(url.pathname);
   if (evidence) {
     const [run, file] = [decodeURIComponent(evidence[1]), decodeURIComponent(evidence[2])];
@@ -301,7 +310,7 @@ function handle(req: IncomingMessage, res: ServerResponse) {
     }
   }
   const asset = basename(url.pathname);
-  if (["app.js", "app.css", "anchor.svg"].includes(asset)) return sendFile(res, join(assets, asset));
+  if (["app.js", "app.css", "anchor.svg", "crab.svg"].includes(asset)) return sendFile(res, join(assets, asset));
   return sendFile(res, join(assets, "index.html")); // the UI routes /runs/… itself
 }
 

@@ -17,6 +17,8 @@ export type StudioRun = {
   errors: string[];
   since: Since | null;
   report: boolean;
+  // The file names under evidence/, sorted: the contact sheet shows each case's last screenshot.
+  evidence: string[];
   findings: StudioFinding[];
 };
 
