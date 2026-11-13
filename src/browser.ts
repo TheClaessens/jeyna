@@ -4,8 +4,8 @@ import { join } from "node:path";
 import { type Browser, chromium, type Page } from "playwright-core";
 import { z } from "zod";
 import { type Config, Slug } from "./schema.js";
-import { caseOf, current, fail, ok, stillCurrent } from "./session.js";
-import { accountValues, substitute } from "./accounts.js";
+import { caseOf, createAccount, current, fail, NEW, ok, stillCurrent } from "./session.js";
+import { type Account, accountValues, substitute } from "./accounts.js";
 import { launchChrome } from "./chrome.js";
 import { appUrl, truncate } from "./shared.js";
 
@@ -102,12 +102,23 @@ export async function closeContexts() {
   pages.clear();
   shots.clear();
   events.clear();
+  scoutCreated = undefined;
   await Promise.allSettled(all.map(async (p) => (await p).context().close()));
 }
 
 // The reserved case for the exploratory look before a session exists (D6, F2.3): no session needed,
 // the first configured viewport, the first pool account, nothing written to disk; session_start closes it.
 export const SCOUT = "scout";
+
+// Scout signs in with the first configured account; with none, with one app.new_account creates on its first
+// placeholder use (D41), kept until session_start closes the scout.
+let scoutCreated: Account | undefined;
+function scoutAccount(root: string, config: Config): Account {
+  if (config.accounts.length) return accountValues(root, config)[0];
+  if (!config.app.new_account) throw new Error("jeyna.config.yaml lists no accounts and no app.new_account, so scout cannot sign in.");
+  const then = "Scout cannot sign in. Fix the command in jeyna.config.yaml, or look without signing in.";
+  return (scoutCreated ??= createAccount(root, config.app.new_account, SCOUT, `scout-${Date.now()}`, then));
+}
 
 function viewportOf(caseId: string, config: Config): string {
   return caseId === SCOUT ? config.viewports[0] : caseOf(caseId).c.viewport;
@@ -194,13 +205,14 @@ export function registerBrowserTools(
 
   const selector = z.string().describe('Playwright selector, e.g. role=button[name="Sign in"], #email, text=Forgot password?');
 
-  // {{account.*}} in a fill value or a selector, filled in with the case's account: its tester's, or the first
-  // pool account for scout. Called after the page await, once stillCurrent has confirmed the run.
+  // {{account.*}} in a fill value or a selector, filled in with the case's account: its tester's (the one created for it,
+  // for handle new), or scout's. Called after the page await, once stillCurrent has confirmed the run.
   const withAccount = (text: string, c: string, root: string, config: Config) => {
     if (!/\{\{account\./.test(text)) return text;
-    const handle = c === SCOUT ? config.accounts[0]?.handle : current?.session.testers.find((t) => t.cases.includes(c))?.account;
-    if (c === SCOUT && !handle) throw new Error("jeyna.config.yaml lists no accounts, so scout cannot sign in.");
-    return substitute(text, accountValues(root, config).find((x) => x.handle === handle), c);
+    if (c === SCOUT) return substitute(text, scoutAccount(root, config), c);
+    const t = current?.session.testers.find((t) => t.cases.includes(c));
+    const account = t?.account === NEW ? current!.created[t.id] : accountValues(root, config).find((x) => x.handle === t?.account);
+    return substitute(text, account, c);
   };
   // After awaiting the page, click and fill refuse with this unless their run is stillCurrent.
   const RACED = "The run ended or was replaced while this call waited for the browser; nothing was done. Stop, and report that your run ended.";

@@ -65799,9 +65799,9 @@ ${end.comment}` : end.comment;
     var is_wsl_default = import_node_process2.default.env.__IS_WSL_TEST__ ? isWsl : isWsl();
     var import_node_process22 = __toESM3(__require("node:process"), 1);
     var import_node_buffer = __require("node:buffer");
-    var import_node_util3 = __require("node:util");
+    var import_node_util4 = __require("node:util");
     var import_node_child_process3 = __toESM3(__require("node:child_process"), 1);
-    var execFile = (0, import_node_util3.promisify)(import_node_child_process3.default.execFile);
+    var execFile = (0, import_node_util4.promisify)(import_node_child_process3.default.execFile);
     var powerShellPath = () => `${import_node_process22.default.env.SYSTEMROOT || import_node_process22.default.env.windir || String.raw`C:\Windows`}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe`;
     var executePowerShell = async (command, options2 = {}) => {
       const {
@@ -65941,9 +65941,9 @@ ${end.comment}` : end.comment;
       return browserId2;
     }
     var import_node_process4 = __toESM3(__require("node:process"), 1);
-    var import_node_util4 = __require("node:util");
+    var import_node_util42 = __require("node:util");
     var import_node_child_process4 = __require("node:child_process");
-    var execFileAsync2 = (0, import_node_util4.promisify)(import_node_child_process4.execFile);
+    var execFileAsync2 = (0, import_node_util42.promisify)(import_node_child_process4.execFile);
     async function runAppleScript(script, { humanReadableOutput = true, signal } = {}) {
       if (import_node_process4.default.platform !== "darwin") {
         throw new Error("macOS only");
@@ -145209,9 +145209,9 @@ Workaround: Set the HOME=/root environment variable${process.env.GITHUB_ACTION ?
               }
               electronArguments.unshift("-r", libPath("server", "electron", "loader.js"));
             }
-            let shell = false;
+            let shell2 = false;
             if (process.platform === "win32") {
-              shell = true;
+              shell2 = true;
               command = [command, ...electronArguments].map((arg2) => `"${escapeDoubleQuotes(arg2)}"`).join(" ");
               electronArguments = [];
             }
@@ -145224,7 +145224,7 @@ Workaround: Set the HOME=/root environment variable${process.env.GITHUB_ACTION ?
                 progress2.log(message);
                 browserLogsCollector.log(message);
               },
-              shell,
+              shell: shell2,
               stdio: "pipe",
               cwd: options2.cwd,
               tempDirectories,
@@ -151418,7 +151418,7 @@ function installDialogBridge(window, endpoint) {
       };
       const browser2 = await progress2.race((async () => {
         const syncServer = await SyncServer.start();
-        const created = new WVBrowser(parent, proxyBase, headersMap, syncServer, transport2, {
+        const created2 = new WVBrowser(parent, proxyBase, headersMap, syncServer, transport2, {
           slowMo: params2.slowMo,
           name: "webkit",
           browserType: "webkit",
@@ -151433,14 +151433,14 @@ function installDialogBridge(window, endpoint) {
           originalLaunchOptions: {}
         });
         const shutdown2 = async () => {
-          await created._closeAllTabs();
+          await created2._closeAllTabs();
           await syncServer.close().catch(() => {
           });
           await doCleanup();
         };
-        created.options.browserProcess = { close: shutdown2, kill: shutdown2 };
-        await created._initialize();
-        return created;
+        created2.options.browserProcess = { close: shutdown2, kill: shutdown2 };
+        await created2._initialize();
+        return created2;
       })());
       if (!params2.isLocal)
         browser2._isBrowserCollocatedWithServer = false;
@@ -171794,8 +171794,8 @@ Playwright version: ${version32}`);
       }
       if (options2.shell === false && options2.onlyShell)
         throw new Error(`Only one of --no-shell and --only-shell can be specified`);
-      const shell = options2.shell === false ? "no" : options2.onlyShell ? "only" : void 0;
-      const executables = registry.resolveBrowsers(args, { shell });
+      const shell2 = options2.shell === false ? "no" : options2.onlyShell ? "only" : void 0;
+      const executables = registry.resolveBrowsers(args, { shell: shell2 });
       if (options2.withDeps)
         await registry.installDeps(executables, !!options2.dryRun);
       if (options2.dryRun && options2.list)
@@ -207058,12 +207058,23 @@ var Config = external_exports.strictObject({
     name: external_exports.string().min(1),
     url: external_exports.url(),
     build: external_exports.string().nullish(),
-    reset: external_exports.string().min(1).nullish().describe("Shell command that resets the app's state; run before every run")
+    reset: external_exports.string().min(1).nullish().describe("Shell command that resets the app's state; run before every run"),
+    new_account: external_exports.string().min(1).nullish().describe("Shell command that creates a new test user and prints JEYNA_USER=<username> and JEYNA_PASS=<password>; run once per tester that signs in")
   }),
   viewports: external_exports.array(external_exports.string().regex(VIEWPORT, "must look like 1440x900")).min(1),
   browser: external_exports.strictObject({ headed: external_exports.boolean().default(false) }).default({ headed: false }),
-  tester: external_exports.strictObject({ model: external_exports.string().default("sonnet"), effort: external_exports.string().default("medium") }).default({ model: "sonnet", effort: "medium" }),
-  accounts: external_exports.array(external_exports.strictObject({ handle: external_exports.string().min(1), user_env: envName, pass_env: envName })).default([])
+  tester: external_exports.strictObject({
+    model: external_exports.string().default("sonnet"),
+    effort: external_exports.string().default("medium"),
+    parallel: external_exports.number().int().min(1).default(20).describe("The most testers in one batch")
+  }).default({ model: "sonnet", effort: "medium", parallel: 20 }),
+  accounts: external_exports.array(
+    external_exports.strictObject({
+      handle: external_exports.string().min(1).refine((h) => h !== "new", "new is reserved for the accounts app.new_account creates; choose another handle"),
+      user_env: envName,
+      pass_env: envName
+    })
+  ).default([])
 });
 var Scenario = external_exports.strictObject({
   name: external_exports.string().min(1),
@@ -207099,6 +207110,9 @@ var SessionFile = external_exports.object({
   finished: external_exports.string().optional(),
   mode: external_exports.enum(["guided", "exploratory"]),
   entry: external_exports.string().optional(),
+  // For each tester's brief (D41): a guided run's flow sections, an exploratory run's focus. Absent in older runs.
+  preconditions: external_exports.string().optional(),
+  focus: external_exports.string().optional(),
   scenarios: external_exports.array(Scenario),
   testers: external_exports.array(
     external_exports.object({ id: external_exports.string(), scenario: external_exports.string(), account: external_exports.string().optional(), batch: external_exports.number(), model: external_exports.string(), cases: external_exports.array(external_exports.string()) })
@@ -207112,22 +207126,7 @@ var SessionFile = external_exports.object({
 import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync as existsSync5, mkdirSync as mkdirSync2, readdirSync as readdirSync3, readFileSync as readFileSync4, renameSync, writeFileSync as writeFileSync3 } from "node:fs";
 import { join as join6 } from "node:path";
-
-// src/browser.ts
-import { writeFileSync } from "node:fs";
-import { join as join3 } from "node:path";
-
-// node_modules/playwright-core/index.mjs
-var import_index2 = __toESM2(require_playwright_core(), 1);
-var chromium = import_index2.default.chromium;
-var firefox = import_index2.default.firefox;
-var webkit = import_index2.default.webkit;
-var selectors = import_index2.default.selectors;
-var devices = import_index2.default.devices;
-var errors = import_index2.default.errors;
-var request2 = import_index2.default.request;
-var _electron = import_index2.default._electron;
-var _android = import_index2.default._android;
+import { parseEnv as parseEnv2 } from "node:util";
 
 // src/accounts.ts
 import { existsSync, readFileSync } from "node:fs";
@@ -207138,6 +207137,7 @@ function readSecrets(root) {
   const dotenv3 = existsSync(file2) ? parseEnv(readFileSync(file2, "utf8")) : {};
   return (n) => process.env[n] ? { from: "env", value: process.env[n] } : dotenv3[n] ? { from: ".env", value: dotenv3[n] } : { from: "missing" };
 }
+var created = [];
 function accountValues(root, config2) {
   const get = readSecrets(root);
   return config2.accounts.map((a) => ({ ...a, user: get(a.user_env).value, pass: get(a.pass_env).value }));
@@ -207186,6 +207186,22 @@ function redactDeep(msg, redact2) {
   };
   return walk(msg);
 }
+
+// src/browser.ts
+import { writeFileSync } from "node:fs";
+import { join as join3 } from "node:path";
+
+// node_modules/playwright-core/index.mjs
+var import_index2 = __toESM2(require_playwright_core(), 1);
+var chromium = import_index2.default.chromium;
+var firefox = import_index2.default.firefox;
+var webkit = import_index2.default.webkit;
+var selectors = import_index2.default.selectors;
+var devices = import_index2.default.devices;
+var errors = import_index2.default.errors;
+var request2 = import_index2.default.request;
+var _electron = import_index2.default._electron;
+var _android = import_index2.default._android;
 
 // node_modules/playwright-core/package.json
 var package_default = {
@@ -207386,9 +207402,17 @@ async function closeContexts() {
   pages.clear();
   shots.clear();
   events.clear();
+  scoutCreated = void 0;
   await Promise.allSettled(all.map(async (p) => (await p).context().close()));
 }
 var SCOUT = "scout";
+var scoutCreated;
+function scoutAccount(root, config2) {
+  if (config2.accounts.length) return accountValues(root, config2)[0];
+  if (!config2.app.new_account) throw new Error("jeyna.config.yaml lists no accounts and no app.new_account, so scout cannot sign in.");
+  const then = "Scout cannot sign in. Fix the command in jeyna.config.yaml, or look without signing in.";
+  return scoutCreated ??= createAccount(root, config2.app.new_account, SCOUT, `scout-${Date.now()}`, then);
+}
 function viewportOf(caseId, config2) {
   return caseId === SCOUT ? config2.viewports[0] : caseOf(caseId).c.viewport;
 }
@@ -207400,14 +207424,14 @@ function page(caseId, config2) {
   let p = pages.get(caseId);
   if (!p) {
     const [width, height] = viewport.split("x").map(Number);
-    const created = getBrowser(config2.browser.headed).then(async (b) => {
+    const created2 = getBrowser(config2.browser.headed).then(async (b) => {
       const pg = await (await b.newContext({ viewport: { width, height } })).newPage();
-      pg.on("close", () => forget(caseId, created));
+      pg.on("close", () => forget(caseId, created2));
       listen(caseId, pg);
       return pg;
     });
-    created.catch(() => forget(caseId, created));
-    pages.set(caseId, p = created);
+    created2.catch(() => forget(caseId, created2));
+    pages.set(caseId, p = created2);
   }
   return p;
 }
@@ -207454,9 +207478,10 @@ function registerBrowserTools(server3, getContext2, redact2) {
   const selector = external_exports.string().describe('Playwright selector, e.g. role=button[name="Sign in"], #email, text=Forgot password?');
   const withAccount = (text2, c, root, config2) => {
     if (!/\{\{account\./.test(text2)) return text2;
-    const handle = c === SCOUT ? config2.accounts[0]?.handle : current?.session.testers.find((t) => t.cases.includes(c))?.account;
-    if (c === SCOUT && !handle) throw new Error("jeyna.config.yaml lists no accounts, so scout cannot sign in.");
-    return substitute(text2, accountValues(root, config2).find((x) => x.handle === handle), c);
+    if (c === SCOUT) return substitute(text2, scoutAccount(root, config2), c);
+    const t = current?.session.testers.find((t2) => t2.cases.includes(c));
+    const account = t?.account === NEW ? current.created[t.id] : accountValues(root, config2).find((x) => x.handle === t?.account);
+    return substitute(text2, account, c);
   };
   const RACED = "The run ended or was replaced while this call waited for the browser; nothing was done. Stop, and report that your run ended.";
   server3.registerTool(
@@ -207773,6 +207798,7 @@ ${external_exports.prettifyError(front.error)}`);
   if (dupes.length) throw new Error(`${file2}: scenario names must be unique: ${dupes.join(", ")}.`);
   return { frontmatter: front.data, body, scenarios };
 }
+var flowSection = (body, heading) => new RegExp(`^## ${heading}[ \\t]*\\n([\\s\\S]*?)(?=^## |(?![\\s\\S]))`, "m").exec(body)?.[1].trim() || void 0;
 function readFlow(root, name) {
   const names = flowNames(root);
   if (!names.includes(name)) throw new Error(`No flow "${name}". Flows in .jeyna/flows/: ${names.join(", ") || "none"}.`);
@@ -207860,30 +207886,39 @@ function registerFlowTools(server3, getContext2) {
 }
 
 // src/session.ts
-function planTesters(scenarios, pool, viewports, first = 1) {
+var NEW = "new";
+function planTesters(scenarios, pool, viewports, first = 1, parallel = 20) {
   const testers = scenarios.map((s, i) => ({
     id: `t${first + i}`,
     scenario: s.name,
-    batch: 1,
+    batch: 0,
     cases: viewports.map((v) => ({ id: `t${first + i}-${v}`, scenario: s.name, viewport: v }))
   }));
-  const needing = [
-    ...testers.filter((_, i) => !scenarios[i].account),
-    ...testers.filter((_, i) => scenarios[i].account === "consumes")
-  ];
-  const consuming = scenarios.filter((s) => s.account === "consumes").length;
-  if (needing.length && !pool.length) {
-    throw new Error(
-      "These scenarios need an account but jeyna.config.yaml lists none: " + needing.map((t) => t.scenario).join(", ") + ". Add accounts, or mark a scenario `Account: none`."
-    );
+  const consumes = (t) => scenarios[testers.indexOf(t)].account === "consumes";
+  const order = [...testers.filter((t) => !consumes(t)), ...testers.filter(consumes)];
+  const needing = order.filter((t) => scenarios[testers.indexOf(t)].account !== "none");
+  if (pool === NEW) {
+    for (const t of needing) t.account = NEW;
+  } else {
+    const consuming = needing.filter(consumes).length;
+    if (needing.length && !pool.length) {
+      throw new Error(
+        "These scenarios need an account but jeyna.config.yaml lists none: " + needing.map((t) => t.scenario).join(", ") + ". Add accounts, set app.new_account, or mark a scenario `Account: none`."
+      );
+    }
+    if (consuming > pool.length) {
+      throw new Error(`${consuming} scenarios are \`Account: consumes\` but the pool has ${pool.length} accounts; each needs its own.`);
+    }
+    needing.forEach((t, i) => t.account = pool[i % pool.length]);
   }
-  if (consuming > pool.length) {
-    throw new Error(`${consuming} scenarios are \`Account: consumes\` but the pool has ${pool.length} accounts; each needs its own.`);
+  const batches = [];
+  for (const t of order) {
+    const shared = t.account && t.account !== NEW ? t.account : void 0;
+    let b = shared && consumes(t) ? Math.max(0, ...batches.flat().filter((o) => o.account === shared).map((o) => o.batch)) : 0;
+    while (batches[b] && (batches[b].length >= parallel || shared && batches[b].some((o) => o.account === shared))) b++;
+    (batches[b] ??= []).push(t);
+    t.batch = b + 1;
   }
-  needing.forEach((t, i) => {
-    t.account = pool[i % pool.length];
-    t.batch = Math.floor(i / pool.length) + 1;
-  });
   return testers;
 }
 var current;
@@ -207915,16 +207950,39 @@ function buildId(root, config2) {
     return "unknown";
   }
 }
-var RESET_TIMEOUT = 12e4;
-function resetApp(root, command) {
-  const r = spawnSync("sh", ["-c", command], { cwd: root, timeout: RESET_TIMEOUT, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+var SHELL_TIMEOUT = 12e4;
+function shell(root, key, command, then, env = {}, seen) {
+  const r = spawnSync("sh", ["-c", command], {
+    cwd: root,
+    timeout: SHELL_TIMEOUT,
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+    env: { ...process.env, ...env }
+  });
+  seen?.(r.stdout ?? "");
   if (r.error || r.status !== 0) {
     const why = r.error ? r.error.message : `exit ${r.status ?? `signal ${r.signal}`}`;
-    const out = `${r.stderr ?? ""}${r.stdout ?? ""}`.trim().split("\n").slice(-5).join("\n");
-    throw new Error(`app.reset failed (${why}): ${command}${out ? `
+    const said = key === "reset" ? `${r.stderr ?? ""}${r.stdout ?? ""}` : r.stderr ?? "";
+    const out = said.trim().split("\n").slice(-5).join("\n");
+    throw new Error(`app.${key} failed (${why}): ${command}${out ? `
 ${out}` : ""}
-No run was started. Fix the command in jeyna.config.yaml, or set reset: null.`);
+${then}`);
   }
+  return r.stdout;
+}
+var NO_RUN = (key) => `No run was started. Fix the command in jeyna.config.yaml, or set ${key}: null.`;
+var resetApp = (root, command) => shell(root, "reset", command, NO_RUN("reset"));
+function createAccount(root, command, account, run, then) {
+  let a = { handle: NEW, user_env: "JEYNA_USER", pass_env: "JEYNA_PASS" };
+  shell(root, "new_account", command, then, { JEYNA_ACCOUNT: account, JEYNA_RUN: run }, (stdout) => {
+    const out = parseEnv2(stdout);
+    created.push(a = { ...a, user: out.JEYNA_USER, pass: out.JEYNA_PASS });
+  });
+  if (!a.user || !a.pass) {
+    throw new Error(`app.new_account must print JEYNA_USER=<username> and JEYNA_PASS=<password> on stdout, one line each, for every new user; it printed ${a.user ? "no JEYNA_PASS" : a.pass ? "no JEYNA_USER" : "neither"}: ${command}
+${then}`);
+  }
+  return a;
 }
 function runningRuns(dir) {
   if (!existsSync5(dir)) return [];
@@ -207936,6 +207994,8 @@ function runningRuns(dir) {
     }
   });
 }
+var spawnPrompt = (cases) => `jeyna-tester-cases: ${cases.join(", ")}
+Call brief with case ${cases[0]} and follow what it returns.`;
 var ok = (v) => ({ content: [{ type: "text", text: JSON.stringify(v) }] });
 var fail = (e) => ({ isError: true, content: [{ type: "text", text: e.message }] });
 function registerSessionTools(server3, getContext2, redact2) {
@@ -207950,11 +208010,12 @@ function registerSessionTools(server3, getContext2, redact2) {
         entry: external_exports.string().min(1).optional().describe("Entry path of an exploratory run, e.g. /login; save_flow writes it to the flow. Default /"),
         slug: Slug.optional().describe("Run folder slug of an exploratory run; default exploratory"),
         viewports: external_exports.array(external_exports.string()).min(1).optional().describe("Viewports to run, e.g. 390x844. A guided run takes its flow's (else the configured ones); an exploratory run any <width>x<height>. Default all of those"),
-        accounts: external_exports.array(external_exports.string().min(1)).min(1).optional().describe("Account handles an exploratory run deals from, e.g. the account a retested finding was found with; default all configured"),
+        accounts: external_exports.array(external_exports.string().min(1)).min(1).optional().describe("Account handles an exploratory run deals from, e.g. the account a retested finding was found with; default all configured, or a new account per tester when app.new_account is set"),
+        focus: external_exports.string().min(1).optional().describe("Exploratory run: what matters most in this run, in the developer's words; every tester's brief carries it"),
         force: external_exports.boolean().default(false)
       }
     },
-    async ({ flow: flowName, scenarios: given, only, entry, slug, viewports, accounts, force }) => {
+    async ({ flow: flowName, scenarios: given, only, entry, slug, viewports, accounts, focus, force }) => {
       try {
         const { root, config: config2 } = getContext2();
         if (flowName && given) throw new Error("session_start needs flow (guided) or scenarios (exploratory), not both.");
@@ -207963,6 +208024,7 @@ function registerSessionTools(server3, getContext2, redact2) {
         if (flow && slug) throw new Error("slug is for exploratory runs; a guided run is named after its flow.");
         if (flow && entry) throw new Error("entry is for exploratory runs; a guided run starts at its flow's entry.");
         if (flow && accounts) throw new Error("accounts is for exploratory runs; a guided run deals its flow's accounts (or all configured).");
+        if (flow && focus) throw new Error("focus is for exploratory runs; a guided run takes its flow's ## What matters most here section.");
         let scenarios = flow?.scenarios ?? given;
         if (only) {
           const unknownScenarios = only.filter((n) => !scenarios.some((s) => s.name === n));
@@ -207985,7 +208047,7 @@ function registerSessionTools(server3, getContext2, redact2) {
           const who = flow ? `Flow ${flowName} names accounts not in jeyna.config.yaml` : "Unknown accounts";
           throw new Error(`${who}: ${strangers.join(", ")}. Configured: ${handles.join(", ") || "none"}.`);
         }
-        const pool = flow?.frontmatter.accounts ?? accounts ?? handles;
+        const pool = flow?.frontmatter.accounts ?? accounts ?? (config2.app.new_account ? NEW : handles);
         const dupes = duplicateNames(scenarios);
         if (dupes.length) throw new Error(`Scenario names must be unique: ${dupes.join(", ")}.`);
         const dir = join6(root, ".jeyna", "playtests");
@@ -207995,7 +208057,7 @@ function registerSessionTools(server3, getContext2, redact2) {
         const aborted2 = stale.map((d) => ({ d, s: d === current?.runDir ? current.session : JSON.parse(readFileSync4(join6(d, "session.json"), "utf8")) }));
         const abortedCases = aborted2.flatMap(({ s }) => (s.cases ?? []).map((c) => c.id));
         const first = Math.max(0, ...[...retired, ...abortedCases].map(testerNo)) + 1;
-        const testers = planTesters(scenarios, pool, viewports ?? valid, first);
+        const testers = planTesters(scenarios, pool, viewports ?? valid, first, config2.tester.parallel);
         const seen = current;
         await launchBrowser(config2.browser.headed);
         if (!stillCurrent(seen)) throw new Error(current ? busy(current.runDir) : "The running run ended while this run was starting; call session_start again.");
@@ -208008,7 +208070,20 @@ function registerSessionTools(server3, getContext2, redact2) {
         const base = `${(/* @__PURE__ */ new Date()).toLocaleDateString("sv")}-${flowName ?? slug ?? "exploratory"}`;
         let id = base;
         for (let n = 2; existsSync5(join6(dir, id)); n++) id = `${base}-${n}`;
+        const made = {};
+        for (const t of testers.filter((t2) => t2.account === NEW)) {
+          const a = createAccount(root, config2.app.new_account, t.id, id, NO_RUN("new_account"));
+          const twin = Object.keys(made).find((k) => made[k].user.toLowerCase() === a.user.toLowerCase());
+          if (twin) {
+            throw new Error(
+              `app.new_account answered the same username for ${twin} and ${t.id}: it must create a new user on every call, so no two testers share an account. ${NO_RUN("new_account")}`
+            );
+          }
+          made[t.id] = a;
+        }
         const runDir = join6(dir, id);
+        const preconditions = flow && flowSection(flow.body, "Preconditions");
+        const matters = flow ? flowSection(flow.body, "What matters most here") : focus;
         mkdirSync2(join6(runDir, "evidence"), { recursive: true });
         const session = {
           schema: 1,
@@ -208020,18 +208095,66 @@ function registerSessionTools(server3, getContext2, redact2) {
           started: (/* @__PURE__ */ new Date()).toISOString(),
           mode: flow ? "guided" : "exploratory",
           entry: flow?.frontmatter.entry ?? entry ?? "/",
+          ...preconditions && { preconditions },
+          ...matters && { focus: matters },
           scenarios,
           testers: testers.map((t) => ({ ...t, model: config2.tester.model, cases: t.cases.map((c) => c.id) })),
           cases: testers.flatMap((t) => t.cases),
           verdicts: []
         };
         save(runDir, session);
-        current = { runDir, session, findings: [] };
+        current = { runDir, session, findings: [], created: made };
         return ok({
           id,
           runDir,
-          testers: testers.map(({ cases, ...t }) => ({ ...t, cases: cases.map(({ id: id2, viewport }) => ({ id: id2, viewport })) }))
+          testers: testers.map(({ cases, ...t }) => ({
+            ...t,
+            cases: cases.map(({ id: id2, viewport }) => ({ id: id2, viewport })),
+            prompt: spawnPrompt(cases.map((c) => c.id))
+          }))
         });
+      } catch (e) {
+        return fail(e);
+      }
+    }
+  );
+  server3.registerTool(
+    "brief",
+    {
+      description: "Your brief as a Jeyna tester: the app url, the entry path, your cases and their viewports, your account, the scenario with its Pass: line, the preconditions, what matters most here, and the project's conventions. Call it first, with the first case id on your prompt's jeyna-tester-cases line.",
+      inputSchema: { case: external_exports.string().describe("Case id from your prompt's jeyna-tester-cases line, e.g. t1-390x844") },
+      annotations: { readOnlyHint: true }
+    },
+    async ({ case: caseId }) => {
+      try {
+        const { session } = caseOf(caseId).run;
+        const { root, config: config2 } = getContext2();
+        const t = session.testers.find((t2) => t2.cases.includes(caseId));
+        const s = session.scenarios.find((s2) => s2.name === t.scenario);
+        const conventions = join6(root, ".jeyna", "CONVENTIONS.md");
+        const signIn = "Sign in with {{account.user}} and {{account.pass}}.";
+        const text2 = [
+          `App: ${config2.app.url}`,
+          `Entry: ${session.entry ?? "/"}`,
+          "Cases, in order:",
+          ...t.cases.map((id) => `- ${id} at ${session.cases.find((c) => c.id === id).viewport}`),
+          "Play only the cases named on your prompt's jeyna-tester-cases line, in this order.",
+          !t.account ? "Account: none. Do not sign in." : `Account: ${t.account === NEW ? "a new account, made for you alone" : t.account}. ${signIn}`,
+          "",
+          `Scenario: ${s.name}`,
+          s.description,
+          `Pass: ${s.pass}`,
+          "",
+          "Preconditions:",
+          session.preconditions ?? "None given.",
+          "",
+          "What matters most here:",
+          session.focus ?? "Nothing given.",
+          "",
+          "Conventions:",
+          existsSync5(conventions) ? readFileSync4(conventions, "utf8") : "None given."
+        ].join("\n");
+        return { content: [{ type: "text", text: text2 }] };
       } catch (e) {
         return fail(e);
       }
@@ -208534,11 +208657,11 @@ function secretSources(root, config2) {
 var cached2;
 var envOf = (names) => JSON.stringify(names.map((n) => process.env[n] ?? null));
 function currentRedactor() {
-  let stamp = "no root";
+  let stamp = `${created.length}|no root`;
   try {
     const root = projectRoot();
     const files = [join10(root, ".jeyna", "jeyna.config.yaml"), join10(root, ".jeyna", ".env")];
-    stamp = [root, ...files.map((f) => {
+    stamp = [created.length, root, ...files.map((f) => {
       const st = statSync(f, { throwIfNoEntry: false });
       return st ? `${st.mtimeMs}:${st.size}` : "-";
     })].join("|");
@@ -208546,11 +208669,11 @@ function currentRedactor() {
   }
   if (!cached2 || cached2.stamp !== stamp || cached2.env !== envOf(cached2.names)) {
     let names = [];
-    let fn = (t) => t;
+    let fn = redactor(created);
     try {
       const { root, config: config2 } = getContext();
       names = config2.accounts.flatMap((a) => [a.user_env, a.pass_env]);
-      fn = redactor(accountValues(root, config2));
+      fn = redactor([...accountValues(root, config2), ...created]);
     } catch {
     }
     cached2 = { stamp, names, env: envOf(names), redact: fn };

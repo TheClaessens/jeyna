@@ -80,7 +80,7 @@ function project(session?: { status: string; cases: string[]; verdicts: string[]
   writeFileSync(
     transcript,
     [
-      { type: "user", isSidechain: true, message: { role: "user", content: "jeyna-tester-cases: t1-1440x900, t1-390x844\nApp: http://localhost:4931\n" } },
+      { type: "user", isSidechain: true, message: { role: "user", content: "jeyna-tester-cases: t1-1440x900, t1-390x844\nCall brief with case t1-1440x900 and follow what it returns." } },
       { type: "attachment" },
       { type: "user", message: { role: "user", content: "<system-reminder>jeyna-tester-cases: t9-1x1</system-reminder>" } },
       { type: "assistant", message: { role: "assistant", content: [{ type: "text", text: "Done." }] } },

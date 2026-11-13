@@ -58,6 +58,11 @@ export function parseFlow(md: string, file: string): Flow {
   return { frontmatter: front.data, body, scenarios };
 }
 
+// The text under a flow body's `## <heading>` (Preconditions, What matters most here), up to the next `## `;
+// undefined when the section is absent or empty. session_start stores them for the testers' briefs (D41).
+export const flowSection = (body: string, heading: string) =>
+  new RegExp(`^## ${heading}[ \\t]*\\n([\\s\\S]*?)(?=^## |(?![\\s\\S]))`, "m").exec(body)?.[1].trim() || undefined;
+
 export function readFlow(root: string, name: string): Flow {
   const names = flowNames(root);
   if (!names.includes(name)) throw new Error(`No flow "${name}". Flows in .jeyna/flows/: ${names.join(", ") || "none"}.`);

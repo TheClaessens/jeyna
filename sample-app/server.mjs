@@ -6,7 +6,8 @@ import { createServer } from "node:http";
 const PORT = Number(process.env.PORT ?? 4173);
 const MAX_FAILURES = 3;
 
-// Same values as .env.example. Restarting the server, or POST /__reset (the config's app.reset), resets everything.
+// Same values as .env.example. Restarting the server, or POST /__reset (the config's app.reset), resets everything,
+// users made by POST /__account (the config's app.new_account) included.
 const account = (pass) => ({ passwords: new Set([pass]), failures: 0, todos: [], next: 1 });
 const seed = () =>
   new Map([
@@ -115,6 +116,12 @@ const server = createServer(async (req, res) => {
     accounts = seed();
     sessions = new Map();
     return res.writeHead(204).end();
+  }
+  // A new user on every call, answered as the two dotenv lines app.new_account expects (D41). /__reset removes it.
+  if (req.method === "POST" && path === "/__account") {
+    const [email, pass] = [`user-${randomUUID().slice(0, 8)}@example.test`, randomUUID()];
+    accounts.set(email, account(pass));
+    return res.writeHead(200, { "content-type": "text/plain" }).end(`JEYNA_USER=${email}\nJEYNA_PASS=${pass}\n`);
   }
   if (req.method === "GET" && (path === "/" || path === "/login")) return user ? redirect("/todos") : send(200, login());
   if (req.method === "POST" && path === "/login") {

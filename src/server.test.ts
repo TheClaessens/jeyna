@@ -62,7 +62,7 @@ test("get_context returns the --project root and the validated config", async ()
       app: { name: "todo-sample", url: "http://localhost:4173" },
       viewports: ["1440x900", "390x844"],
       browser: { headed: false },
-      tester: { model: "sonnet", effort: "medium" },
+      tester: { model: "sonnet", effort: "medium", parallel: 20 },
       accounts: [{ handle: "user_a", user_env: "JEYNA_USER_A_USER", pass_env: "JEYNA_USER_A_PASS" }],
     },
     secrets: { JEYNA_USER_A_USER: "missing", JEYNA_USER_A_PASS: "missing" },

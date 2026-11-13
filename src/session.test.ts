@@ -55,3 +55,21 @@ test("more consuming scenarios than accounts, or account-needing scenarios with 
   expect(() => planTesters([sc("x", "consumes"), sc("y", "consumes")], ["user_a"], ["390x844"])).toThrow(/consumes/);
   expect(() => planTesters([sc("a")], [], ["390x844"])).toThrow(/Account: none/);
 });
+
+test("tester.parallel bounds every batch, Account: none testers included, and keeps tester and case ids", () => {
+  const testers = planTesters([sc("a", "none"), sc("b", "none"), sc("c", "none"), sc("d")], ["user_a", "user_b"], ["390x844"], 5, 2);
+  expect(testers.map((t) => [t.id, t.batch])).toEqual([["t5", 1], ["t6", 1], ["t7", 2], ["t8", 2]]);
+  expect(testers[3].cases).toEqual([{ id: "t8-390x844", scenario: "d", viewport: "390x844" }]);
+});
+
+test("a consuming tester runs after every other tester of its account, also under a parallel cap", () => {
+  const testers = planTesters([sc("x", "consumes"), sc("a"), sc("b"), sc("c")], ["user_a", "user_b"], ["390x844"], 1, 1);
+  noAccountHeldTwiceInABatch(testers);
+  expect(testers.map((t) => t.batch)).toEqual([4, 1, 2, 3]);
+});
+
+test("with created accounts every tester that signs in gets its own (handle new), bounded only by parallel", () => {
+  const testers = planTesters([sc("a"), sc("lockout", "consumes"), sc("public", "none"), sc("b")], "new", ["390x844"]);
+  expect(testers.map((t) => [t.id, t.account, t.batch])).toEqual([["t1", "new", 1], ["t2", "new", 1], ["t3", undefined, 1], ["t4", "new", 1]]);
+  expect(planTesters([sc("a"), sc("b"), sc("c")], "new", ["390x844"], 1, 2).map((t) => t.batch)).toEqual([1, 1, 2]);
+});

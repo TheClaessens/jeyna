@@ -202366,12 +202366,23 @@ var Config = external_exports.strictObject({
     name: external_exports.string().min(1),
     url: external_exports.url(),
     build: external_exports.string().nullish(),
-    reset: external_exports.string().min(1).nullish().describe("Shell command that resets the app's state; run before every run")
+    reset: external_exports.string().min(1).nullish().describe("Shell command that resets the app's state; run before every run"),
+    new_account: external_exports.string().min(1).nullish().describe("Shell command that creates a new test user and prints JEYNA_USER=<username> and JEYNA_PASS=<password>; run once per tester that signs in")
   }),
   viewports: external_exports.array(external_exports.string().regex(VIEWPORT, "must look like 1440x900")).min(1),
   browser: external_exports.strictObject({ headed: external_exports.boolean().default(false) }).default({ headed: false }),
-  tester: external_exports.strictObject({ model: external_exports.string().default("sonnet"), effort: external_exports.string().default("medium") }).default({ model: "sonnet", effort: "medium" }),
-  accounts: external_exports.array(external_exports.strictObject({ handle: external_exports.string().min(1), user_env: envName, pass_env: envName })).default([])
+  tester: external_exports.strictObject({
+    model: external_exports.string().default("sonnet"),
+    effort: external_exports.string().default("medium"),
+    parallel: external_exports.number().int().min(1).default(20).describe("The most testers in one batch")
+  }).default({ model: "sonnet", effort: "medium", parallel: 20 }),
+  accounts: external_exports.array(
+    external_exports.strictObject({
+      handle: external_exports.string().min(1).refine((h) => h !== "new", "new is reserved for the accounts app.new_account creates; choose another handle"),
+      user_env: envName,
+      pass_env: envName
+    })
+  ).default([])
 });
 var Scenario = external_exports.strictObject({
   name: external_exports.string().min(1),
@@ -202407,6 +202418,9 @@ var SessionFile = external_exports.object({
   finished: external_exports.string().optional(),
   mode: external_exports.enum(["guided", "exploratory"]),
   entry: external_exports.string().optional(),
+  // For each tester's brief (D41): a guided run's flow sections, an exploratory run's focus. Absent in older runs.
+  preconditions: external_exports.string().optional(),
+  focus: external_exports.string().optional(),
   scenarios: external_exports.array(Scenario),
   testers: external_exports.array(
     external_exports.object({ id: external_exports.string(), scenario: external_exports.string(), account: external_exports.string().optional(), batch: external_exports.number(), model: external_exports.string(), cases: external_exports.array(external_exports.string()) })

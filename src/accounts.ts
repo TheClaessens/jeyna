@@ -14,6 +14,10 @@ export function readSecrets(root: string): (name: string) => { from: "env" | ".e
   return (n) => (process.env[n] ? { from: "env", value: process.env[n] } : dotenv[n] ? { from: ".env", value: dotenv[n] } : { from: "missing" });
 }
 
+// Accounts app.new_account created in this server process (D41). Their values live here only: never written to disk,
+// never returned, and redacted like configured values for the life of the process, also after their run ends.
+export const created: Account[] = [];
+
 // Values are read when needed, never kept.
 export function accountValues(root: string, config: Config): Account[] {
   const get = readSecrets(root);

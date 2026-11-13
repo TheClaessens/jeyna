@@ -60,8 +60,8 @@ test("session_start plans testers and cases and writes session.json", async () =
   expect(r.isError).toBeFalsy();
   const out = JSON.parse(text(r));
   expect(out.testers).toEqual([
-    { id: "t1", scenario: "Sign in", account: "user_a", batch: 1, cases: [{ id: "t1-1440x900", viewport: "1440x900" }, { id: "t1-390x844", viewport: "390x844" }] },
-    { id: "t2", scenario: "Landing", batch: 1, cases: [{ id: "t2-1440x900", viewport: "1440x900" }, { id: "t2-390x844", viewport: "390x844" }] },
+    { id: "t1", scenario: "Sign in", account: "user_a", batch: 1, cases: [{ id: "t1-1440x900", viewport: "1440x900" }, { id: "t1-390x844", viewport: "390x844" }], prompt: expect.stringMatching(/^jeyna-tester-cases: t1-1440x900, t1-390x844\n/) },
+    { id: "t2", scenario: "Landing", batch: 1, cases: [{ id: "t2-1440x900", viewport: "1440x900" }, { id: "t2-390x844", viewport: "390x844" }], prompt: expect.any(String) },
   ]);
   expect(out.runDir).toMatch(/\.jeyna\/playtests\/\d{4}-\d{2}-\d{2}-login$/);
   const session = JSON.parse(readFileSync(join(out.runDir, "session.json"), "utf8"));

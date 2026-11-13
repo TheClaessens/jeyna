@@ -9,7 +9,7 @@ import plugin from "../plugin/.claude-plugin/plugin.json" with { type: "json" };
 import { Config } from "./schema.js";
 import { current, registerSessionTools } from "./session.js";
 import { registerBrowserTools } from "./browser.js";
-import { accountValues, readSecrets, redactDeep, redactor } from "./accounts.js";
+import { accountValues, created, readSecrets, redactDeep, redactor } from "./accounts.js";
 import { registerFindingTools } from "./findings.js";
 import { registerFinishTools, validateCli } from "./finish.js";
 import { listFlows, registerFlowTools } from "./flows.js";
@@ -49,29 +49,30 @@ function secretSources(root: string, config: Config): Record<string, "env" | ".e
 }
 
 // The account-value redactor (D9), rebuilt only when what it is built from changes: the config's and
-// .jeyna/.env's mtime and size, and the env values of the variables the config names. Re-checked per
+// .jeyna/.env's mtime and size, the env values of the variables the config names, and the number of accounts
+// app.new_account created (D41), so a created value is redacted from the moment it exists. Re-checked per
 // message (not per string), so a .jeyna/.env edited mid-run is still honoured, without a YAML and .env parse per message (D30).
 let cached: { stamp: string; names: string[]; env: string; redact: (t: string) => string } | undefined;
 const envOf = (names: string[]) => JSON.stringify(names.map((n) => process.env[n] ?? null));
 
 function currentRedactor(): (text: string) => string {
-  let stamp = "no root";
+  let stamp = `${created.length}|no root`;
   try {
     const root = projectRoot();
     const files = [join(root, ".jeyna", "jeyna.config.yaml"), join(root, ".jeyna", ".env")];
-    stamp = [root, ...files.map((f) => {
+    stamp = [created.length, root, ...files.map((f) => {
       const st = statSync(f, { throwIfNoEntry: false });
       return st ? `${st.mtimeMs}:${st.size}` : "-";
     })].join("|");
   } catch {} // no project root: nothing to redact with
   if (!cached || cached.stamp !== stamp || cached.env !== envOf(cached.names)) {
     let names: string[] = [];
-    let fn = (t: string) => t;
+    let fn = redactor(created);
     try {
       const { root, config } = getContext();
       names = config.accounts.flatMap((a) => [a.user_env, a.pass_env]);
-      fn = redactor(accountValues(root, config));
-    } catch {} // no valid config: no account values to know of
+      fn = redactor([...accountValues(root, config), ...created]);
+    } catch {} // no valid config: only created values to know of
     cached = { stamp, names, env: envOf(names), redact: fn };
   }
   return cached.redact;
