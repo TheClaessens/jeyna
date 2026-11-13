@@ -4,7 +4,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, renameSync, writeFile
 import { join } from "node:path";
 import { parseEnv } from "node:util";
 import { z } from "zod";
-import { type Account, created } from "./accounts.js";
+import { type Account, addCreated, createdAccounts, pruneCreated } from "./accounts.js";
 import { closeContexts, launchBrowser } from "./browser.js";
 import { flowSection, readFlow } from "./flows.js";
 import { type Case, type Config, RESULTS, Scenario, type Session, Slug, type Verdict, VIEWPORT } from "./schema.js";
@@ -137,7 +137,7 @@ export function createAccount(root: string, command: string, account: string, ru
   let a: Account = { handle: NEW, user_env: "JEYNA_USER", pass_env: "JEYNA_PASS" };
   shell(root, "new_account", command, then, { JEYNA_ACCOUNT: account, JEYNA_RUN: run }, (stdout) => {
     const out = parseEnv(stdout);
-    created.push((a = { ...a, user: out.JEYNA_USER, pass: out.JEYNA_PASS }));
+    addCreated((a = { ...a, user: out.JEYNA_USER, pass: out.JEYNA_PASS }));
   });
   if (!a.user || !a.pass) {
     throw new Error(`app.new_account must print JEYNA_USER=<username> and JEYNA_PASS=<password> on stdout, one line each, for every new user; it printed ${a.user ? "no JEYNA_PASS" : a.pass ? "no JEYNA_USER" : "neither"}: ${command}\n${then}`);
@@ -260,16 +260,22 @@ export function registerSessionTools(server: McpServer, getContext: () => { root
         for (let n = 2; existsSync(join(dir, id)); n++) id = `${base}-${n}`;
         // After the reset, so it does not remove them; before the run folder, so a failure starts nothing (D41).
         // Synchronous, like the reset: nothing can start or end a run in between.
+        // Then the redaction list keeps every account this start made (refused or not) and drops the oldest others.
         const made: Record<string, Account> = {};
-        for (const t of testers.filter((t) => t.account === NEW)) {
-          const a = createAccount(root, config.app.new_account!, t.id, id, NO_RUN("new_account"));
-          const twin = Object.keys(made).find((k) => made[k].user!.toLowerCase() === a.user!.toLowerCase());
-          if (twin) {
-            throw new Error(
-              `app.new_account answered the same username for ${twin} and ${t.id}: it must create a new user on every call, so no two testers share an account. ${NO_RUN("new_account")}`,
-            );
+        const before = createdAccounts().length;
+        try {
+          for (const t of testers.filter((t) => t.account === NEW)) {
+            const a = createAccount(root, config.app.new_account!, t.id, id, NO_RUN("new_account"));
+            const twin = Object.keys(made).find((k) => made[k].user!.toLowerCase() === a.user!.toLowerCase());
+            if (twin) {
+              throw new Error(
+                `app.new_account answered the same username for ${twin} and ${t.id}: it must create a new user on every call, so no two testers share an account. ${NO_RUN("new_account")}`,
+              );
+            }
+            made[t.id] = a;
           }
-          made[t.id] = a;
+        } finally {
+          if (createdAccounts().length > before) pruneCreated(createdAccounts().slice(before));
         }
         const runDir = join(dir, id);
         // What every tester's brief carries besides its scenario, fixed for the run (D41).

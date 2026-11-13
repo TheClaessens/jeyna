@@ -145,6 +145,32 @@ test("a run that names accounts deals configured ones; tester.parallel bounds th
   expect(created.testers.map((t: { account: string; batch: number }) => [t.account, t.batch])).toEqual([["new", 1], ["new", 1], ["new", 2]]);
 });
 
+// At most 50 created accounts stay registered for redaction (src/accounts.ts). The command derives the values from
+// JEYNA_RUN and JEYNA_ACCOUNT, so the test knows them; an unknown `only` name echoes any text through the exit point.
+const DERIVED = 'printf "JEYNA_USER=u-$JEYNA_ACCOUNT-$JEYNA_RUN@example.test\\nJEYNA_PASS=p-$JEYNA_ACCOUNT-$JEYNA_RUN-secret\\n"';
+const many = (n: number) => Array.from({ length: n }, (_, i) => ({ ...SIGN_IN, name: `S${i + 1}` }));
+
+test("at the limit, a new run's created accounts are redacted from the very next message", async () => {
+  const { call, text, must } = await start(DERIVED);
+  const echo = async (s: string) => text(await call("session_start", { scenarios: [SIGN_IN], only: [s] }));
+  const first = JSON.parse(text(await must("session_start", { scenarios: many(50), viewports: ["390x844"] })));
+  expect(await echo(`u-t50-${first.id}@example.test`)).toBe("Unknown scenarios: {{account.user}}. Scenarios given: Sign in.");
+  // The list stays at 50 (one new, the oldest dropped), so only a change count, not its length, tells the cache to rebuild.
+  const second = JSON.parse(text(await must("session_start", { scenarios: [SIGN_IN], force: true })));
+  expect(second.testers[0].account).toBe("new");
+  expect(await echo(`u-t51-${second.id}@example.test`)).toBe("Unknown scenarios: {{account.user}}. Scenarios given: Sign in.");
+  expect(await echo(`p-t51-${second.id}-secret`)).toBe("Unknown scenarios: {{account.pass}}. Scenarios given: Sign in.");
+  expect(await echo(`u-t50-${first.id}@example.test`)).toBe("Unknown scenarios: {{account.user}}. Scenarios given: Sign in.");
+}, 30_000);
+
+test("a run with more testers than the limit keeps every one of its own accounts redacted", async () => {
+  const { call, text, must } = await start(DERIVED);
+  const run = JSON.parse(text(await must("session_start", { scenarios: many(55), viewports: ["390x844"] })));
+  for (const t of ["t1", "t30", "t55"]) {
+    expect(text(await call("session_start", { scenarios: [SIGN_IN], only: [`u-${t}-${run.id}@example.test`] }))).toBe("Unknown scenarios: {{account.user}}. Scenarios given: Sign in.");
+  }
+}, 30_000);
+
 test("new is a reserved handle: a configured account may not use it", async () => {
   const { call, text } = await start("true", "accounts:\n  - { handle: new, user_env: A_USER, pass_env: A_PASS }\n");
   const r = await call("get_context");

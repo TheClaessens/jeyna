@@ -14,9 +14,33 @@ export function readSecrets(root: string): (name: string) => { from: "env" | ".e
   return (n) => (process.env[n] ? { from: "env", value: process.env[n] } : dotenv[n] ? { from: ".env", value: dotenv[n] } : { from: "missing" });
 }
 
-// Accounts app.new_account created in this server process (D41). Their values live here only: never written to disk,
-// never returned, and redacted like configured values for the life of the process, also after their run ends.
-export const created: Account[] = [];
+// Accounts app.new_account created in this server process (D41), oldest first. Their values live here only: never
+// written to disk, never returned. Each is redacted like a configured value from the moment it exists: every account
+// of the current run for as long as it runs, then, once a newer run creates its accounts, while it is among the most
+// recent CREATED_MAX (the current run's accounts first). Older ones are dropped and no longer redacted.
+// ponytail: CREATED_MAX caps the one combined redactor regex, whose cost grows steeply with its alternatives. Measured
+// on a 90,000-character snapshot (redacted twice per snapshot) with uuid passwords and user-xxxxxxxx@example.test
+// usernames: 50 accounts 2 ms, 60 15 ms, 100 150 ms, 300 770 ms. To keep more, match values with a linear scan
+// (indexOf per value, or Aho-Corasick) instead of one alternation.
+export const CREATED_MAX = 50;
+const created: Account[] = [];
+let changes = 0;
+export const createdAccounts = (): readonly Account[] => created;
+// Goes up on every change to the list, never down: the redactor's cache key. A pruned list can keep its length.
+export const createdStamp = () => changes;
+
+export function addCreated(a: Account) {
+  created.push(a);
+  changes++;
+}
+
+// A run created `run`: keep all of them, then the most recent others up to CREATED_MAX.
+export function pruneCreated(run: Account[]) {
+  const older = created.filter((a) => !run.includes(a));
+  const room = Math.max(0, CREATED_MAX - run.length);
+  created.splice(0, created.length, ...older.slice(Math.max(0, older.length - room)), ...run);
+  changes++;
+}
 
 // Values are read when needed, never kept.
 export function accountValues(root: string, config: Config): Account[] {

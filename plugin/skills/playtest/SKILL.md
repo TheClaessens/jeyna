@@ -131,7 +131,9 @@ Call `validate`.
   ```
   jeyna-tester-cases: <the case ids without a verdict, comma separated>
   Call brief with case <the first of them> and follow what it returns.
-  ``` If a case still has none, call `scenario_verdict {case, result: "blocked", note: "the tester ended without a verdict"}` yourself.
+  ```
+
+  If a case still has none, call `scenario_verdict {case, result: "blocked", note: "the tester ended without a verdict"}` yourself.
 - Any other error: the run folder is written only by the server, so show the error to the developer and stop. The run stays `running`; the next run needs `force`.
 
 ## 6. Mark duplicates

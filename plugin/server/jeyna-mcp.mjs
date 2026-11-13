@@ -61103,14 +61103,14 @@ ${end.comment}` : end.comment;
           }
         }).join("");
       }
-      postProcess(changes, options2) {
-        if (!changes || options2.oneChangePerToken) {
-          return changes;
+      postProcess(changes2, options2) {
+        if (!changes2 || options2.oneChangePerToken) {
+          return changes2;
         }
         let lastKeep = null;
         let insertion = null;
         let deletion = null;
-        changes.forEach((change) => {
+        changes2.forEach((change) => {
           if (change.added) {
             insertion = change;
           } else if (change.removed) {
@@ -61127,7 +61127,7 @@ ${end.comment}` : end.comment;
         if (insertion || deletion) {
           dedupeWhitespaceInChangeObjects(lastKeep, deletion, insertion, null, options2.intlSegmenter);
         }
-        return changes;
+        return changes2;
       }
     };
     var wordDiff = new WordDiff();
@@ -62253,11 +62253,11 @@ ${end.comment}` : end.comment;
       }
       return result2;
     }
-    function convertChangesToDMP(changes) {
+    function convertChangesToDMP(changes2) {
       const ret = [];
       let change, operation;
-      for (let i2 = 0; i2 < changes.length; i2++) {
-        change = changes[i2];
+      for (let i2 = 0; i2 < changes2.length; i2++) {
+        change = changes2[i2];
         if (change.added) {
           operation = 1;
         } else if (change.removed) {
@@ -62269,10 +62269,10 @@ ${end.comment}` : end.comment;
       }
       return ret;
     }
-    function convertChangesToXML(changes) {
+    function convertChangesToXML(changes2) {
       const ret = [];
-      for (let i2 = 0; i2 < changes.length; i2++) {
-        const change = changes[i2];
+      for (let i2 = 0; i2 < changes2.length; i2++) {
+        const change = changes2[i2];
         if (change.added) {
           ret.push("<ins>");
         } else if (change.removed) {
@@ -207137,7 +207137,21 @@ function readSecrets(root) {
   const dotenv3 = existsSync(file2) ? parseEnv(readFileSync(file2, "utf8")) : {};
   return (n) => process.env[n] ? { from: "env", value: process.env[n] } : dotenv3[n] ? { from: ".env", value: dotenv3[n] } : { from: "missing" };
 }
+var CREATED_MAX = 50;
 var created = [];
+var changes = 0;
+var createdAccounts = () => created;
+var createdStamp = () => changes;
+function addCreated(a) {
+  created.push(a);
+  changes++;
+}
+function pruneCreated(run) {
+  const older = created.filter((a) => !run.includes(a));
+  const room = Math.max(0, CREATED_MAX - run.length);
+  created.splice(0, created.length, ...older.slice(Math.max(0, older.length - room)), ...run);
+  changes++;
+}
 function accountValues(root, config2) {
   const get = readSecrets(root);
   return config2.accounts.map((a) => ({ ...a, user: get(a.user_env).value, pass: get(a.pass_env).value }));
@@ -207976,7 +207990,7 @@ function createAccount(root, command, account, run, then) {
   let a = { handle: NEW, user_env: "JEYNA_USER", pass_env: "JEYNA_PASS" };
   shell(root, "new_account", command, then, { JEYNA_ACCOUNT: account, JEYNA_RUN: run }, (stdout) => {
     const out = parseEnv2(stdout);
-    created.push(a = { ...a, user: out.JEYNA_USER, pass: out.JEYNA_PASS });
+    addCreated(a = { ...a, user: out.JEYNA_USER, pass: out.JEYNA_PASS });
   });
   if (!a.user || !a.pass) {
     throw new Error(`app.new_account must print JEYNA_USER=<username> and JEYNA_PASS=<password> on stdout, one line each, for every new user; it printed ${a.user ? "no JEYNA_PASS" : a.pass ? "no JEYNA_USER" : "neither"}: ${command}
@@ -208071,15 +208085,20 @@ function registerSessionTools(server3, getContext2, redact2) {
         let id = base;
         for (let n = 2; existsSync5(join6(dir, id)); n++) id = `${base}-${n}`;
         const made = {};
-        for (const t of testers.filter((t2) => t2.account === NEW)) {
-          const a = createAccount(root, config2.app.new_account, t.id, id, NO_RUN("new_account"));
-          const twin = Object.keys(made).find((k) => made[k].user.toLowerCase() === a.user.toLowerCase());
-          if (twin) {
-            throw new Error(
-              `app.new_account answered the same username for ${twin} and ${t.id}: it must create a new user on every call, so no two testers share an account. ${NO_RUN("new_account")}`
-            );
+        const before = createdAccounts().length;
+        try {
+          for (const t of testers.filter((t2) => t2.account === NEW)) {
+            const a = createAccount(root, config2.app.new_account, t.id, id, NO_RUN("new_account"));
+            const twin = Object.keys(made).find((k) => made[k].user.toLowerCase() === a.user.toLowerCase());
+            if (twin) {
+              throw new Error(
+                `app.new_account answered the same username for ${twin} and ${t.id}: it must create a new user on every call, so no two testers share an account. ${NO_RUN("new_account")}`
+              );
+            }
+            made[t.id] = a;
           }
-          made[t.id] = a;
+        } finally {
+          if (createdAccounts().length > before) pruneCreated(createdAccounts().slice(before));
         }
         const runDir = join6(dir, id);
         const preconditions = flow && flowSection(flow.body, "Preconditions");
@@ -208657,11 +208676,11 @@ function secretSources(root, config2) {
 var cached2;
 var envOf = (names) => JSON.stringify(names.map((n) => process.env[n] ?? null));
 function currentRedactor() {
-  let stamp = `${created.length}|no root`;
+  let stamp = `${createdStamp()}|no root`;
   try {
     const root = projectRoot();
     const files = [join10(root, ".jeyna", "jeyna.config.yaml"), join10(root, ".jeyna", ".env")];
-    stamp = [created.length, root, ...files.map((f) => {
+    stamp = [createdStamp(), root, ...files.map((f) => {
       const st = statSync(f, { throwIfNoEntry: false });
       return st ? `${st.mtimeMs}:${st.size}` : "-";
     })].join("|");
@@ -208669,11 +208688,11 @@ function currentRedactor() {
   }
   if (!cached2 || cached2.stamp !== stamp || cached2.env !== envOf(cached2.names)) {
     let names = [];
-    let fn = redactor(created);
+    let fn = redactor([...createdAccounts()]);
     try {
       const { root, config: config2 } = getContext();
       names = config2.accounts.flatMap((a) => [a.user_env, a.pass_env]);
-      fn = redactor([...accountValues(root, config2), ...created]);
+      fn = redactor([...accountValues(root, config2), ...createdAccounts()]);
     } catch {
     }
     cached2 = { stamp, names, env: envOf(names), redact: fn };
