@@ -9,12 +9,12 @@ Decision references (Dn) point to `docs/decisions.md`; terms are defined in `GLO
 **Claude Code (the developer's session, one process)**
 - You, in the terminal: `/jeyna:init` once per project, then `/jeyna:playtest authentication`.
 - Main agent running the `playtest` skill: resolves scope (scout look in exploratory mode), starts the session, spawns testers batch by batch, waits, reads findings with `Read`, marks duplicates, calls `session_finish`. No reviewer agent in v0 (D12). Running the `init` skill, it writes `.jeyna/` from the plugin's templates (D13). Running the `feedback` or `feedback-next` skill, it loads one feedback item at a time with `get_feedback`, follows the developer's lead, and sets `processed` after implementing and `done` only on the developer's OK (D36).
-- `jeyna-tester` × N (model `sonnet`, effort `medium` by default; config override passed per spawn, D15): one subagent per scenario, each with its own context window; runs one case per viewport in sequence, each in a fresh browser context. Tools allowlist: eight exact jeyna-mcp names (browser family, `record_finding`, `scenario_verdict`). No Read/Write/Edit/Bash, no other browser, no run-control tools. Returns a short TEXT summary to the main agent.
+- `jeyna-tester` × N (model `sonnet`, effort `medium` by default; config override passed per spawn, D15): one subagent per scenario, each with its own context window; runs one case per viewport in sequence, each in a fresh browser context. Tools allowlist: nine exact jeyna-mcp names (`brief`, browser family, `record_finding`, `scenario_verdict`); its first call is `brief`, which returns what it plays (D41). No Read/Write/Edit/Bash, no other browser, no run-control tools. Returns a short TEXT summary to the main agent.
 - Hooks (shell + node): PreToolUse denies Write/Edit/NotebookEdit under `.jeyna/playtests/` and `.jeyna/feedback/` and on `.jeyna/.env`; SubagentStop blocks a tester once if any of its cases has no verdict. They read `session.json` and the tester's transcript; they do not run `jeyna validate` (D2).
 
 **jeyna-mcp (local child process, stdio)**
 Started by the plugin as `node ${CLAUDE_PLUGIN_ROOT}/server/jeyna-mcp.mjs --project ${CLAUDE_PROJECT_DIR}`: a committed bundle, no npm on the user's machine (D13). Server key `mcp`, tools exposed as `mcp__plugin_jeyna_mcp__<tool>` (D1).
-- Tool handlers, run family: `get_context`, `get_flow`, `session_start`, `scenario_verdict`, `record_finding`, `update_status` (findings and feedback items), `validate`, `session_finish`, `save_flow`; `get_feedback` (D36).
+- Tool handlers, run family: `get_context`, `get_flow`, `session_start`, `brief`, `scenario_verdict`, `record_finding`, `update_status` (findings and feedback items), `validate`, `session_finish`, `save_flow`; `get_feedback` (D36).
 - Tool handlers, browser family (every call carries `case`; `scout` is a reserved session-less case for the exploratory look and writes nothing, D6): `goto`, `click`, `fill`, `press`, `snapshot`, `screenshot`. Every text result passes one redaction step that replaces account values with placeholders (D9).
 - zod schema: finding, session, config, flow, feedback item. `report.md` has no schema: it is plain markdown rendered from the session and the findings.
 - Session state: held in memory during a run; `session.json` is a copy written through one queue (temp + rename), never read back mid-run (D11).
@@ -25,9 +25,9 @@ Started by the plugin as `node ${CLAUDE_PLUGIN_ROOT}/server/jeyna-mcp.mjs --proj
 - Build id: `git describe --always --dirty` in the project root (D7).
 
 **project/.jeyna/ (files on disk, git-tracked except where noted)**
-- `jeyna.config.yaml` — YAML — app url, viewports, tester model, account pool as env variable names.
+- `jeyna.config.yaml` — YAML — app url, viewports, tester model and `parallel`, account pool as env variable names, or `app.new_account`, a command that creates a test user per tester (D41).
 - `.env` — dotenv — account values; gitignored, written by you, never by Claude (D18).
-- `CONVENTIONS.md` — MD — what counts as a finding per kind; returned by `get_context`, put into every tester prompt.
+- `CONVENTIONS.md` — MD — what counts as a finding per kind; returned by `get_context` and, read at call time, by every tester's `brief`.
 - `flows/*.md` — MD+YAML — optional; scenarios, `Pass:` and `Account:` lines.
 - `playtests/<run>/session.json` — JSON — status, scope, build, testers, cases, verdicts. Read back by since-last-run, retests and `save_flow`.
 - `playtests/<run>/findings/PT-*.md` — MD+YAML — one file per finding. The record.
@@ -129,7 +129,7 @@ flowchart LR
 |---|---|---|---|
 | You → main agent | Claude Code prompt (`/jeyna:playtest`, `/jeyna:init`, `/jeyna:feedback`, `/jeyna:feedback-next`) | TEXT | the skills |
 | Plugin templates → main agent → `.jeyna/` | `init` skill reads templates, writes with `Write` | YAML config, MD conventions, `.env` with empty entries, `.gitignore` line | the plugin templates; validated by `get_context` |
-| Main agent → testers | Agent tool, in-process | TEXT prompt: marker line `jeyna-tester-cases: …`, scenario, per-case viewport, account handle, conventions | the skill |
+| Main agent → testers | Agent tool, in-process | TEXT prompt from `session_start`, passed verbatim: marker line `jeyna-tester-cases: …` and a call to `brief`, which returns the scenario, per-case viewport, account, conventions (D41) | the skill |
 | Testers → main agent | Agent tool return | TEXT summary (cases, verdicts, finding ids) | the skill |
 | Agents → jeyna-mcp | MCP tool calls, JSON-RPC over stdio | JSON args in; JSON result out, plus image content for `screenshot` only when `look: true` | jeyna-mcp (zod → JSON Schema in the tool definitions) |
 | jeyna-mcp → web app | Playwright, one context per case | HTTP + CDP | n/a |

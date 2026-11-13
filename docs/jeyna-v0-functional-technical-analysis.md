@@ -68,7 +68,7 @@ Numbered so they can be referenced in grill sessions. "Must" is v0; "should" is 
 - F2.2 **Guided mode.** The flow file declares scenarios, preconditions, accounts and what pass means. Viewports come from the flow if declared, otherwise from config. Runs are repeatable and comparable across builds.
 - F2.3 **Exploratory mode.** No flow exists for the prompt. The skill derives a scenario list from the prompt plus a short look at the app through `jeyna-mcp` using the reserved case `scout` (D6): entry page snapshot, visible navigation, about 10 browser calls at most; it may log in with the first account in the pool when the entry page is a login wall. `scout` needs no session, uses the first configured viewport, writes nothing to disk (`screenshot` returns the image only), and is closed by `session_start`. The skill proposes the list and the pass criteria to the developer in one message, and proceeds after confirmation or edits. The derived scenarios are stored in `session.json` (`scenarios[]`, same shape as a flow's) so the run is self-describing.
 - F2.4 **Promotion.** At the end of an exploratory run the skill offers to save the run's scenarios as `flows/<name>.md` via `save_flow {run, name}`; the server copies them from that run's `session.json`, so the saved flow is exactly what ran (D6). The developer edits it from there; the next run with the same prompt is guided. Flow files are therefore written by the loop and edited by people, not authored up front.
-- F2.5 Fan-out rule (D4): axes that change the environment run in sequence inside one tester; axes that change who the tester is get their own tester. In v0 the only environment axis is viewport and there is one implicit persona, so: one **tester** per scenario; one **case** per (scenario, viewport), each with its own browser context and verdict. N testers = scenarios after filters. Concurrency is planned by the server (D10, D14): testers needing an account are limited to the number of accounts in the pool; testers needing none are not limited by Jeyna (Claude Code's own limit is 20 concurrent subagents). `session_start` returns a `batch` number per tester; the skill spawns batch by batch and states the plan up front ("4 testers, 2 at a time: 2 accounts").
+- F2.5 Fan-out rule (D4): axes that change the environment run in sequence inside one tester; axes that change who the tester is get their own tester. In v0 the only environment axis is viewport and there is one implicit persona, so: one **tester** per scenario; one **case** per (scenario, viewport), each with its own browser context and verdict. N testers = scenarios after filters. Concurrency is planned by the server (D10, D14): testers needing a configured account are limited to the number of accounts in the pool; testers with an account created for them (`app.new_account`) or none are not; every batch holds at most `tester.parallel` testers, default 20, Claude Code's own limit of concurrent subagents (D41). `session_start` returns a `batch` number per tester; the skill spawns batch by batch and states the plan up front ("4 testers, 2 at a time: 2 accounts").
 
 ### F3. Session
 - F3.0 The server resolves the project root from its `--project` argument (`.mcp.json` passes `${CLAUDE_PROJECT_DIR}`, which the plugin docs say resolves in MCP `args`; D13), else `CLAUDE_PROJECT_DIR` from its environment, else the nearest folder containing `.jeyna/` above its working directory; if neither, `get_context` fails with an explicit message. `get_context` returns the resolved root and the skill shows it in its first message (D7).
@@ -78,7 +78,7 @@ Numbered so they can be referenced in grill sessions. "Must" is v0; "should" is 
 
 ### F4. Tester behaviour
 - F4.1 A tester receives, in its prompt: a first marker line `jeyna-tester-cases: <case ids>`, the scenario text, each case's viewport, the tester's account handle (if any), the flow's preconditions, and the conventions file. It receives no credentials. It runs its cases in order and treats each as a fresh check, not a repeat of the previous viewport.
-- F4.2 A tester may only use these eight `jeyna-mcp` tools, listed by exact name in `tools:` (no wildcard; see D1): `goto`, `click`, `fill`, `press`, `snapshot`, `screenshot`, `record_finding`, `scenario_verdict`. No `Write`, `Edit`, `Bash`, no other browser tool, and no run-control tool (`session_start`, `session_finish`, `save_flow`, `update_status`): the server cannot tell which agent is calling, so the allowlist is the only thing keeping a tester from aborting the run.
+- F4.2 A tester may only use these nine `jeyna-mcp` tools, listed by exact name in `tools:` (no wildcard; see D1): `brief` (D41), `goto`, `click`, `fill`, `press`, `snapshot`, `screenshot`, `record_finding`, `scenario_verdict`. No `Write`, `Edit`, `Bash`, no other browser tool, and no run-control tool (`session_start`, `session_finish`, `save_flow`, `update_status`): the server cannot tell which agent is calling, so the allowlist is the only thing keeping a tester from aborting the run.
 - F4.3 A tester must record exactly one verdict per case before it finishes, via `scenario_verdict`.
 - F4.4 A tester records a finding whenever observed behaviour diverges from the flow's definition of pass, or from common expectations for the kind (a11y, ux) as described in `CONVENTIONS.md`. One finding per distinct problem.
 - F4.5 Every finding of kind `bug` must carry at least one piece of evidence; `record_finding` refuses it otherwise (D2). Other kinds should.
@@ -182,7 +182,7 @@ Numbered so they can be referenced in grill sessions. "Must" is v0; "should" is 
 
 **Finding frontmatter** (server-added fields in bold): schema, **id**, kind, severity, **status** (`open | duplicate | wontfix | fixed`), **of?**, **flow**, **case**, **scenario**, route, **viewport**, **browser**, **build**, **author** (the config's `tester.model`, a model alias such as `sonnet`, D15), **created**, evidence. Scenario and viewport are copied from the case, so a tester cannot get them wrong (D4).
 
-**Session** (`session.json`): schema, id, flow (name, or `exploratory:<slug>`), app, build, status (running | done | aborted), started, finished?, mode (guided | exploratory), entry, scenarios[{name, description, pass, account?: none | consumes}], testers[{id, scenario, account?, batch, model, cases[]}], cases[{id, scenario, viewport}], verdicts[{case, result, note?, findings[]}], summary?.
+**Session** (`session.json`): schema, id, flow (name, or `exploratory:<slug>`), app, build, status (running | done | aborted), started, finished?, mode (guided | exploratory), entry, preconditions?, focus? (D41), scenarios[{name, description, pass, account?: none | consumes}], testers[{id, scenario, account?, batch, model, cases[]}], cases[{id, scenario, viewport}], verdicts[{case, result, note?, findings[]}], summary?.
 
 **Config** (`jeyna.config.yaml`):
 
@@ -192,12 +192,15 @@ app:
   url: http://localhost:4173
   build: null            # optional fixed id; else git HEAD
   reset: null            # optional shell command run before every run, e.g. npm run db:seed (D31)
+  new_account: null      # optional shell command that creates a test user per call and prints
+                         # JEYNA_USER=… and JEYNA_PASS=…; one per tester that signs in (D41)
 viewports: [1440x900, 390x844]
 browser:
   headed: false
-tester:                  # optional; default model: sonnet, effort: medium (D15)
+tester:                  # optional; default model: sonnet, effort: medium (D15), parallel: 20 (D41)
   model: sonnet
   effort: medium
+  parallel: 20           # the most testers in one batch
 accounts:
   - { handle: user_a, user_env: JEYNA_USER_A_USER, pass_env: JEYNA_USER_A_PASS }
   - { handle: user_b, user_env: JEYNA_USER_B_USER, pass_env: JEYNA_USER_B_PASS }
@@ -240,7 +243,8 @@ Run family:
 |---|---|---|
 | `get_context` | — | project root, config (env variable names only), `secrets`: per account variable `env` \| `.env` \| `missing`, never the value (D18, D21), conventions text, flows with their scenario names |
 | `get_flow` | `{name}` | flow frontmatter + body + parsed scenario list |
-| `session_start` | `{flow?, scenarios?: [{name, description, pass, account?}], slug?, entry?, only?: string[], viewports?: string[], accounts?: string[], force?}` | session id, run dir, testers[{id, scenario, account handle?, batch, cases[{id, viewport}]}]. Either `flow` (guided) or an explicit `scenarios` list (exploratory) is required; `slug`, `entry` and `accounts` (handles to deal from) are for exploratory runs (D29, D40). A guided run's `viewports` must be its flow's (else the configured ones); an exploratory run takes any `<width>x<height>`, so a finding's retest runs at the finding's viewport. Launches the browser first and refuses the run without one (F11.3). Closes the scout. Runs `app.reset` first, if set; a failure refuses the run (D31). After `force`, testers are numbered after the aborted runs' (F3.3). |
+| `session_start` | `{flow?, scenarios?: [{name, description, pass, account?}], slug?, entry?, only?: string[], viewports?: string[], accounts?: string[], focus?, force?}` | session id, run dir, testers[{id, scenario, account handle?, batch, cases[{id, viewport}], prompt}]. `prompt` is the tester's spawn prompt: the `jeyna-tester-cases` line, then a call to `brief`. With `app.new_account` set and no accounts named (by the flow or `accounts`), each tester that signs in gets an account created for it alone, handle `new`, after the reset; a failing command, missing lines or a repeated username refuse the run (D41). `focus` (exploratory) is what matters most, in the developer's words; a guided run stores its flow's Preconditions and What matters most here instead. Either `flow` (guided) or an explicit `scenarios` list (exploratory) is required; `slug`, `entry` and `accounts` (handles to deal from) are for exploratory runs (D29, D40). A guided run's `viewports` must be its flow's (else the configured ones); an exploratory run takes any `<width>x<height>`, so a finding's retest runs at the finding's viewport. Launches the browser first and refuses the run without one (F11.3). Closes the scout. Runs `app.reset` first, if set; a failure refuses the run (D31). After `force`, testers are numbered after the aborted runs' (F3.3). |
+| `brief` | `{case}` | read-only; the tester's brief as text, for the tester that owns `case`: app url, entry, its cases and viewports (play those on the prompt's `jeyna-tester-cases` line), account line, scenario with its `Pass:` line, preconditions, what matters most here, and `.jeyna/CONVENTIONS.md` read at call time (D41) |
 | `save_flow` | `{run, name}` | writes `flows/<name>.md` from that run's `session.json` scenarios and `entry` (F2.4); refuses if the file exists, a bad name, or a scenario that would not read back the same (D29) |
 | `scenario_verdict` | `{case, result, note?, findings?}` | ok; `findings` may name any finding of the same tester's cases (its other viewports, D40); refused if `fail` has none, or `blocked`/`skipped` has no note |
 | `record_finding` | `{case, finding: FindingInput}` | `{id, path}`; refused if kind is `bug` with no evidence, or an evidence file does not exist |
@@ -268,7 +272,7 @@ One `chromium.launch({ channel: "chrome" })` per server process (fallback: Playw
 
 ### 5.6 Accounts
 
-Config lists handles and env variable names. `session_start` assigns one account per tester (none for `Account: none` scenarios) and plans batches so no account is held by two testers at once; a tester in a later batch reuses an account freed by an earlier one. `Account: consumes` testers go in the last batch. A flow may restrict to specific handles. Resetting a locked account between runs is the developer's job in v0 (D10). The server reads the env at substitution time. If an env variable is missing, `fill` fails with "account user_a not configured", not with an empty string.
+Config lists handles and env variable names. `session_start` assigns one account per tester (none for `Account: none` scenarios) and plans batches so no account is held by two testers at once; a tester in a later batch reuses an account freed by an earlier one. `Account: consumes` testers go in the last batch. A flow may restrict to specific handles. Resetting a locked account between runs is the developer's job in v0 (D10). With `app.new_account` set, a run that names no accounts creates one per tester that signs in instead (handle `new`, values in server memory only); such testers are bounded only by `tester.parallel`, which bounds every batch (D41). The server reads the env at substitution time. If an env variable is missing, `fill` fails with "account user_a not configured", not with an empty string.
 
 ### 5.7 Plugin layout
 
@@ -298,7 +302,7 @@ plugin/
 2. Resolve the flow from the prompt (F1.2). Ask if ambiguous.
    - No flow: exploratory mode. Take an entry snapshot, derive scenarios and pass criteria, show them, wait for confirmation.
 3. Call `session_start` with the flow name (guided) or the confirmed scenario list (exploratory), plus `only` / `viewports` read from the prompt.
-4. For each batch in the result, spawn its `jeyna-tester`s in parallel with the prompt template (F4.1), listing their cases; start the next batch when the current one has returned.
+4. For each batch in the result, spawn its `jeyna-tester`s in parallel, each with its `prompt` from the result verbatim (the tester then calls `brief`, D41); start the next batch when the current one has returned.
 5. Wait for all testers. Report progress as they return (scenario, verdict, finding count).
 6. Call `validate`; read the findings with `Read`; mark cross-scenario duplicates with `update_status`; call `session_finish` with a short summary, fixing whatever it refuses.
 7. Relay the summary and the report path. State elapsed time and tester count.
@@ -370,7 +374,7 @@ A SubagentStop hook fires at each tester's exit (verdict recorded for each case?
 
 These are the places where the design is a guess and a Claude Code session can disprove it quickly.
 
-1. ~~**Tool naming in agent allowlists.**~~ Resolved, D1: `mcp__plugin_jeyna_mcp__<tool>`; wildcards (`mcp__<server>__*`) work but are not used for testers, which get 8 exact names (10 before D9 cut clips).
+1. ~~**Tool naming in agent allowlists.**~~ Resolved, D1: `mcp__plugin_jeyna_mcp__<tool>`; wildcards (`mcp__<server>__*`) work but are not used for testers, which get 9 exact names (8 from D9 to D41, which added `brief`; 10 before D9 cut clips).
 2. ~~**Hooks and MCP.**~~ Resolved, D2: all confirmed; exit hooks rescoped to the stopping agent, run-level validation moved into `session_finish`. Original question: Confirm Stop/SubagentStop can block with a reason and that `stop_hook_active` is present in the payload. Confirm the PreToolUse payload exposes `tool_input.file_path` for Write/Edit.
 3. ~~**Image return.**~~ Open until the first-slice probe, D3: `screenshot` returns the image only on `look: true`; fallback is snapshot-only testers and no layout findings in v0. Original question: Does a screenshot returned as MCP image content reach a subagent's context as an image? If only text does, testers navigate by snapshot and screenshots are evidence only.
 4. **Snapshot size.** Observed in the first full run, not a gate (D14). How large is an aria snapshot of a realistic page, and what cap keeps a tester under budget across a 10-step scenario?
