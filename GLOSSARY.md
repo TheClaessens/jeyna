@@ -14,7 +14,7 @@ The one glossary for Jeyna. Use these words in docs, code, issues and agent prom
 - **Flow**: a named set of scenarios for one area of the app, in `flows/<name>.md`. Usually first written by the loop at the end of an exploratory run (`save_flow`), then edited by people.
 - **Scenario**: one named path through a flow, with a description, a `Pass:` line and an optional `Account:` line (`none` or `consumes`).
 - **Reset**: the `app.reset` shell command in `jeyna.config.yaml`, run by `session_start` from the project root before every run so each run starts from the same app state. A failing command refuses the run. (D31)
-- **Retest**: a run of one finding's scenario at its viewport, started by `/jeyna:playtest PT-<slug>-<nnn>`. A `pass` marks the finding `fixed`. (D31)
+- **Retest**: an exploratory run that plays one finding: its Steps, judged against its Expected, at its viewport, with the account its tester had; started by `/jeyna:playtest PT-<slug>-<nnn>`. A `pass` marks the finding `fixed`. (D31, D32, D40)
 - **Slug**: the flow name or exploratory slug used in the run folder and finding ids. It never contains a colon. (D7)
 
 ## Who does the work
@@ -23,8 +23,9 @@ The one glossary for Jeyna. Use these words in docs, code, issues and agent prom
 - **Tester**: one `jeyna-tester` subagent per scenario. It runs that scenario's cases in sequence. Sonnet at medium effort by default. (D4, D15)
 - **Case**: one (scenario, viewport) pair in a run. It has its own browser context, evidence prefix and verdict, and uses its tester's account. Browser tools are keyed by case. (D4)
 - **Scout**: the reserved case id for the exploratory look before a session exists. It writes nothing to disk. (D6)
-- **Batch**: a group of testers that run at the same time. No account is held by two testers in the same batch. (D10)
-- **Account**: a test login from the pool in `jeyna.config.yaml` (handle plus environment variable names). One per tester, never shared by concurrently running testers. (D10)
+- **Batch**: a group of testers that run at the same time: at most `tester.parallel` (default 20), and no configured account held by two of them. (D10, D41)
+- **Account**: a test login a tester signs in with, one per tester, never shared by concurrently running testers. Either configured, from the pool in `jeyna.config.yaml` (handle plus environment variable names), or created: made by the `app.new_account` command for one tester alone, handle `new`, its values kept in server memory only. A run that names accounts (a flow's `accounts`, or the `accounts` input) uses configured ones. (D10, D41)
+- **Brief**: what a tester plays, returned by the `brief` tool for one of its cases: app url, entry, its cases and viewports, account, scenario and `Pass:` line, preconditions, what matters most here, conventions. A tester's spawn prompt is only its `jeyna-tester-cases` line and the call to `brief`. (D41)
 - **Persona**: *not supported in v0; required in v1.* Who the tester pretends to be. It changes behaviour, so each persona gets its own tester. (D4)
 
 ## What a run produces
@@ -32,7 +33,7 @@ The one glossary for Jeyna. Use these words in docs, code, issues and agent prom
 - **Finding**: one observed divergence, one markdown file `findings/PT-<slug>-<nnn>.md`. Its kind is `bug`, `ux`, `a11y` or `question` (no `perf` in v0, D8). Its status is `open`, `duplicate` (with `of`), `wontfix` or `fixed`. (D11)
 - **Verdict**: `pass`, `fail`, `blocked` or `skipped` for one case. Recorded by the tester and checked by the server. (D8)
 - **Evidence**: PNG files under the run's `evidence/` folder, named `<case>-<seq>[-<label>].png` and referenced by name from findings. No clips in v0. (D9)
-- **Console**: the app's page errors, console errors, failed requests and 4xx/5xx responses in a case's browser since the tester's last call, carried by the results of `goto`, `click`, `press` and `snapshot`. Not stored. (D31)
+- **Console**: the app's page errors, console errors, failed requests and 4xx/5xx responses in a case's browser since the tester's last call, carried by the results of `goto`, `click`, `press` and `snapshot`. Also the dialogs the browser accepted (type and message) and the new tabs the app opened (url; closed, not followed). Not stored. (D31, D39)
 - **Report**: `report.md`, written by `session_finish`: counts, scenario matrix, the verdicts that changed since the latest done run of the same flow, and findings sorted by severity then kind.
 
 ## Reading a run

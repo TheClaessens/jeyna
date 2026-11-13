@@ -5,6 +5,11 @@ app:
   build: null            # optional fixed build id; else git describe --always --dirty
   reset: null            # optional shell command run from the project root before every run, so each run
                          # starts from the same app state, e.g. npm run db:seed. A failing command refuses the run.
+  new_account: null      # optional shell command that creates a new test user on every call and prints
+                         # JEYNA_USER=<username> and JEYNA_PASS=<password> on stdout, e.g. npm run --silent make-test-user.
+                         # When set, each tester that signs in gets its own account, so all can run at once.
+                         # The command gets JEYNA_ACCOUNT (the tester id) and JEYNA_RUN (the run id) to build a unique
+                         # name. Put no password in the command itself: get_context returns this file.
 
 # Each viewport is one case per scenario, run in sequence by one tester (D4).
 viewports: [1440x900, 390x844]
@@ -15,8 +20,11 @@ browser:
 tester:                  # model and effort for every tester (D15)
   model: sonnet
   effort: medium
+  parallel: 20           # the most testers running at once (Claude Code runs up to 20 subagents by default)
 
 # Test accounts. Only env variable NAMES live here, never values (D18).
 # Values come from the shell environment, else from .jeyna/.env (gitignored, filled by people only).
+# No two testers hold one at once, so a small pool runs testers in batches; app.new_account avoids that.
+# A flow that names accounts (a particular seeded user) still takes them from here. The handle new is reserved.
 #   - { handle: user_a, user_env: JEYNA_USER_A_USER, pass_env: JEYNA_USER_A_PASS }
 accounts: []

@@ -452,15 +452,14 @@ The capture state lives **in the sidecar**: mode, frozen PNG, region, frames, an
 
 ### 3.11 What is saved, and what Claude receives
 
-The item format of D36 stays. A **snap** is one PNG of **exactly the selected region at device resolution**, cut from a full-resolution CDP frame: no scaling, no studio chrome, no letterbox. A **recording** is region-clipped PNG frames with real `ms`, after any trim. Three optional frontmatter fields are added; the first two are cheap and always known in the Jeyna window:
+The item format of D36 stays. A **snap** is one PNG of **exactly the selected region at device resolution**, cut from a full-resolution CDP frame: no scaling, no studio chrome, no letterbox. A **recording** is region-clipped PNG frames with real `ms`, after any trim. Two optional frontmatter fields are added, cheap and always known in the Jeyna window (a third, `target`, the selector of a clicked element, was proposed here and cut by D37 with element click-to-select):
 
 ```yaml
 url: http://localhost:4173/login          # the page's URL at the freeze (live only)
 viewport: { width: 1512, height: 860, dpr: 2 }  # CSS px and ratio at the freeze (live only)
-target: "form#login > input[name=email]"  # only when the selection came from an element click
 ```
 
-`get_feedback` prints them in its text before the frames: "Captured at http://localhost:4173/login, viewport 1512×860 @2x, element form#login > input[name=email]". Claude then knows the route and the component to look for, not only how they look. Tighter crops also mean fewer tokens and less downscaling (§1.5).
+`get_feedback` prints them in its text before the frames. Claude then knows the route and the size it was seen at, not only how it looks. Tighter crops also mean fewer tokens and less downscaling (§1.5).
 
 ---
 
@@ -473,7 +472,7 @@ A new **D37** amends D36's "On Live" bullet and its "Rejected" line:
 - getDisplayMedia and the iframe go.
 - The "streaming frames" rejection is kept and explicitly distinguished.
 - The in-place overlay replaces the modal for every capture.
-- The three optional item fields are added.
+- The optional item fields `url` and `viewport` are added (`target` was cut).
 
 GLOSSARY:
 - **Live** gets the new definition.
@@ -491,8 +490,8 @@ GLOSSARY:
 | `src/studio/app/capture.tsx` | `CaptureEditor` goes (replaced by the overlay in a lightbox). `Flipbook`, `feedbackApi`, `captureUrl` and `prompt` stay. | −110, +~40 (lightbox wrapper) |
 | `src/studio/app/finding.tsx` | Open the lightbox; capture origin at open. | ~10 |
 | `src/studio/server.ts` | `POST /api/window` (`open` / `close` / `front` / `stop`) behind the existing `fromStudio` check; `window` state in the index. | ~50 |
-| `src/feedback.ts` | Optional `url`, `viewport` and `target` in `FeedbackFront` and `NewFeedback`. Schema stays 1 (additive). | ~15 + tests |
-| `src/finish.ts` (`get_feedback`) | Print the three fields. | ~8 |
+| `src/feedback.ts` | Optional `url` and `viewport` in `FeedbackFront` and `NewFeedback` (`target` cut by D37). Schema stays 1 (additive). | ~15 + tests |
+| `src/finish.ts` (`get_feedback`) | Print the two fields. | ~8 |
 | `build.mjs`, `scripts/check.mjs` | Sidecar bundle with playwright-core (the MCP bundle's `external` and `banner`, and its `pw/*.json` copy into `plugin/studio/pw/`); a new IIFE entry `plugin/studio/overlay.js`. | ~30; **plugin/studio grows by about 9 MB** |
 | `src/studio/app/studio.css` | Drop `dialog.capture`, `.stage` and the `.live` iframe rules; add the lightbox and launcher. | ±80 |
 | `plugin/skills/init/SKILL.md` | One `.gitignore` line. | 1 |

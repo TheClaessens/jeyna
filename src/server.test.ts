@@ -62,7 +62,7 @@ test("get_context returns the --project root and the validated config", async ()
       app: { name: "todo-sample", url: "http://localhost:4173" },
       viewports: ["1440x900", "390x844"],
       browser: { headed: false },
-      tester: { model: "sonnet", effort: "medium" },
+      tester: { model: "sonnet", effort: "medium", parallel: 20 },
       accounts: [{ handle: "user_a", user_env: "JEYNA_USER_A_USER", pass_env: "JEYNA_USER_A_PASS" }],
     },
     secrets: { JEYNA_USER_A_USER: "missing", JEYNA_USER_A_PASS: "missing" },
@@ -150,4 +150,14 @@ test("an account value in place of an env variable name is refused", async () =>
   const r = await getContext({ args: ["--project", root] });
   expect(r.isError).toBe(true);
   expect(r.text).toMatch(/environment variable name/);
+});
+
+test("the server reports the plugin's version, snapshot declares its own result size limit, and no tool text carries spec ids", async () => {
+  const { client } = await getContext({ args: ["--project", project(VALID)] });
+  expect(client.getServerVersion()).toMatchObject({ name: "jeyna", version: JSON.parse(readFileSync("plugin/.claude-plugin/plugin.json", "utf8")).version });
+  // Claude Code saves a text result over 50,000 characters to a file unless the tool declares a higher limit (D40).
+  const { tools } = await client.listTools();
+  expect(tools.find((t) => t.name === "snapshot")?._meta).toEqual({ "anthropic/maxResultSizeChars": 90_000 });
+  // The model cannot look up D11, F2.4, AC3 and the like.
+  for (const t of tools) expect(JSON.stringify([t.description, t.inputSchema]), t.name).not.toMatch(/\b(D\d+|F\d+(\.\d+)?|AC\d+|N\d+|P\d+)\b/);
 });

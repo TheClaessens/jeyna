@@ -16,8 +16,8 @@ One loop only: `/jeyna:playtest <free text>` typed in the developer's own Claude
 ## Contract (summary; the analysis has the full data model)
 `.jeyna/`: `jeyna.config.yaml`, `CONVENTIONS.md`, `flows/*.md` (optional), `playtests/<run>/{session.json, report.md, findings/*.md, evidence/*}`.
 Finding frontmatter: schema, id, kind, severity, status, flow, scenario, route, viewport, browser, build, author, created, evidence[]. Body: Steps / Expected / Actual / Evidence / Suggested next step.
-Plugin `jeyna`: skill `playtest` (invoked as `/jeyna:playtest`); agent `jeyna-tester` (Sonnet, medium effort by default, overridable in config; 8 exact jeyna-mcp tools: browser family + `record_finding` + `scenario_verdict`), no reviewer agent in v0 (the main agent marks duplicates and finishes; D12); hooks: PreToolUse write guard on `.jeyna/playtests/**`; SubagentStop checks that a stopping tester recorded a verdict for each case.
-MCP tools (server key `mcp`, so `mcp__plugin_jeyna_mcp__<tool>`): run family (`get_context, get_flow, session_start, scenario_verdict, record_finding, update_status, validate, session_finish, save_flow`) and browser family keyed by case (`goto, click, fill, press, snapshot, screenshot`).
+Plugin `jeyna`: skill `playtest` (invoked as `/jeyna:playtest`); agent `jeyna-tester` (Sonnet, medium effort by default, overridable in config; 9 exact jeyna-mcp tools: `brief` + browser family + `record_finding` + `scenario_verdict`), no reviewer agent in v0 (the main agent marks duplicates and finishes; D12); hooks: PreToolUse write guard on `.jeyna/playtests/**`; SubagentStop checks that a stopping tester recorded a verdict for each case.
+MCP tools (server key `mcp`, so `mcp__plugin_jeyna_mcp__<tool>`): run family (`get_context, get_flow, session_start, brief, scenario_verdict, record_finding, update_status, validate, session_finish, save_flow`) and browser family keyed by case (`goto, click, fill, press, snapshot, screenshot`).
 
 ## Guards against agent non-determinism
 1. Tool schema, not prose. 2. One door: agent allowlist + write-guard hook. 3. Shape rules refused at call time; `session_finish` refuses an invalid run; same linter runnable by hand (CI in v1). Exit hooks only nudge an agent about its own unfinished duty. 4. Viewer validates on read, "needs attention" lane, never drops a file.
@@ -35,7 +35,7 @@ MCP tools (server key `mcp`, so `mcp__plugin_jeyna_mcp__<tool>`): run family (`g
 - **Personas** (UX playtests: an 80-year-old and a 20-year-old use the app differently). Fan-out rule (D4): environment axes (viewport) run in sequence inside one tester; identity axes (persona) get their own tester. v1 adds `persona?` to cases, findings and the matrix under a new `schema` version.
 
 ## Stack
-TypeScript / Node ≥ 20 / ESM · zod v4 · gray-matter + template · @modelcontextprotocol/sdk (stdio) · Playwright library · YAML config · POSIX sh hooks · vitest · npm + esbuild at build time only (users get committed bundles from the GitHub plugin marketplace, no npm publish) · viewer on TanStack Router + remark, bundled the same way and started by `/jeyna:studio` (D34).
+TypeScript / Node ≥ 20 / ESM · zod v4 · `yaml` + template · @modelcontextprotocol/sdk (stdio) · Playwright library · YAML config · POSIX sh hooks · vitest · npm + esbuild at build time only (users get committed bundles from the GitHub plugin marketplace, no npm publish) · viewer on TanStack Router + remark, bundled the same way and started by `/jeyna:studio` (D34).
 
 ## Build order
 0. Walking skeleton that settles the eight unverified platform facts: see `docs/first-slice.md` (D19). 1. Schema + conventions + sample app. 2. jeyna-mcp, both tool families. 3. Skill, agents, hooks; run it; read the output in a plain markdown viewer. 4. Viewer, only once the findings are worth reading.

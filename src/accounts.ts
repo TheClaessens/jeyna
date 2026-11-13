@@ -3,22 +3,65 @@ import { join } from "node:path";
 import { parseEnv } from "node:util";
 import type { Config } from "./schema.js";
 
-export type Account = { handle: string; user?: string; pass?: string };
+// An account: its handle, the names of its two variables, and their values when set. Values are never returned.
+export type Account = { handle: string; user_env: string; pass_env: string; user?: string; pass?: string };
 
-// Values are read when needed, from the server's env first, then .jeyna/.env (D18). Never returned.
-export function accountValues(root: string, config: Config): Account[] {
+// The one reader of account variables: the server's env first, then .jeyna/.env (D18).
+// `from` says where a variable is set; its `value` never leaves the server.
+export function readSecrets(root: string): (name: string) => { from: "env" | ".env" | "missing"; value?: string } {
   const file = join(root, ".jeyna", ".env");
   const dotenv = existsSync(file) ? parseEnv(readFileSync(file, "utf8")) : {};
-  const get = (n: string) => process.env[n] || dotenv[n] || undefined;
-  return config.accounts.map((a) => ({ handle: a.handle, user: get(a.user_env), pass: get(a.pass_env) }));
+  return (n) => (process.env[n] ? { from: "env", value: process.env[n] } : dotenv[n] ? { from: ".env", value: dotenv[n] } : { from: "missing" });
 }
 
-// `{{account.user}}` / `{{account.pass}}` in a fill value become the account's values (F5.4).
-export function substitute(value: string, account: Account | undefined, caseId: string): string {
-  if (!/\{\{account\.(user|pass)\}\}/.test(value)) return value;
+// Accounts app.new_account created in this server process (D41), oldest first. Their values live here only: never
+// written to disk, never returned. Each is redacted like a configured value from the moment it exists: every account
+// of the current run for as long as it runs, then, once a newer run creates its accounts, while it is among the most
+// recent CREATED_MAX (the current run's accounts first). Older ones are dropped and no longer redacted.
+// ponytail: CREATED_MAX caps the one combined redactor regex, whose cost grows steeply with its alternatives. Measured
+// on a 90,000-character snapshot (redacted twice per snapshot) with uuid passwords and user-xxxxxxxx@example.test
+// usernames: 50 accounts 2 ms, 60 15 ms, 100 150 ms, 300 770 ms. To keep more, match values with a linear scan
+// (indexOf per value, or Aho-Corasick) instead of one alternation.
+export const CREATED_MAX = 50;
+const created: Account[] = [];
+let changes = 0;
+export const createdAccounts = (): readonly Account[] => created;
+// Goes up on every change to the list, never down: the redactor's cache key. A pruned list can keep its length.
+export const createdStamp = () => changes;
+
+export function addCreated(a: Account) {
+  created.push(a);
+  changes++;
+}
+
+// A run created `run`: keep all of them, then the most recent others up to CREATED_MAX.
+export function pruneCreated(run: Account[]) {
+  const older = created.filter((a) => !run.includes(a));
+  const room = Math.max(0, CREATED_MAX - run.length);
+  created.splice(0, created.length, ...older.slice(Math.max(0, older.length - room)), ...run);
+  changes++;
+}
+
+// Values are read when needed, never kept.
+export function accountValues(root: string, config: Config): Account[] {
+  const get = readSecrets(root);
+  return config.accounts.map((a) => ({ ...a, user: get(a.user_env).value, pass: get(a.pass_env).value }));
+}
+
+// `{{account.user}}` / `{{account.pass}}` in a fill value or a selector become the account's values (F5.4).
+// Only the placeholders the text uses need their variable set.
+export function substitute(text: string, account: Account | undefined, caseId: string): string {
+  if (!/\{\{account\.(user|pass)\}\}/.test(text)) return text;
   if (!account) throw new Error(`Case ${caseId} has no account (its scenario is \`Account: none\`), so {{account.*}} cannot be filled.`);
-  if (!account.user || !account.pass) throw new Error(`account ${account.handle} not configured`);
-  return value.replaceAll("{{account.user}}", account.user).replaceAll("{{account.pass}}", account.pass);
+  for (const k of ["user", "pass"] as const) {
+    if (text.includes(`{{account.${k}}}`) && !account[k]) {
+      throw new Error(
+        `{{account.${k}}} cannot be filled: ${account[`${k}_env`]} (account ${account.handle}) is not set. ` +
+          "The developer fills it in .jeyna/.env, or exports it in the shell before starting claude; until then this account cannot sign in.",
+      );
+    }
+  }
+  return text.replaceAll("{{account.user}}", account.user ?? "").replaceAll("{{account.pass}}", account.pass ?? "");
 }
 
 const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -32,7 +75,7 @@ const AFTER = `(?=$|(?!${TOKEN})[\\s\\S]|%[0-9A-Fa-f]{2}|\\.(?![\\p{L}\\p{N}]))`
 
 // Every configured value, also URL- and form-encoded, back to its placeholder, ignoring case (D9).
 // Passwords are replaced wherever they appear, even inside a larger token; usernames as whole tokens (D30).
-export function redactor(accounts: Account[]): (text: string) => string {
+export function redactor(accounts: Pick<Account, "handle" | "user" | "pass">[]): (text: string) => string {
   const pairs = accounts.flatMap((a) => [
     [a.user, "{{account.user}}"],
     [a.pass, "{{account.pass}}"], // after the user: a value that is both is treated as a password

@@ -3,10 +3,9 @@
 // sidecar both import it, so the studio validates with the same rules and never duplicates them.
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { parse } from "yaml";
 import { z } from "zod";
 import { FindingInput, type Session, SessionFile } from "./schema.js";
-import { splitFront } from "./shared.js";
+import { parseFront } from "./shared.js";
 
 export const SEVERITIES = FindingInput.shape.severity.options;
 export const KINDS = FindingInput.shape.kind.options;
@@ -48,24 +47,14 @@ export function readFindings(runDir: string, session: Session): Finding[] {
     .map((file) => {
       const text = readFileSync(join(dir, file), "utf8");
       const f: Finding = { path: `findings/${file}`, id: file.slice(0, -3), source: text, errors: [] };
-      const m = splitFront(text);
-      if (!m) return { ...f, errors: ["no YAML frontmatter between --- lines"] };
-      let raw: unknown;
-      try {
-        raw = parse(m[1]);
-      } catch (e) {
-        return { ...f, errors: [`frontmatter is not valid YAML: ${(e as Error).message.split("\n")[0]}`] };
-      }
-      const r = FindingFront.safeParse(raw);
-      if (!r.success) {
-        return { ...f, errors: r.error.issues.map((i) => `frontmatter ${i.path.join(".") || "(root)"}: ${i.message}`) };
-      }
-      const front = (f.front = r.data);
-      f.title = /^# (.+)$/m.exec(m[2])?.[1];
+      const { front, body = "", errors } = parseFront(text, FindingFront);
+      if (!front) return { ...f, errors };
+      f.front = front;
+      f.title = /^# (.+)$/m.exec(body)?.[1];
       if (front.id !== f.id) f.errors.push(`id ${front.id} does not match the file name`);
       if (!session.cases.some((c) => c.id === front.case)) f.errors.push(`case ${front.case} is not a case of this run`);
       if (!f.title) f.errors.push("missing the # title line");
-      for (const s of SECTIONS) if (!new RegExp(`^## ${s}$`, "m").test(m[2])) f.errors.push(`missing the ## ${s} section`);
+      for (const s of SECTIONS) if (!new RegExp(`^## ${s}$`, "m").test(body)) f.errors.push(`missing the ## ${s} section`);
       for (const e of front.evidence) if (!existsSync(join(runDir, "evidence", e))) f.errors.push(`evidence ${e} does not exist in evidence/`);
       if (front.kind === "bug" && !front.evidence.length) f.errors.push("a bug needs evidence");
       if (front.status === "duplicate" && !front.of) f.errors.push("status duplicate needs of: PT-…");
@@ -130,6 +119,8 @@ export function runs(root: string): string[] {
 }
 
 // The latest done run of the same flow started before this one: the baseline of "Since last run" (D31).
+// An exploratory run's flow exploratory:<name> is the same flow as <name>, which save_flow makes of it (#18).
+const flowOf = (s: Session) => s.flow.replace(/^exploratory:/, "");
 export function previousRun(runDir: string, session: Session): Session | undefined {
   const dir = join(runDir, "..");
   return readdirSync(dir)
@@ -140,7 +131,7 @@ export function previousRun(runDir: string, session: Session): Session | undefin
         return [];
       }
     })
-    .filter((s) => s.flow === session.flow && s.status === "done" && s.started < session.started)
+    .filter((s) => flowOf(s) === flowOf(session) && s.status === "done" && s.started < session.started)
     .sort((a, b) => b.started.localeCompare(a.started))[0];
 }
 

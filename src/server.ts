@@ -1,14 +1,15 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { appendFileSync, existsSync, readFileSync, statSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
-import { parseArgs, parseEnv } from "node:util";
+import { join } from "node:path";
+import { parseArgs } from "node:util";
 import { parse } from "yaml";
 import { z } from "zod";
+import plugin from "../plugin/.claude-plugin/plugin.json" with { type: "json" };
 import { Config } from "./schema.js";
 import { current, registerSessionTools } from "./session.js";
 import { registerBrowserTools } from "./browser.js";
-import { accountValues, redactDeep, redactor } from "./accounts.js";
+import { accountValues, createdAccounts, createdStamp, readSecrets, redactDeep, redactor } from "./accounts.js";
 import { registerFindingTools } from "./findings.js";
 import { registerFinishTools, validateCli } from "./finish.js";
 import { listFlows, registerFlowTools } from "./flows.js";
@@ -42,43 +43,44 @@ function getContext() {
 
 // Where each account variable is set: shell env first, then .jeyna/.env. Never the value (D18, P3).
 function secretSources(root: string, config: Config): Record<string, "env" | ".env" | "missing"> {
-  const file = join(root, ".jeyna", ".env");
-  const dotenv = existsSync(file) ? parseEnv(readFileSync(file, "utf8")) : {};
+  const read = readSecrets(root);
   const names = config.accounts.flatMap((a) => [a.user_env, a.pass_env]);
-  return Object.fromEntries(names.map((n) => [n, process.env[n] ? "env" : dotenv[n] ? ".env" : "missing"]));
+  return Object.fromEntries(names.map((n) => [n, read(n).from]));
 }
 
 // The account-value redactor (D9), rebuilt only when what it is built from changes: the config's and
-// .jeyna/.env's mtime and size, and the env values of the variables the config names. Re-checked per
-// message (not per string), so a .jeyna/.env edited mid-run is still honoured, without a YAML and .env parse per message (D30).
+// .jeyna/.env's mtime and size, the env values of the variables the config names, and the change count of the
+// accounts app.new_account created (D41; not their number, which pruning can leave the same), so a created value is
+// redacted from the moment it exists. Re-checked per message (not per string), so a .jeyna/.env edited mid-run is
+// still honoured, without a YAML and .env parse per message (D30).
 let cached: { stamp: string; names: string[]; env: string; redact: (t: string) => string } | undefined;
 const envOf = (names: string[]) => JSON.stringify(names.map((n) => process.env[n] ?? null));
 
 function currentRedactor(): (text: string) => string {
-  let stamp = "no root";
+  let stamp = `${createdStamp()}|no root`;
   try {
     const root = projectRoot();
     const files = [join(root, ".jeyna", "jeyna.config.yaml"), join(root, ".jeyna", ".env")];
-    stamp = [root, ...files.map((f) => {
+    stamp = [createdStamp(), root, ...files.map((f) => {
       const st = statSync(f, { throwIfNoEntry: false });
       return st ? `${st.mtimeMs}:${st.size}` : "-";
     })].join("|");
   } catch {} // no project root: nothing to redact with
   if (!cached || cached.stamp !== stamp || cached.env !== envOf(cached.names)) {
     let names: string[] = [];
-    let fn = (t: string) => t;
+    let fn = redactor([...createdAccounts()]);
     try {
       const { root, config } = getContext();
       names = config.accounts.flatMap((a) => [a.user_env, a.pass_env]);
-      fn = redactor(accountValues(root, config));
-    } catch {} // no valid config: no account values to know of
+      fn = redactor([...accountValues(root, config), ...createdAccounts()]);
+    } catch {} // no valid config: only created values to know of
     cached = { stamp, names, env: envOf(names), redact: fn };
   }
   return cached.redact;
 }
 const redact = (text: string) => currentRedactor()(text);
 
-const server = new McpServer({ name: "jeyna", version: "0.0.1" });
+const server = new McpServer({ name: "jeyna", version: plugin.version }); // the plugin's version, read at build time
 
 // Every tool call logs start and end to stderr, so concurrent calls show as overlapping spans (P8), and
 // to the running run's server.log, so a run folder records what its testers called and got (D33).
@@ -144,10 +146,10 @@ server.registerTool(
   },
 );
 
-registerSessionTools(server, getContext);
+registerSessionTools(server, getContext, redact);
 registerBrowserTools(server, getContext, redact);
-registerFindingTools(server);
-registerFinishTools(server, getContext);
+registerFindingTools(server, redact);
+registerFinishTools(server, getContext, redact);
 registerFlowTools(server, getContext);
 
 // `node jeyna-mcp.mjs validate [runDir]` lints a run folder from a shell instead of serving MCP (F8.2).

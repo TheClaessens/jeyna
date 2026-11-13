@@ -2,7 +2,7 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { execFileSync } from "node:child_process";
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, afterEach, beforeAll, expect, test } from "vitest";
@@ -60,8 +60,8 @@ test("session_start plans testers and cases and writes session.json", async () =
   expect(r.isError).toBeFalsy();
   const out = JSON.parse(text(r));
   expect(out.testers).toEqual([
-    { id: "t1", scenario: "Sign in", account: "user_a", batch: 1, cases: [{ id: "t1-1440x900", viewport: "1440x900" }, { id: "t1-390x844", viewport: "390x844" }] },
-    { id: "t2", scenario: "Landing", batch: 1, cases: [{ id: "t2-1440x900", viewport: "1440x900" }, { id: "t2-390x844", viewport: "390x844" }] },
+    { id: "t1", scenario: "Sign in", account: "user_a", batch: 1, cases: [{ id: "t1-1440x900", viewport: "1440x900" }, { id: "t1-390x844", viewport: "390x844" }], prompt: expect.stringMatching(/^jeyna-tester-cases: t1-1440x900, t1-390x844\n/) },
+    { id: "t2", scenario: "Landing", batch: 1, cases: [{ id: "t2-1440x900", viewport: "1440x900" }, { id: "t2-390x844", viewport: "390x844" }], prompt: expect.any(String) },
   ]);
   expect(out.runDir).toMatch(/\.jeyna\/playtests\/\d{4}-\d{2}-\d{2}-login$/);
   const session = JSON.parse(readFileSync(join(out.runDir, "session.json"), "utf8"));
@@ -82,13 +82,57 @@ test("a second session_start is refused while one runs, and force aborts it", as
   expect(JSON.parse(readFileSync(join(first.runDir, "session.json"), "utf8")).status).toBe("aborted");
 });
 
-test("viewports narrows the cases and unknown names are refused with the valid ones", async () => {
+test("two simultaneous session_start calls: one run starts, the other is refused as a second run is", async () => {
+  const root = project();
+  const { call, text } = await connect(root);
+  const both = await Promise.all([1, 2].map(() => call("session_start", { scenarios: [SIGN_IN], slug: "login" })));
+  expect(both.map((r) => !!r.isError).sort()).toEqual([false, true]);
+  const winner = JSON.parse(text(both.find((r) => !r.isError)!));
+  expect(text(both.find((r) => r.isError)!)).toBe(`A run is still running: ${winner.runDir}. Call session_start with force: true to abort it.`);
+  const dir = join(root, ".jeyna", "playtests");
+  expect(readdirSync(dir).map((d) => sessionOf(join(dir, d)).status)).toEqual(["running"]);
+});
+
+test("an exploratory run takes any well-formed viewport, so a finding seen at a flow's own viewport can be retested", async () => {
   const { call, text } = await connect(project());
-  const bad = await call("session_start", { scenarios: [SIGN_IN], viewports: ["800x600"] });
-  expect(bad.isError).toBe(true);
-  expect(text(bad)).toMatch(/1440x900, 390x844/);
-  const ok = JSON.parse(text(await call("session_start", { scenarios: [SIGN_IN], viewports: ["390x844"] })));
-  expect(ok.testers[0].cases).toEqual([{ id: "t1-390x844", viewport: "390x844" }]);
+  const bad = await call("session_start", { scenarios: [SIGN_IN], viewports: ["800x600", "wide"] });
+  expect(text(bad)).toBe("Viewports look like 1440x900 (<width>x<height>), not: wide. Configured: 1440x900, 390x844.");
+  const ok = JSON.parse(text(await call("session_start", { scenarios: [SIGN_IN], viewports: ["800x600"] })));
+  expect(ok.testers[0].cases).toEqual([{ id: "t1-800x600", viewport: "800x600" }]);
+});
+
+test("accounts narrows an exploratory run's pool to the given handles; unknown handles are refused with the configured ones", async () => {
+  const config = `${CONFIG()}  - { handle: user_b, user_env: JEYNA_USER_B_USER, pass_env: JEYNA_USER_B_PASS }\n`;
+  const { call, text } = await connect(project(config));
+  expect(text(await call("session_start", { scenarios: [SIGN_IN], accounts: ["user_c"] }))).toBe("Unknown accounts: user_c. Configured: user_a, user_b.");
+  const run = JSON.parse(text(await call("session_start", { scenarios: [SIGN_IN, { ...SIGN_IN, name: "Again" }], accounts: ["user_b"] })));
+  expect(run.testers.map((t: { account: string; batch: number }) => [t.account, t.batch])).toEqual([["user_b", 1], ["user_b", 2]]);
+});
+
+// A tester of an aborted run keeps calling with its case ids, which a new run would reuse (t1-…) if numbering restarted.
+test("after session_start force, a tester of the aborted run is refused and told to stop; the new run numbers its testers after it", async () => {
+  const { call, text } = await connect(project());
+  const old = JSON.parse(text(await call("session_start", { scenarios: [SIGN_IN, { ...SIGN_IN, name: "Landing", account: "none" }] })));
+  const forced = JSON.parse(text(await call("session_start", { scenarios: [SIGN_IN], force: true })));
+  expect(forced.testers.map((t: { id: string; cases: { id: string }[] }) => [t.id, t.cases.map((c) => c.id)])).toEqual([["t3", ["t3-1440x900", "t3-390x844"]]]);
+  for (const [tool, args] of [
+    ["scenario_verdict", { result: "pass" }],
+    ["record_finding", { finding: A11Y }],
+    ["snapshot", {}],
+  ] as const) {
+    const r = await call(tool, { case: "t1-390x844", ...args });
+    expect(r.isError, tool).toBe(true);
+    expect(text(r)).toBe("Case t1-390x844 belongs to a run that was aborted: a new run replaced it. Stop now: make no more calls and report that your run was aborted.");
+    expect(text(r)).not.toMatch(/t3-/); // never points a stale tester at the new run's cases
+  }
+  expect(sessionOf(forced.runDir).verdicts).toEqual([]);
+  expect(sessionOf(old.runDir).status).toBe("aborted");
+  // Later runs of this server keep numbering after the retired ids, forced or not.
+  await call("scenario_verdict", { case: "t3-1440x900", result: "pass" });
+  await call("scenario_verdict", { case: "t3-390x844", result: "pass" });
+  expect((await call("session_finish", { summary: "Done." })).isError).toBeFalsy();
+  const next = JSON.parse(text(await call("session_start", { scenarios: [SIGN_IN] })));
+  expect(next.testers[0].id).toBe("t3");
 });
 
 async function started(env: Record<string, string> = {}) {
@@ -149,13 +193,21 @@ test("snapshot returns the aria tree, where the unlabelled password field shows 
   expect(snap).toMatch(/button "Sign in"/);
 });
 
-test("snapshot truncates above 90,000 characters with a note", async () => {
+test("snapshot keeps its whole result, console tail included, within 90,000 characters, the page text cut with a note", async () => {
   const { call, text } = await started();
   const big = "<p>" + "a fairly long paragraph of filler text for the snapshot ".repeat(3) + "</p>";
+  // 40 console errors of 400 characters, after the goto has returned, so the snapshot carries them.
+  const noisy = `<script>setTimeout(() => { for (let i = 0; i < 40; i++) console.error("${"e".repeat(400)}") }, 300)</script>`;
   await call("goto", { case: "t1-1440x900", url: "data:text/html," + encodeURIComponent(big.repeat(1000)) });
   const snap = text(await call("snapshot", { case: "t1-1440x900" }));
-  expect(snap.length).toBeLessThan(90_200);
-  expect(snap).toMatch(/truncated at 90000 characters, the page continues/);
+  expect(snap.length).toBeLessThanOrEqual(90_000);
+  expect(snap).toMatch(/\n\[truncated, the page continues\]$/);
+  await call("goto", { case: "t1-1440x900", url: "data:text/html," + encodeURIComponent(noisy + big.repeat(1000)) });
+  await new Promise((r) => setTimeout(r, 800));
+  const loud = text(await call("snapshot", { case: "t1-1440x900" }));
+  expect(loud.length).toBeLessThanOrEqual(90_000);
+  expect(loud).toMatch(/\[truncated, the page continues\]\n\nConsole since your last call:\n/);
+  expect(loud).toMatch(/- … and more; the rest is dropped until the next call$/);
 });
 
 const pngSize = (b: Buffer) => [b.readUInt32BE(16), b.readUInt32BE(20)];
@@ -189,12 +241,14 @@ test("browser tools before session_start say to start a session", async () => {
   expect(text(r)).toMatch(/session_start/);
 });
 
-test("with Chrome forced to fail and no Playwright Chromium, the error names npx playwright install chromium (P4)", async () => {
+test("with Chrome forced to fail and no Playwright Chromium, session_start refuses the run, naming npx playwright install chromium (P4, F11.3)", async () => {
   const empty = mkdtempSync(join(tmpdir(), "jeyna-no-browsers-"));
-  const { call, text } = await started({ JEYNA_BROWSER_CHANNEL: "chrome-does-not-exist", PLAYWRIGHT_BROWSERS_PATH: empty });
-  const r = await call("goto", { case: "t1-390x844", path: "/" });
+  const root = project();
+  const { call, text } = await connect(root, { JEYNA_BROWSER_CHANNEL: "chrome-does-not-exist", PLAYWRIGHT_BROWSERS_PATH: empty });
+  const r = await call("session_start", { scenarios: [SIGN_IN] });
   expect(r.isError).toBe(true);
-  expect(text(r)).toMatch(/npx playwright install chromium/);
+  expect(text(r)).toMatch(/^No browser found\. [\s\S]*npx playwright install chromium/);
+  expect(existsSync(join(root, ".jeyna", "playtests"))).toBe(false);
 });
 
 const sessionOf = (runDir: string) => JSON.parse(readFileSync(join(runDir, "session.json"), "utf8"));
@@ -320,18 +374,24 @@ test("concurrent record_finding calls never get the same id", async () => {
   for (const id of ids) expect(existsSync(join(runDir, "findings", `${id}.md`))).toBe(true);
 });
 
-test("fail needs a finding of that case; findings of another case or unknown ids are refused", async () => {
-  const { call, text, runDir } = await started();
+test("fail needs a finding of the tester's own cases: one recorded at its other viewport is cited; another tester's or an unknown id is refused", async () => {
+  const root = project();
+  const { call, text } = await connect(root);
+  const { runDir } = JSON.parse(text(await call("session_start", { scenarios: [SIGN_IN, { ...SIGN_IN, name: "Landing", account: "none" }] })));
   const none = await call("scenario_verdict", { case: "t1-390x844", result: "fail" });
   expect(none.isError).toBe(true);
   expect(text(none)).toMatch(/record_finding/);
   const id = JSON.parse(text(await call("record_finding", { case: "t1-1440x900", finding: A11Y }))).id;
-  const other = await call("scenario_verdict", { case: "t1-390x844", result: "fail", findings: [id] });
-  expect(other.isError).toBe(true);
-  expect(text(other)).toMatch(id);
+  const theirs = JSON.parse(text(await call("record_finding", { case: "t2-390x844", finding: A11Y }))).id;
+  const other = await call("scenario_verdict", { case: "t1-390x844", result: "fail", findings: [theirs] });
+  expect(text(other)).toBe(`Not findings of your cases (t1-1440x900, t1-390x844): ${theirs}. Their findings: ${id}.`);
   expect((await call("scenario_verdict", { case: "t1-390x844", result: "pass", findings: ["PT-nope-001"] })).isError).toBe(true);
   expect((await call("scenario_verdict", { case: "t1-1440x900", result: "fail", findings: [id] })).isError).toBeFalsy();
-  expect(sessionOf(runDir).verdicts).toEqual([{ case: "t1-1440x900", result: "fail", findings: [id] }]);
+  expect((await call("scenario_verdict", { case: "t1-390x844", result: "fail", findings: [id] })).isError).toBeFalsy();
+  expect(sessionOf(runDir).verdicts).toEqual([
+    { case: "t1-1440x900", result: "fail", findings: [id] },
+    { case: "t1-390x844", result: "fail", findings: [id] },
+  ]);
 });
 
 // P8: two cases driven concurrently over one connection, as two testers in one batch would be.

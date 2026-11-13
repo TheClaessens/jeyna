@@ -57,7 +57,7 @@ test("a live item keeps the page url and viewport it was captured at; evidence i
   expect(() => createFeedback(root, { ...snap, viewport: { width: 0, height: 860, dpr: 2 } })).toThrow();
 });
 
-test("text changes only while open; a new status drops the old note; delete removes the item and its frames", () => {
+test("text changes only while open; the note outlives a status change until a new one, and open clears it; delete removes the item and its frames", () => {
   const root = project();
   createFeedback(root, snap);
   updateFeedback(root, "FB-001", { text: "Make it 44 px" });
@@ -65,7 +65,12 @@ test("text changes only while open; a new status drops the old note; delete remo
   expect(readFeedback(root)[0]).toMatchObject({ text: "Make it 44 px", front: { status: "processed", note: "bumped to 44 px" } });
   expect(() => updateFeedback(root, "FB-001", { text: "x" })).toThrow("FB-001 is processed; only an open item's text can change. Reopen it first.");
   updateFeedback(root, "FB-001", { status: "done" });
+  expect(readFeedback(root)[0].front).toMatchObject({ status: "done", note: "bumped to 44 px" });
+  updateFeedback(root, "FB-001", { status: "wontfix", note: "not needed after all" });
+  expect(readFeedback(root)[0].front?.note).toBe("not needed after all");
+  updateFeedback(root, "FB-001", { status: "open" });
   expect(readFeedback(root)[0].front?.note).toBeUndefined();
+  updateFeedback(root, "FB-001", { status: "done" });
   expect(() => updateFeedback(root, "../x", { status: "done" })).toThrow("A feedback id looks like FB-001");
   expect(() => updateFeedback(root, "FB-009", { status: "done" })).toThrow("No feedback FB-009");
   deleteFeedback(root, "FB-001");
@@ -80,6 +85,8 @@ test("a hand-broken item still lists with its errors; capture files resolve by b
   writeFileSync(file, readFileSync(file, "utf8").replace("status: open", "status: maybe"));
   writeFileSync(join(feedbackDir(root), "FB-002.md"), "no frontmatter");
   expect(readFeedback(root).map((i) => [i.id, i.errors.length > 0, !!i.front])).toEqual([["FB-001", true, false], ["FB-002", true, false]]);
+  writeFileSync(file, readFileSync(file, "utf8").replace("status: maybe", "status: [open"));
+  expect(() => updateFeedback(root, "FB-001", { status: "done" })).toThrow(/^\.jeyna\/feedback\/FB-001\.md has no readable frontmatter \(frontmatter is not valid YAML: .*\); fix it by hand\.$/);
   expect(feedbackFile(root, "FB-001.png")).toBe(join(feedbackDir(root), "FB-001.png"));
   for (const bad of ["../FB-001.png", "FB-001.md", "x.png"]) expect(() => feedbackFile(root, bad)).toThrow();
 });

@@ -3,9 +3,10 @@ import { existsSync, mkdirSync, readdirSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { stringify } from "yaml";
 import { z } from "zod";
+import { redactDeep } from "./accounts.js";
 import { browserName } from "./browser.js";
 import { FindingInput } from "./schema.js";
-import { current, fail, ok } from "./session.js";
+import { caseOf, fail, ok, stillCurrent } from "./session.js";
 
 // The finding file: frontmatter (§5.2) and the Steps / Expected / Actual / Evidence / Suggested next step sections.
 export function findingMarkdown(front: Record<string, unknown>, f: FindingInput): string {
@@ -20,7 +21,9 @@ export function findingMarkdown(front: Record<string, unknown>, f: FindingInput)
   ].join("\n\n") + "\n";
 }
 
-export function registerFindingTools(server: McpServer) {
+// redact: the transport's account-value redactor (D9). A tester can read a username off a screenshot and type it into a
+// finding, so every string of it is redacted before it is written (AC3).
+export function registerFindingTools(server: McpServer, redact: (text: string) => string) {
   server.registerTool(
     "record_finding",
     {
@@ -28,12 +31,10 @@ export function registerFindingTools(server: McpServer) {
         "Record one distinct problem seen in this case as a finding; returns its id (PT-<slug>-<nnn>) to list in scenario_verdict. A bug needs evidence: take a screenshot first and pass its file name. Evidence names must be files screenshot returned in this run.",
       inputSchema: { case: z.string().describe("Case id from session_start, e.g. t1-390x844"), finding: FindingInput },
     },
-    async ({ case: caseId, finding }) => {
+    async ({ case: caseId, finding: given }) => {
       try {
-        if (!current) throw new Error("No running session. Call session_start first.");
-        const run = current;
-        const c = run.session.cases.find((c) => c.id === caseId);
-        if (!c) throw new Error(`Unknown case "${caseId}". Cases in this run: ${run.session.cases.map((c) => c.id).join(", ")}.`);
+        const { run, c } = caseOf(caseId);
+        const finding = redactDeep(given, redact);
         const evidenceDir = join(run.runDir, "evidence");
         const have = () => readdirSync(evidenceDir).filter((f) => f.startsWith(`${caseId}-`));
         if (finding.kind === "bug" && !finding.evidence.length) {
@@ -48,7 +49,7 @@ export function registerFindingTools(server: McpServer) {
         }
         const browser = await browserName();
         // The run may have finished or been replaced (session_start force) during that await: never write into it.
-        if (current !== run || run.session.status !== "running") {
+        if (!stillCurrent(run)) {
           throw new Error(`The run ${run.session.id} ended or was replaced while this finding was being recorded; nothing was written.`);
         }
 

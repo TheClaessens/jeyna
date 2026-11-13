@@ -107,6 +107,18 @@ test("get_flow refuses an unknown name with the valid ones, and a malformed flow
   expect(text(await call("get_flow", { name: "badaccount" }))).toMatch(/Account: shared; use none or consumes/);
 });
 
+test("a Pass: line wrapped onto the next lines keeps all of it, and a flow with Windows line endings parses", async () => {
+  const flow = (name: string, scenario: string) => `---\nname: ${name}\nentry: /\n---\n\n## Scenarios\n\n${scenario}`;
+  const wrapped = flow("wrapped", "### Add\nSign in and add a todo.\nPass: the todo appears in the list\nwith High priority.\nAccount: consumes\n\n### Two\nA second paragraph\nover two lines.\nPass: it works.\n\nMore description after a blank line.\n");
+  const crlf = flow("crlf", "### Add\nSign in.\nPass: ok.\n").replaceAll("\n", "\r\n");
+  const { json } = await connect(project({ wrapped, crlf }));
+  expect((await json("get_flow", { name: "wrapped" })).scenarios).toEqual([
+    { name: "Add", description: "Sign in and add a todo.", pass: "the todo appears in the list with High priority.", account: "consumes" },
+    { name: "Two", description: "A second paragraph over two lines. More description after a blank line.", pass: "it works." },
+  ]);
+  expect((await json("get_flow", { name: "crlf" })).scenarios).toEqual([{ name: "Add", description: "Sign in.", pass: "ok." }]);
+});
+
 const sessionOf = (runDir: string) => JSON.parse(readFileSync(join(runDir, "session.json"), "utf8"));
 
 test("session_start with a flow runs guided: the flow's scenarios, its name as slug, testers planned by batch", async () => {
@@ -135,7 +147,16 @@ test("only and viewports narrow a guided run; unknown names are refused with the
   expect(text(badFlow)).toBe('No flow "authentication". Flows in .jeyna/flows/: todos.');
 
   const run = await json("session_start", { flow: "todos", only: ["Complete and delete a todo"], viewports: ["390x844"] });
-  expect(run.testers).toEqual([{ id: "t1", scenario: "Complete and delete a todo", account: "user_a", batch: 1, cases: [{ id: "t1-390x844", viewport: "390x844" }] }]);
+  expect(run.testers).toEqual([
+    {
+      id: "t1",
+      scenario: "Complete and delete a todo",
+      account: "user_a",
+      batch: 1,
+      cases: [{ id: "t1-390x844", viewport: "390x844" }],
+      prompt: "jeyna-tester-cases: t1-390x844\nCall brief with case t1-390x844 and follow what it returns.",
+    },
+  ]);
   expect(sessionOf(run.runDir).scenarios.map((s: { name: string }) => s.name)).toEqual(["Complete and delete a todo"]);
 });
 
@@ -173,35 +194,64 @@ const ENV = {
   JEYNA_USER_B_PASS: "correct-horse-b",
 };
 
-type Tester = { id: string; scenario: string; account?: string; batch: number; cases: { id: string; viewport: string }[] };
+type Tester = { id: string; scenario: string; account?: string; batch: number; cases: { id: string; viewport: string }[]; prompt: string };
 
-// The tester prompt template of skills/playtest/SKILL.md step 4, filled in the way the skill says.
-const TEMPLATE = /`prompt`: exactly this template[^\n]*\n\n```\n([\s\S]*?)\n```/.exec(readFileSync("plugin/skills/playtest/SKILL.md", "utf8"))![1];
-const section = (body: string, heading: string) => [...body.matchAll(/^## (.+)\n([\s\S]*?)(?=^## |(?![\s\S]))/gm)].find((m) => m[1] === heading)?.[2].trim();
-function testerPrompt(t: Tester, ctx: { config: { app: { url: string } }; conventions: string | null }, flow: { frontmatter: { entry: string }; body: string; scenarios: { name: string; description: string; pass: string }[] }) {
-  const s = flow.scenarios.find((x) => x.name === t.scenario)!;
-  return [
-    `jeyna-tester-cases: ${t.cases.map((c) => c.id).join(", ")}`,
-    `App: ${ctx.config.app.url}`,
-    `Entry: ${flow.frontmatter.entry}`,
-    "Cases, in order:",
-    ...t.cases.map((c) => `- ${c.id} at ${c.viewport}`),
-    t.account ? `Account: ${t.account}. Sign in with {{account.user}} and {{account.pass}}.` : "Account: none. Do not sign in.",
-    "",
-    `Scenario: ${s.name}`,
-    s.description,
-    `Pass: ${s.pass}`,
-    "",
-    "Preconditions:",
-    section(flow.body, "Preconditions") ?? "None given.",
-    "",
-    "What matters most here:",
-    section(flow.body, "What matters most here") ?? "Nothing given.",
-    "",
-    "Conventions:",
-    ctx.conventions ?? "",
-  ].join("\n");
-}
+// The sample flow's sections, as written in the file.
+const TODOS = readFileSync("sample-app/flows/todos.md", "utf8");
+const PRECONDITIONS = /^## Preconditions\n\n(.+)\n\n## /m.exec(TODOS)![1];
+const MATTERS = /^## What matters most here\n\n(.+)\n$/m.exec(TODOS)![1];
+
+test("each tester's prompt is the marker line and a call to brief, which renders the whole brief from the run", async () => {
+  const root = project();
+  writeFileSync(join(root, ".jeyna", "CONVENTIONS.md"), "# Playtest conventions\n\nBe kind.\n");
+  const { call, text, json } = await connect(root);
+  const early = await call("brief", { case: "t1-1440x900" });
+  expect(early.isError).toBe(true);
+  expect(text(early)).toMatch(/^No running session. Call session_start first/);
+
+  const run = await json("session_start", { flow: "todos" });
+  expect(run.testers.map((t: Tester) => t.prompt)).toEqual(
+    [1, 2, 3].map((n) => `jeyna-tester-cases: t${n}-1440x900, t${n}-390x844\nCall brief with case t${n}-1440x900 and follow what it returns.`),
+  );
+  expect(sessionOf(run.runDir)).toMatchObject({ preconditions: PRECONDITIONS, focus: MATTERS });
+
+  expect(text(await call("brief", { case: "t2-390x844" }))).toBe(
+    [
+      `App: ${app.url}`,
+      "Entry: /login",
+      "Cases, in order:",
+      "- t2-1440x900 at 1440x900",
+      "- t2-390x844 at 390x844",
+      "Play only the cases named on your prompt's jeyna-tester-cases line, in this order.",
+      "Account: user_a. Sign in with {{account.user}} and {{account.pass}}.",
+      "",
+      "Scenario: Add a todo with a priority",
+      'Sign in, then add a todo called "Buy milk" with priority High.',
+      'Pass: "Buy milk" appears in the list with High priority.',
+      "",
+      "Preconditions:",
+      PRECONDITIONS,
+      "",
+      "What matters most here:",
+      MATTERS,
+      "",
+      "Conventions:",
+      "# Playtest conventions\n\nBe kind.\n",
+    ].join("\n"),
+  );
+  expect(text(await call("brief", { case: "t1-390x844" }))).toContain("\nAccount: none. Do not sign in.\n");
+  expect(text(await call("brief", { case: "t9-390x844" }))).toMatch(/^Unknown case "t9-390x844". Cases in this run: t1-1440x900/);
+  expect(text(await call("session_start", { flow: "todos", focus: "x", force: true }))).toMatch(/focus is for exploratory runs/);
+});
+
+test("an exploratory run's brief carries its focus; preconditions are None given", async () => {
+  const { text, json, call } = await connect(project());
+  const scenario = { name: "Retest PT-todos-001: Priority dropped", description: "Add a todo with High priority.", pass: "It shows High." };
+  await json("session_start", { scenarios: [scenario], focus: "Whether PT-todos-001 is fixed: Priority dropped.", viewports: ["390x844"] });
+  const brief = text(await call("brief", { case: "t1-390x844" }));
+  expect(brief).toContain("\nPreconditions:\nNone given.\n\nWhat matters most here:\nWhether PT-todos-001 is fixed: Priority dropped.\n");
+  expect(brief).toContain("\nConventions:\nNone given.");
+});
 
 // The tester SubagentStop check (plugin/hooks/check-exit.sh) fed a transcript that opens with this prompt.
 function exitCheck(root: string, prompt: string) {
@@ -214,12 +264,6 @@ function exitCheck(root: string, prompt: string) {
   });
   return out ? JSON.parse(out) : undefined;
 }
-
-test("the skill's tester prompt template has the marker line first and the fields the tester agent expects", () => {
-  const labels = TEMPLATE.split("\n").map((l) => /^([A-Za-z ,]+):/.exec(l)?.[1]).filter(Boolean);
-  expect(TEMPLATE.split("\n")[0]).toMatch(/^jeyna-tester-cases: </);
-  expect(labels).toEqual(["App", "Entry", "Cases, in order", "Account", "Scenario", "Pass", "Preconditions", "What matters most here", "Conventions"]);
-});
 
 // The tool calls /jeyna:playtest todos makes, in the skill's order, with scripted testers in place of
 // spawned ones. The live skill run is pending (decisions.md).
@@ -236,7 +280,6 @@ test("a guided run on the sample app, driven the way the skill drives it, produc
   // Skill steps 1–3: context, the flow the request names, the run.
   const ctx = await json("get_context");
   expect(ctx.flows).toEqual([{ name: "todos", scenarios: expect.any(Array) }]);
-  const flow = await json("get_flow", { name: "todos" });
   const run = await json("session_start", { flow: "todos" });
   const testers: Tester[] = run.testers;
 
@@ -247,9 +290,11 @@ test("a guided run on the sample app, driven the way the skill drives it, produc
 
   // A tester (agents/jeyna-tester.md): per case, goto the entry, snapshot, one look: true screenshot (F4.7), play, record, verdict.
   const play = async (t: Tester) => {
-    const prompt = testerPrompt(t, ctx, flow);
+    // The spawn prompt from session_start, passed verbatim; the tester's first call is brief.
+    const brief = text(await must("brief", { case: /^Call brief with case (\S+) /m.exec(t.prompt)![1] }));
+    const entry = /^Entry: (.+)$/m.exec(brief)![1];
     for (const { id: c, viewport } of t.cases) {
-      await must("goto", { case: c, path: flow.frontmatter.entry });
+      await must("goto", { case: c, path: entry });
       const snap = text(await must("snapshot", { case: c }));
       const look = await must("screenshot", { case: c, look: true });
       expect(look.content.map((p) => p.type)).toEqual(["text", "image"]);
@@ -285,15 +330,11 @@ test("a guided run on the sample app, driven the way the skill drives it, produc
       }
       // Mid-run, the exit check finds this tester's later cases unverdicted from the marker line alone.
       const rest = t.cases.slice(t.cases.findIndex((x) => x.id === c) + 1).map((x) => x.id);
-      const stop = exitCheck(root, prompt);
+      const stop = exitCheck(root, t.prompt);
       if (rest.length) expect(stop.reason).toContain(rest.join(", "));
       else expect(stop).toBeUndefined();
     }
   };
-  expect(testers.map((t) => testerPrompt(t, ctx, flow).split("\n")[0])).toEqual(
-    testers.map((t) => `jeyna-tester-cases: ${t.cases.map((c) => c.id).join(", ")}`),
-  );
-  expect(testerPrompt(testers[0], ctx, flow)).toContain("Account: none. Do not sign in.");
 
   // Skill step 4: batch by batch, the testers of a batch in parallel (P8).
   for (const batch of [...new Set(testers.map((t) => t.batch))].sort()) await Promise.all(testers.filter((t) => t.batch === batch).map(play));
