@@ -8,7 +8,7 @@ argument-hint: "[FB-… id]"
 
 Request: $ARGUMENTS
 
-The developer snapped or recorded part of their app in Jeyna studio and wrote what should change (D36). You bring that feedback into this conversation, one item at a time, and then follow the developer's lead. Every Jeyna tool is `mcp__plugin_jeyna_mcp__<tool>`.
+The developer snapped or recorded part of their app in Jeyna studio and wrote what should change. You bring that feedback into this conversation, one item at a time, and then follow the developer's lead. Every Jeyna tool is `mcp__plugin_jeyna_mcp__<tool>`.
 
 Rules for the whole session:
 - Read feedback only through `get_feedback`, never with your own file tools. Never write under `.jeyna/feedback/`: the studio writes items, and the write guard denies you anyway.
@@ -21,6 +21,7 @@ Rules for the whole session:
 - If it names several (`FB-002, FB-004`, or `2, 4, 6`), those are your queue, in that order; go to step 2 with the first.
 - Otherwise call `get_feedback` with no arguments and show `todo` as a short table: id, status (processed reads "processed, awaiting your check"), title, capture (snap, or recording with its frame count) and where it was captured. If `broken` is not empty, list those ids with their first error and say the developer fixes or deletes them in the studio. If `todo` is empty, say there is nothing to do, that feedback is captured in Jeyna studio (`/jeyna:studio`, on Live or on a finding's evidence), and stop.
   Then ask which to take: one id, several ("2, 4, 6"), or a sweep (every open item, oldest first). Wait for the answer. For a processed item, the developer may just want to confirm it: ask whether it is OK, and on yes set `done`.
+  A sweep is a queue too: the ids of the `todo` items whose status is `open`, in the order `todo` lists them (oldest first). Go to step 2 with the first.
 
 ## 2. Load
 
@@ -41,4 +42,4 @@ When you have made the change the developer asked for:
 
 ## 4. The next one
 
-With a queue or a sweep, once the item is `done` or `wontfix` (or the developer says "next" or "skip"), load the next one: the next id of the queue, or for a sweep `get_feedback` with `next: true`, which returns the oldest open item. Go to step 2. When the queue is empty or `next` says there is no open feedback, say so and stop.
+With a queue (a sweep included), once the item is `done` or `wontfix`, or the developer says "next" or "skip", go to step 2 with the next id of the queue. A skipped item stays open and stays behind you. When the queue is empty, say so and stop.

@@ -247,10 +247,10 @@ Browser family (all `{case, …}`; `case: "scout"` is reserved for the pre-sessi
 
 | tool | input | output |
 |---|---|---|
-| `goto` | `{url \| path}` | final url, title, and `console` (page errors, console errors, failed and 4xx/5xx requests since the case's last call, D31); `path` is relative to the app url including its base path (D30) |
-| `click` | `{selector}` | ok, or error with nearest candidates |
-| `fill` | `{selector, value}` | ok; placeholders substituted; `<select>` handled via `selectOption` |
-| `press` | `{key}` | ok |
+| `goto` | `{url \| path}` | final url, title, and `console` (page errors, console errors, failed and 4xx/5xx requests since the case's last call, D31; also accepted dialogs and new tabs, D39); `path` is relative to the app url including its base path (D30) |
+| `click` | `{selector}` | url, title and `console` as `goto`; error with nearest candidates, or saying the page was closed or is `about:blank`. Placeholders in `selector` substituted (D39); refused if the run ended or was replaced while it waited for the browser |
+| `fill` | `{selector, value}` | ok; placeholders substituted in `value` and `selector` (D39), each needing only its own variable set; `<select>` handled via `selectOption`; refused if the run ended or was replaced while it waited for the browser |
+| `press` | `{key}` | url, title and `console` as `goto` |
 | `snapshot` | — | aria snapshot text, truncated with a note above ~90k characters, ending with the console events since the case's last call (D31) |
 | `screenshot` | `{label?, fullPage?, look?}` | file name; plus image content when `look: true` |
 

@@ -1011,3 +1011,30 @@ The approved Night watch / Day watch design (spec and artboards in the design se
 - `GET /runs/<run>/report.md` serves the report as plain text (D34's "report.md is not read" no longer holds for this route), and `crab.svg` is served beside `anchor.svg`.
 
 **Verified**: `npm run check`; `model.test.ts` (problems, pips and their scaling, outcome, last evidence, viewport names, dates) and `server.test.ts` (evidence list, report.md, crab). Every screen in Chrome through playwright-core against a studio on a copy of `sample-app/.jeyna`, dark and light, 1440 and 390 wide, against the NW-* and DW-* artboards; keyboard (`j` / `k` / Enter / Esc, the frame strip), the evidence overlay opening and closing, and item writes (Save text, Won't fix, Reopen, Checked: done) on that copy. Not run: opening the real Live window (headed Chrome), so its open, recording and draft states are checked by build and type only. Pending live verification (developer, 2.1.312 (Claude Code)): restart `/jeyna:studio` and look over the screens on your own data.
+
+## D39 · 2026-11-13 · Agent review: browser tools, flow parsing, the write guard, tester and skill text
+
+Fixes from a review of what testers met in recorded runs (`sample-app/.jeyna/playtests/2026-10-18-todos-2`: 10 findings for 3 problems; case `t3-390x844` failed while its `Pass:` line held).
+
+**Browser tools**
+- Dialogs (`confirm`, `alert`, `prompt`; a prompt with its default text) are accepted, as the user who clicked would; unhandled, Playwright dismissed them, so a Delete behind `confirm()` did nothing and read as a bug. Each adds a console line: type and message.
+- A tab the app opens (`target="_blank"`, `window.open`) is named in a console line (its url, "not followed; goto that url") and closed. The popup event fires when the tab's first page loads, usually just after the click returns, so the line comes in that call's `console` or the next one's. No tab switching.
+- `{{account.user}}` / `{{account.pass}}` are substituted in `click` and `fill` selectors, with the same account as `fill`'s value (the case's tester's; the first pool account for `scout`), so a control the snapshot shows under a placeholder name can be operated. Errors still leave through the redactor.
+- `click` and `fill` re-check after awaiting the page that their run is still current and running, and refuse otherwise ("The run ended or was replaced…"); `fill` used to throw `Cannot read properties of undefined`.
+- `click`'s miss says when the page was closed during the call, or is `about:blank` (closed and replaced, or never opened), instead of "The page has no clickable controls."
+- A missing account variable names the variable (`JEYNA_USER_A_PASS (account user_a) is not set`) and where to set it (`.jeyna/.env`, or exported before starting `claude`), and only the placeholders a text uses need their variable. No value is printed.
+- One reader of account variables, `readSecrets` in `src/accounts.ts`, serves `fill` and `get_context`'s `secrets`.
+
+**Flow files**: lines directly after a `Pass:` line (up to a blank line, an `Account:` line or a heading) are part of the pass text, not the description. `splitFront` reads CRLF files (a Windows checkout of `.jeyna/`) for flows, findings and feedback alike.
+
+**Write guard**: `Read` on `.jeyna/.env` is denied too (the matcher gains `Read`; reading findings and feedback stays allowed). The path is resolved against the payload's `cwd`, `.` and `..` collapsed, and compared ignoring case. `/jeyna:init` adds missing variable names with `grep -q '^NAME=' .jeyna/.env || printf 'NAME=\n' >> .jeyna/.env`, which prints no value. Not guarded, as before: `Bash` (`cat .jeyna/.env`) and `Grep` on that file.
+
+**Tester and skill text**
+- `jeyna-tester`: the verdict step is a list; "What matters most here" says where to look and what to record and never changes a verdict; a problem from an earlier case of the same tester that shows again at the next viewport is cited by id, not recorded again (a layout problem only at this viewport is its own finding); dialogs, new tabs and placeholders in selectors are described.
+- `/jeyna:playtest`: of duplicates, the most severe finding is kept (lowest number on a tie); a retest passes `accounts: [<handle>]` to `session_start` with the handle the original run's tester had for that scenario.
+- `/jeyna:feedback`: a sweep is a queue of the open ids from `todo`, oldest first, so a skipped item no longer comes straight back; `/jeyna:feedback-next` keeps `next: true`.
+- Spec ids (`(F4.7)`, `(D34)`, `(D36)`, `(D37)`) are gone from every skill.
+
+**Depends on the parallel server change**: a verdict citing a finding of an earlier case of the same tester, and `session_start {accounts}`, are the server side of two text changes above; until both land, the tester's citation is refused and the retest's `accounts` is rejected.
+
+**Verified**: `npm run check` (vitest over MCP stdio against the bundle: dialogs, new tab, placeholders in selectors, closed and blank pages, the run replaced during `fill`, the missing-variable message; `get_flow` on a wrapped `Pass:` line and a CRLF flow; `splitFront` on CRLF; the guard fed `Read`, `.`/`..`, upper-case and relative paths), `claude plugin validate ./plugin` and `claude plugin validate .`. Pending live verification (developer, 2.1.323 (Claude Code); `/reload-plugins` or restart `claude` first): a `/jeyna:playtest todos` run where testers cite their earlier finding at 390x844 instead of recording a duplicate, and pass `t2`/`t3` at phone width when the todo works; the guard denying `Read` on `.jeyna/.env` in a live session; `/jeyna:init` on a project with an existing `.jeyna/.env`; a retest (`/jeyna:playtest PT-…`) passing `accounts`; a `/jeyna:feedback` sweep with a skip.

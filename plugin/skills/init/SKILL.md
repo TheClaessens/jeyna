@@ -30,9 +30,11 @@ Ask in one round:
 1. `mkdir -p .jeyna`.
 2. `.jeyna/jeyna.config.yaml`: copy the template, replace `__APP_NAME__` and `__APP_URL__`, and replace `accounts: []` with one line per account, e.g. `  - { handle: user_a, user_env: JEYNA_USER_A_USER, pass_env: JEYNA_USER_A_PASS }` under `accounts:`. Keep the comments.
 3. `.jeyna/CONVENTIONS.md`: copy the template as is.
-4. `.jeyna/.env`: create it **with Bash** (the write guard denies `Write`/`Edit` on this file): `cp` the `env` template, then append one empty line per variable, e.g. `printf 'JEYNA_USER_A_USER=\nJEYNA_USER_A_PASS=\n' >> .jeyna/.env`. Leave the values empty. If `.jeyna/.env` already exists, only append the variables it lacks.
+4. `.jeyna/.env`: it holds the accounts' secrets, so handle it **with Bash** and print nothing from it (the write guard denies `Read`, `Write` and `Edit` on this file). If it does not exist, `cp` the `env` template to it. Then, for each variable name, append an empty line only when the file lacks that name, a command that prints no value:
+   `grep -q '^JEYNA_USER_A_USER=' .jeyna/.env || printf 'JEYNA_USER_A_USER=\n' >> .jeyna/.env`
+   Leave the values empty; the developer fills them in.
 5. `.gitignore` at the project root (create it if missing), adding only lines not already there:
-   - always `.jeyna/.env`, `.jeyna/index.json` (the studio's derived cache, D34) and `.jeyna/chrome-profile/` (the Live window's browser profile, with its logins, D37);
+   - always `.jeyna/.env`, `.jeyna/index.json` (the studio's derived cache) and `.jeyna/chrome-profile/` (the Live window's browser profile, with its logins);
    - if evidence is gitignored, also `.jeyna/playtests/*/evidence/`.
 
 ## 5. Validate

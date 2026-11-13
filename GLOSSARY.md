@@ -32,7 +32,7 @@ The one glossary for Jeyna. Use these words in docs, code, issues and agent prom
 - **Finding**: one observed divergence, one markdown file `findings/PT-<slug>-<nnn>.md`. Its kind is `bug`, `ux`, `a11y` or `question` (no `perf` in v0, D8). Its status is `open`, `duplicate` (with `of`), `wontfix` or `fixed`. (D11)
 - **Verdict**: `pass`, `fail`, `blocked` or `skipped` for one case. Recorded by the tester and checked by the server. (D8)
 - **Evidence**: PNG files under the run's `evidence/` folder, named `<case>-<seq>[-<label>].png` and referenced by name from findings. No clips in v0. (D9)
-- **Console**: the app's page errors, console errors, failed requests and 4xx/5xx responses in a case's browser since the tester's last call, carried by the results of `goto`, `click`, `press` and `snapshot`. Not stored. (D31)
+- **Console**: the app's page errors, console errors, failed requests and 4xx/5xx responses in a case's browser since the tester's last call, carried by the results of `goto`, `click`, `press` and `snapshot`. Also the dialogs the browser accepted (type and message) and the new tabs the app opened (url; closed, not followed). Not stored. (D31, D39)
 - **Report**: `report.md`, written by `session_finish`: counts, scenario matrix, the verdicts that changed since the latest done run of the same flow, and findings sorted by severity then kind.
 
 ## Reading a run

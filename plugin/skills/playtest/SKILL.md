@@ -82,11 +82,11 @@ Start only after the developer confirms. If they edit (add, drop or rename scena
 
 Only when the request is a finding id. The run plays the finding itself: its Steps, judged against its Expected. Not the scenario it was found in: a finding is often something seen on the way (an unlabelled field while signing in to add a todo), and that scenario's `Pass:` line says nothing about it.
 
-**Find it.** `Glob` `.jeyna/playtests/*/findings/<id>.md`. None: say so and stop. Several (ids repeat across runs of a flow): take the newest run folder (folder names sort by date) unless the request names a run. `Read` the finding: its frontmatter (`flow`, `scenario`, `viewport`, `status`), the title and the Steps, Expected and Actual sections. Then `Read` that run's `session.json` for `entry` and the `account` of the scenario named in the finding. Reading these files is fine; never write them.
+**Find it.** `Glob` `.jeyna/playtests/*/findings/<id>.md`. None: say so and stop. Several (ids repeat across runs of a flow): take the newest run folder (folder names sort by date) unless the request names a run. `Read` the finding: its frontmatter (`flow`, `scenario`, `viewport`, `status`), the title and the Steps, Expected and Actual sections. Then `Read` that run's `session.json` for `entry`, the `account` of the scenario named in the finding (in `scenarios`), and the account handle of the tester that played it (the `account` of the entry in `testers` whose `scenario` is that name; a tester of an `Account: none` scenario has none). Reading these files is fine; never write them.
 
-**Start it.** An exploratory run of one scenario at one viewport:
+**Start it.** An exploratory run of one scenario at one viewport, signed in with the same account as the run that found the problem:
 
-`session_start {scenarios: [{name, description, pass, account?}], slug: "retest-<flow without the exploratory: prefix>", entry, viewports: [viewport]}` with
+`session_start {scenarios: [{name, description, pass, account?}], slug: "retest-<flow without the exploratory: prefix>", entry, viewports: [viewport], accounts?: [<the tester's handle>]}` (pass `accounts` only when that tester had a handle) with
 - `name`: `Retest <id>: <title>`;
 - `description`: `Retest of <id> from run <run folder name>. <the Steps, as one paragraph: "Open /login, then read the snapshot."> Last time: <the Actual text>.`;
 - `pass`: the finding's Expected text;
@@ -146,7 +146,7 @@ Conventions:
 <conventions from get_context, verbatim>
 ```
 
-Never put a username, password or env variable value in a prompt. The tester reads each page with `snapshot` and takes one `screenshot` with `look: true` per case once the first page has settled (F4.7), so every viewport gets one visual check.
+Never put a username, password or env variable value in a prompt. The tester reads each page with `snapshot` and takes one `screenshot` with `look: true` per case once the first page has settled, so every viewport gets one visual check.
 
 As each tester returns, report one line: scenario, the verdict of each case, and how many findings it recorded.
 
@@ -160,7 +160,7 @@ Call `validate`.
 
 List `<runDir>/findings/` and `Read` every `PT-*.md` in it.
 
-A duplicate is the same problem in the app recorded twice: the same element and behaviour on the same route, usually by two scenarios (or by one tester at two viewports). Different symptoms of one cause are not duplicates, and neither are two problems that one finding happens to mention together: if a finding describes anything the kept one does not (another element, message or behaviour), it is not a duplicate. When in doubt, keep both. For each duplicate, keep the finding with the lowest number and call `update_status {id, status: "duplicate", of: <kept id>}`. Set no other status.
+A duplicate is the same problem in the app recorded twice: the same element and behaviour on the same route, usually by two scenarios (or by one tester at two viewports). Different symptoms of one cause are not duplicates, and neither are two problems that one finding happens to mention together: if a finding describes anything the kept one does not (another element, message or behaviour), it is not a duplicate. When in doubt, keep both. Of each set of duplicates, keep the most severe finding (critical, then major, minor, note), and of equally severe ones the lowest number; for every other finding of the set call `update_status {id, status: "duplicate", of: <kept id>}`. Set no other status.
 
 ## 7. Finish and report
 
