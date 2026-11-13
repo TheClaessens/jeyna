@@ -3,7 +3,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { expect, test } from "vitest";
 import { redactor } from "./accounts.js";
-import { appUrl, clip, duplicateNames, runDirOf, splitFront } from "./shared.js";
+import { z } from "zod";
+import { appUrl, duplicateNames, parseFront, runDirOf, splitFront, truncate, withStatus } from "./shared.js";
 
 test("appUrl keeps the app url's base path, and the path's query and hash", () => {
   expect(appUrl("/login", "http://host:8080/app/")).toBe("http://host:8080/app/login");
@@ -21,18 +22,34 @@ test("appUrl leaves a full url as it is, as goto always has", () => {
   expect(appUrl("//cdn.test/x", "http://host/app/")).toBe("http://cdn.test/x");
 });
 
-test("clip redacts before it cuts, so no prefix of an account value survives the cut", () => {
+test("truncate redacts before it cuts, so no prefix of an account value survives the cut; the result stays within max", () => {
   const redact = redactor([{ handle: "a", user: "user_a@example.test", pass: "correct-horse-a" }]);
   const max = 100;
-  for (let at = max - 15; at <= max; at++) {
+  for (let at = max - 50; at <= max; at++) {
     for (const value of ["user_a@example.test", "correct-horse-a"]) {
-      const text = `${"x".repeat(at - 1)} ${value} and more`; // the value starts at index `at`
-      const out = clip(text, max, redact);
-      expect(out).toMatch(/\[truncated at 100 characters, the page continues\]$/);
-      for (let n = 5; n <= value.length; n++) expect(out).not.toContain(value.slice(0, n)); // "user" alone is in the placeholder
+      const text = `${"x".repeat(at - 1)} ${value} ${"y".repeat(max)}`; // the value starts at index `at`
+      for (const out of [truncate(text, max, redact), truncate(text, max, redact, "…")]) {
+        expect(out.length).toBeLessThanOrEqual(max);
+        for (let n = 5; n <= value.length; n++) expect(out).not.toContain(value.slice(0, n)); // "user" alone is in the placeholder
+      }
+      expect(truncate(text, max, redact)).toMatch(/\n\[truncated, the page continues\]$/);
     }
   }
-  expect(clip("short user_a@example.test", max, redact)).toBe("short {{account.user}}");
+  expect(truncate("short user_a@example.test", max, redact)).toBe("short {{account.user}}");
+});
+
+test("parseFront gives the checked frontmatter and body, or one error line per reason", () => {
+  const Front = z.strictObject({ id: z.string() });
+  expect(parseFront("---\nid: x\n---\n# Body\n", Front)).toEqual({ front: { id: "x" }, body: "# Body\n", errors: [] });
+  expect(parseFront("# none", Front)).toEqual({ errors: ["no YAML frontmatter between --- lines"] });
+  expect(parseFront("---\nid: [x\n---\nbody", Front)).toMatchObject({ body: "body", errors: [expect.stringMatching(/^frontmatter is not valid YAML: /)] });
+  expect(parseFront("---\nid: 1\nnope: 2\n---\n", Front).errors).toHaveLength(2);
+});
+
+test("withStatus puts of and note right after status, dropping the old ones", () => {
+  const front = { id: "PT-x-001", status: "duplicate", of: "PT-x-002", note: "old", created: "t" };
+  expect(Object.entries(withStatus(front, "wontfix", { note: "new" }))).toEqual([["id", "PT-x-001"], ["status", "wontfix"], ["note", "new"], ["created", "t"]]);
+  expect(withStatus(front, "open", { of: undefined, note: undefined })).toEqual({ id: "PT-x-001", status: "open", created: "t" });
 });
 
 test("splitFront splits YAML frontmatter from the body", () => {

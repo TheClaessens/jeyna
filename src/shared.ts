@@ -1,6 +1,8 @@
 // Small pure helpers shared by the tool modules. No side effects at import, so unit tests can load it.
 import { existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
+import { parse } from "yaml";
+import type { z } from "zod";
 
 // YAML frontmatter between --- lines, then the body: [_, yaml, body] (flows §5.2 and findings).
 export const splitFront = (md: string) => /^---\n([\s\S]*?)\n?---\n([\s\S]*)$/.exec(md);
@@ -23,10 +25,38 @@ export function appUrl(path: string, app: string): string {
   return base.href;
 }
 
-// A snapshot cut to `max` characters. Redacted first, so a value straddling the cut leaves no prefix (D9, D14, D30).
-export function clip(text: string, max: number, redact: (t: string) => string): string {
+// Text cut to at most `max` characters, `more` included. Redacted first, so a value straddling the cut leaves no prefix (D9, D14, D30).
+export function truncate(text: string, max: number, redact: (t: string) => string, more = "\n[truncated, the page continues]"): string {
   const safe = redact(text);
-  return safe.length > max ? `${safe.slice(0, max)}\n[truncated at ${max} characters, the page continues]` : safe;
+  return safe.length > max ? `${safe.slice(0, Math.max(0, max - more.length))}${more}` : safe;
+}
+
+// A markdown file's frontmatter checked against `schema`, and its body: findings, feedback items, update_status.
+// Each reason it does not read is one error line; the body is there whenever the --- lines are.
+export function parseFront<T>(md: string, schema: z.ZodType<T>): { front?: T; body?: string; errors: string[] } {
+  const m = splitFront(md);
+  if (!m) return { errors: ["no YAML frontmatter between --- lines"] };
+  let raw: unknown;
+  try {
+    raw = parse(m[1]);
+  } catch (e) {
+    return { body: m[2], errors: [`frontmatter is not valid YAML: ${(e as Error).message.split("\n")[0]}`] };
+  }
+  const r = schema.safeParse(raw);
+  if (!r.success) return { body: m[2], errors: r.error.issues.map((i) => `frontmatter ${i.path.join(".") || "(root)"}: ${i.message}`) };
+  return { front: r.data, body: m[2], errors: [] };
+}
+
+// Frontmatter with a new status, rebuilt in place so `of` and `note` sit right after it (update_status, the studio).
+// The old of and note go; `after` holds the ones to keep, undefined ones left out.
+export function withStatus(front: Record<string, unknown>, status: string, after: { of?: string; note?: string }): Record<string, unknown> {
+  const next: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(front)) {
+    if (k === "of" || k === "note") continue;
+    next[k] = k === "status" ? status : v;
+    if (k === "status") for (const [ak, av] of Object.entries(after)) if (av !== undefined) next[ak] = av;
+  }
+  return next;
 }
 
 // A run's folder from a run id (or that folder's path): a direct child of .jeyna/playtests/, nothing else.

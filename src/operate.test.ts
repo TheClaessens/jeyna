@@ -1,6 +1,7 @@
 // click, fill, press and redaction (D9), driving the committed bundle over MCP stdio against the sample app.
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { execFileSync } from "node:child_process";
 import { cpSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -51,9 +52,8 @@ async function start(env: Record<string, string> = ENV_A, scenarios = [SIGN_IN])
   for (const k of Object.keys(clean)) if (k.startsWith("JEYNA_USER_")) delete clean[k];
   const client = new Client({ name: "test", version: "0" });
   clients.push(client);
-  await client.connect(
-    new StdioClientTransport({ command: "node", args: [bundle, "--project", root], env: { ...clean, ...env }, stderr: "ignore" }),
-  );
+  const transport = new StdioClientTransport({ command: "node", args: [bundle, "--project", root], env: { ...clean, ...env }, stderr: "ignore" });
+  await client.connect(transport);
   const seen: string[] = []; // every text the server returned, as the transcript would hold it
   const call = async (name: string, args: Record<string, unknown> = {}) => {
     const r = (await client.callTool({ name, arguments: args })) as Result;
@@ -62,7 +62,7 @@ async function start(env: Record<string, string> = ENV_A, scenarios = [SIGN_IN])
   };
   const text = (r: Result) => (r.content[0] as { text: string }).text;
   const run = JSON.parse(text(await call("session_start", { scenarios })));
-  return { root, call, text, seen, run };
+  return { root, call, text, seen, run, pid: transport.pid! };
 }
 
 const SIGN_IN = { name: "Sign in", description: "Sign in from the login page.", pass: "The todo list shows." };
@@ -189,9 +189,51 @@ test("a .jeyna/.env edited mid-run is redacted from the next message on", async 
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-// record_finding awaits the browser name; if session_start (force) replaces the run meanwhile, nothing is written (D30).
-test("record_finding refuses when its run is replaced while it waits for the browser", async () => {
-  const { call, text, run } = await start();
+// The browser the server launched, found as its child process (as in run.test.ts).
+const browserPids = (serverPid: number) =>
+  execFileSync("ps", ["-A", "-o", "pid=,ppid=,args="], { encoding: "utf8" })
+    .split("\n")
+    .map((l) => l.trim().split(/\s+/))
+    .filter(([, ppid, ...args]) => Number(ppid) === serverPid && /chrom/i.test(args.join(" ")))
+    .map(([pid]) => Number(pid));
+
+test("a console line is redacted before it is cut, so a password straddling the cut leaves no prefix", async () => {
+  const { call, text } = await start();
+  // The line is `GET <url> 404`; the password starts 9 characters before the 300-character cut.
+  const prefix = `GET ${APP}/`;
+  const pad = "x".repeat(300 - prefix.length - "?p=".length - 9);
+  const r = JSON.parse(text(await call("goto", { case: CASE, path: `/${pad}?p=${encodeURIComponent(A.pass)}` })));
+  expect(r.console).toEqual([`${`${prefix}${pad}?p={{account.pass}} 404`.slice(0, 299)}…`]);
+});
+
+test("text a tester or the skill writes is redacted before it reaches disk: finding, verdict note, summary, status notes (AC3)", async () => {
+  const { root, call, text, run } = await start();
+  const said = `signed in as ${A.user}`;
+  const finding = {
+    title: `Menu shows ${A.user}`, kind: "ux", severity: "minor", route: `/users/${A.user}`,
+    steps: [`Sign in as ${A.user}`], expected: said, actual: said, next: said,
+  };
+  const id = JSON.parse(text(await call("record_finding", { case: CASE, finding }))).id;
+  await call("scenario_verdict", { case: CASE, result: "fail", note: said, findings: [id] });
+  expect((await call("session_finish", { summary: said })).isError).toBeFalsy();
+  await call("update_status", { id, status: "wontfix", note: said, run: run.id });
+  mkdirSync(join(root, ".jeyna", "feedback"));
+  writeFileSync(join(root, ".jeyna", "feedback", "FB-001.png"), Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==", "base64"));
+  writeFileSync(join(root, ".jeyna", "feedback", "FB-001.md"), "---\nschema: 1\nid: FB-001\nstatus: open\ncapture: snap\nframes:\n  - file: FB-001.png\n    ms: 0\nsource: live\ncreated: 2026-10-20T10:00:00.000Z\n---\n\nBigger button\n");
+  expect((await call("update_status", { id: "FB-001", status: "processed", note: said })).isError).toBeFalsy();
+
+  const files = filesUnder(join(root, ".jeyna")).filter((f) => !f.endsWith(".jeyna/.env") && !f.endsWith(".png"));
+  for (const f of files) for (const s of forms(A.user)) expect(readFileSync(f, "utf8"), f).not.toContain(s);
+  expect(readFileSync(join(run.runDir, "findings", `${id}.md`), "utf8")).toContain("# Menu shows {{account.user}}");
+  expect(readFileSync(join(root, ".jeyna", "feedback", "FB-001.md"), "utf8")).toContain("note: signed in as {{account.user}}");
+});
+
+// record_finding awaits the browser name; if the run ends or is replaced meanwhile, nothing is written (D30).
+test("record_finding refuses when its run ends while it waits for the browser", async () => {
+  const { call, text, run, pid } = await start();
+  // session_start launched the browser; kill it, so the next call launches one and record_finding waits on that.
+  for (const chrome of browserPids(pid)) process.kill(chrome, "SIGKILL");
+  await sleep(500);
   const goto = call("goto", { case: CASE, path: "/login" }); // starts the browser launch
   await sleep(30);
   const finding = {
@@ -205,11 +247,13 @@ test("record_finding refuses when its run is replaced while it waits for the bro
   };
   const recorded = call("record_finding", { case: CASE, finding }); // waits on the launch for the browser name
   await sleep(30);
-  const restarted = call("session_start", { scenarios: [SIGN_IN], force: true });
+  // session_start (force) would now wait on the same launch, so end the run with session_finish, which does not wait.
+  expect((await call("scenario_verdict", { case: CASE, result: "pass" })).isError).toBeFalsy();
+  const finished = await call("session_finish", { summary: "Ended mid-finding." });
+  expect(finished.isError, text(finished)).toBeFalsy();
   const r = await recorded;
   expect(r.isError, text(r)).toBe(true);
   expect(text(r)).toMatch(/ended or was replaced while this finding was being recorded; nothing was written/);
   expect(readdirSync(run.runDir)).not.toContain("findings");
-  expect((await restarted).isError).toBeFalsy();
   await goto;
 }, 30_000);

@@ -7365,7 +7365,7 @@ var require_public_api = __commonJS2({
       }
       return doc;
     }
-    function parse6(src, reviver, options2) {
+    function parse5(src, reviver, options2) {
       let _reviver = void 0;
       if (typeof reviver === "function") {
         _reviver = reviver;
@@ -7406,7 +7406,7 @@ var require_public_api = __commonJS2({
         return value2.toString(options2);
       return new Document.Document(value2, _replacer, options2).toString(options2);
     }
-    exports2.parse = parse6;
+    exports2.parse = parse5;
     exports2.parseAllDocuments = parseAllDocuments;
     exports2.parseDocument = parseDocument;
     exports2.stringify = stringify4;
@@ -65819,7 +65819,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
       isValidJWT: () => isValidJWT2,
       locales: () => locales_exports2,
       meta: () => meta3,
-      parse: () => parse6,
+      parse: () => parse5,
       parseAsync: () => parseAsync3,
       prettifyError: () => prettifyError2,
       process: () => process11,
@@ -66756,7 +66756,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
       }
       return result2.value;
     };
-    var parse6 = /* @__PURE__ */ _parse3($ZodRealError2);
+    var parse5 = /* @__PURE__ */ _parse3($ZodRealError2);
     var _parseAsync3 = (_Err) => async (schema, value2, _ctx, params2) => {
       const ctx = _ctx ? { ..._ctx, async: true } : { async: true };
       let result2 = schema._zod.run({ value: value2, issues: [] }, ctx);
@@ -69538,10 +69538,10 @@ Expecting one of '${allowedValues.join("', '")}'`);
           throw new Error("implement() must be called with a function");
         }
         return function(...args) {
-          const parsedArgs = inst._def.input ? parse6(inst._def.input, args) : args;
+          const parsedArgs = inst._def.input ? parse5(inst._def.input, args) : args;
           const result2 = Reflect.apply(func, this, parsedArgs);
           if (inst._def.output) {
-            return parse6(inst._def.output, result2);
+            return parse5(inst._def.output, result2);
           }
           return result2;
         };
@@ -184496,18 +184496,18 @@ var validateAsync = async (schema, value2, _ctx) => {
   return result2.issues.length === 0;
 };
 var _encode = (_Err) => {
-  const parse6 = _parse(_Err);
+  const parse5 = _parse(_Err);
   const fn = (schema, value2, _ctx, _params) => {
     const ctx = _ctx ? { ..._ctx, direction: "backward" } : { direction: "backward" };
-    return parse6(schema, value2, ctx, finalizeParams(fn, _params));
+    return parse5(schema, value2, ctx, finalizeParams(fn, _params));
   };
   return fn;
 };
 var encode = /* @__PURE__ */ _encode($ZodRealError);
 var _decode = (_Err) => {
-  const parse6 = _parse(_Err);
+  const parse5 = _parse(_Err);
   const fn = (schema, value2, _ctx, _params) => {
-    return parse6(schema, value2, _ctx, finalizeParams(fn, _params));
+    return parse5(schema, value2, _ctx, finalizeParams(fn, _params));
   };
   return fn;
 };
@@ -186002,7 +186002,7 @@ function capSize(inst, size2) {
   if (!caps.length)
     return;
   const cap2 = Math.min(...caps.map((c) => c[0]));
-  const parse6 = inst._zod.parse;
+  const parse5 = inst._zod.parse;
   inst._zod.parse = (payload2, ctx) => {
     const n = size2(payload2.value);
     if (n > cap2 && !ctx?.skipChecks && ctx?.direction !== "backward") {
@@ -186016,7 +186016,7 @@ function capSize(inst, size2) {
         }
       }
     }
-    return parse6(payload2, ctx);
+    return parse5(payload2, ctx);
   };
 }
 var arraySize = (input2) => Array.isArray(input2) ? input2.length : -1;
@@ -202356,6 +202356,10 @@ function date4(params2) {
 }
 
 // src/schema.ts
+var SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+var Slug = external_exports.string().regex(SLUG, "lowercase words joined by '-'");
+var VIEWPORT = /^\d+x\d+$/;
+var RESULTS = ["pass", "fail", "blocked", "skipped"];
 var envName = external_exports.string().regex(/^[A-Za-z_][A-Za-z0-9_]*$/, "must be an environment variable name, not a value");
 var Config = external_exports.strictObject({
   app: external_exports.strictObject({
@@ -202364,7 +202368,7 @@ var Config = external_exports.strictObject({
     build: external_exports.string().nullish(),
     reset: external_exports.string().min(1).nullish().describe("Shell command that resets the app's state; run before every run")
   }),
-  viewports: external_exports.array(external_exports.string().regex(/^\d+x\d+$/, "must look like 1440x900")).min(1),
+  viewports: external_exports.array(external_exports.string().regex(VIEWPORT, "must look like 1440x900")).min(1),
   browser: external_exports.strictObject({ headed: external_exports.boolean().default(false) }).default({ headed: false }),
   tester: external_exports.strictObject({ model: external_exports.string().default("sonnet"), effort: external_exports.string().default("medium") }).default({ model: "sonnet", effort: "medium" }),
   accounts: external_exports.array(external_exports.strictObject({ handle: external_exports.string().min(1), user_env: envName, pass_env: envName })).default([])
@@ -202388,7 +202392,7 @@ var FindingInput = external_exports.strictObject({
 });
 var Verdict = external_exports.object({
   case: external_exports.string(),
-  result: external_exports.enum(["pass", "fail", "blocked", "skipped"]),
+  result: external_exports.enum(RESULTS),
   note: external_exports.string().optional(),
   findings: external_exports.array(external_exports.string())
 });
@@ -202413,7 +202417,7 @@ var SessionFile = external_exports.object({
 });
 
 // src/feedback.ts
-var import_yaml = __toESM2(require_dist(), 1);
+var import_yaml2 = __toESM2(require_dist(), 1);
 import { existsSync as existsSync2, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { basename, join as join2 } from "node:path";
 
@@ -202422,9 +202426,34 @@ var FRAME_MS = 500;
 var MAX_FRAMES = 40;
 
 // src/shared.ts
+var import_yaml = __toESM2(require_dist(), 1);
 import { existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 var splitFront = (md) => /^---\n([\s\S]*?)\n?---\n([\s\S]*)$/.exec(md);
+function parseFront(md, schema) {
+  const m = splitFront(md);
+  if (!m) return { errors: ["no YAML frontmatter between --- lines"] };
+  let raw2;
+  try {
+    raw2 = (0, import_yaml.parse)(m[1]);
+  } catch (e) {
+    return { body: m[2], errors: [`frontmatter is not valid YAML: ${e.message.split("\n")[0]}`] };
+  }
+  const r = schema.safeParse(raw2);
+  if (!r.success) return { body: m[2], errors: r.error.issues.map((i) => `frontmatter ${i.path.join(".") || "(root)"}: ${i.message}`) };
+  return { front: r.data, body: m[2], errors: [] };
+}
+function withStatus(front, status, after) {
+  const next = {};
+  for (const [k, v] of Object.entries(front)) {
+    if (k === "of" || k === "note") continue;
+    next[k] = k === "status" ? status : v;
+    if (k === "status") {
+      for (const [ak, av] of Object.entries(after)) if (av !== void 0) next[ak] = av;
+    }
+  }
+  return next;
+}
 function runDirOf(root4, run) {
   const playtests2 = resolve(root4, ".jeyna", "playtests");
   const dir = resolve(playtests2, run);
@@ -202482,18 +202511,10 @@ function readFeedback(root4) {
   return readdirSync(dir).filter((f) => /^FB-\d{3,}\.md$/.test(f)).sort((a, b) => num(a) - num(b)).map((file2) => {
     const source14 = readFileSync(join2(dir, file2), "utf8");
     const item = { path: file2, id: file2.slice(0, -3), text: "", source: source14, errors: [] };
-    const m = splitFront(source14);
-    if (!m) return { ...item, errors: ["no YAML frontmatter between --- lines"] };
-    item.text = m[2].trim();
-    let raw2;
-    try {
-      raw2 = (0, import_yaml.parse)(m[1]);
-    } catch (e) {
-      return { ...item, errors: [`frontmatter is not valid YAML: ${e.message.split("\n")[0]}`] };
-    }
-    const r = FeedbackFront.safeParse(raw2);
-    if (!r.success) return { ...item, errors: r.error.issues.map((i) => `frontmatter ${i.path.join(".") || "(root)"}: ${i.message}`) };
-    const front = item.front = r.data;
+    const { front, body: body4 = "", errors: errors2 } = parseFront(source14, FeedbackFront);
+    item.text = body4.trim();
+    if (!front) return { ...item, errors: errors2 };
+    item.front = front;
     if (front.id !== item.id) item.errors.push(`id ${front.id} does not match the file name`);
     if (front.capture === "snap" && front.frames.length !== 1) item.errors.push("a snap has exactly one frame");
     if (front.source === "evidence" && !(front.run && front.evidence)) item.errors.push("feedback on evidence names its run and evidence");
@@ -202557,7 +202578,7 @@ function createFeedback(root4, input2, now = /* @__PURE__ */ new Date()) {
     created: now.toISOString()
   };
   writeFileSync(join2(dir, `${id}.md`), `---
-${(0, import_yaml.stringify)(front)}---
+${(0, import_yaml2.stringify)(front)}---
 
 ${n.text.trim()}
 `, { flag: "wx" });
@@ -202565,25 +202586,18 @@ ${n.text.trim()}
 }
 function updateFeedback(root4, id, change) {
   const path = itemFile(root4, id);
-  const m = splitFront(readFileSync(path, "utf8"));
-  const r = m ? FeedbackFront.safeParse((0, import_yaml.parse)(m[1])) : void 0;
-  if (!m || !r?.success) throw new Error(`.jeyna/feedback/${id}.md has no readable frontmatter; fix it by hand.`);
-  const front = r.data;
-  let text6 = m[2].trim();
+  const { front, body: body4 = "", errors: errors2 } = parseFront(readFileSync(path, "utf8"), FeedbackFront);
+  if (!front) throw new Error(`.jeyna/feedback/${id}.md has no readable frontmatter (${errors2.join("; ")}); fix it by hand.`);
+  let text6 = body4.trim();
   if (change.text !== void 0) {
     if (front.status !== "open") throw new Error(`${id} is ${front.status}; only an open item's text can change. Reopen it first.`);
     text6 = change.text.trim();
     if (!text6) throw new Error("write what should change");
   }
-  const note = change.status ? change.note : front.note;
-  const next = {};
-  for (const [k, v] of Object.entries(front)) {
-    if (k === "note") continue;
-    next[k] = k === "status" ? change.status ?? v : v;
-    if (k === "status" && note) next.note = note;
-  }
+  const note = change.note ?? (change.status === "open" ? void 0 : front.note);
+  const next = withStatus(front, change.status ?? front.status, { note });
   writeFileSync(path, `---
-${(0, import_yaml.stringify)(next)}---
+${(0, import_yaml2.stringify)(next)}---
 
 ${text6}
 `);
@@ -202596,7 +202610,6 @@ function deleteFeedback(root4, id) {
 }
 
 // src/validate.ts
-var import_yaml2 = __toESM2(require_dist(), 1);
 import { existsSync as existsSync3, readdirSync as readdirSync2, readFileSync as readFileSync2 } from "node:fs";
 import { join as join3 } from "node:path";
 var SEVERITIES = FindingInput.shape.severity.options;
@@ -202628,24 +202641,14 @@ function readFindings(runDir, session) {
   return readdirSync2(dir).filter((f) => f.endsWith(".md")).sort().map((file2) => {
     const text6 = readFileSync2(join3(dir, file2), "utf8");
     const f = { path: `findings/${file2}`, id: file2.slice(0, -3), source: text6, errors: [] };
-    const m = splitFront(text6);
-    if (!m) return { ...f, errors: ["no YAML frontmatter between --- lines"] };
-    let raw2;
-    try {
-      raw2 = (0, import_yaml2.parse)(m[1]);
-    } catch (e) {
-      return { ...f, errors: [`frontmatter is not valid YAML: ${e.message.split("\n")[0]}`] };
-    }
-    const r = FindingFront.safeParse(raw2);
-    if (!r.success) {
-      return { ...f, errors: r.error.issues.map((i) => `frontmatter ${i.path.join(".") || "(root)"}: ${i.message}`) };
-    }
-    const front = f.front = r.data;
-    f.title = /^# (.+)$/m.exec(m[2])?.[1];
+    const { front, body: body4 = "", errors: errors2 } = parseFront(text6, FindingFront);
+    if (!front) return { ...f, errors: errors2 };
+    f.front = front;
+    f.title = /^# (.+)$/m.exec(body4)?.[1];
     if (front.id !== f.id) f.errors.push(`id ${front.id} does not match the file name`);
     if (!session.cases.some((c) => c.id === front.case)) f.errors.push(`case ${front.case} is not a case of this run`);
     if (!f.title) f.errors.push("missing the # title line");
-    for (const s of SECTIONS) if (!new RegExp(`^## ${s}$`, "m").test(m[2])) f.errors.push(`missing the ## ${s} section`);
+    for (const s of SECTIONS) if (!new RegExp(`^## ${s}$`, "m").test(body4)) f.errors.push(`missing the ## ${s} section`);
     for (const e of front.evidence) if (!existsSync3(join3(runDir, "evidence", e))) f.errors.push(`evidence ${e} does not exist in evidence/`);
     if (front.kind === "bug" && !front.evidence.length) f.errors.push("a bug needs evidence");
     if (front.status === "duplicate" && !front.of) f.errors.push("status duplicate needs of: PT-\u2026");

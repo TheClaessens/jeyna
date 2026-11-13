@@ -3,11 +3,11 @@ import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { type Browser, chromium, type Page } from "playwright-core";
 import { z } from "zod";
-import type { Config } from "./schema.js";
-import { current, fail, ok } from "./session.js";
+import { type Config, Slug } from "./schema.js";
+import { caseOf, current, fail, ok, stillCurrent } from "./session.js";
 import { accountValues, substitute } from "./accounts.js";
 import { launchChrome } from "./chrome.js";
-import { appUrl, clip } from "./shared.js";
+import { appUrl, truncate } from "./shared.js";
 
 const log = (...a: unknown[]) => console.error(new Date().toISOString(), ...a);
 
@@ -35,6 +35,9 @@ function getBrowser(headed: boolean): Promise<Browser> {
   return (browser = launching);
 }
 
+// session_start launches the browser before it starts a run, so a missing one refuses the run (F11.3).
+export const launchBrowser = async (headed: boolean) => void (await getBrowser(headed));
+
 async function launch(headed: boolean): Promise<Browser> {
   const b = await launchChrome((channel) => chromium.launch({ channel, headless: !headed }));
   log(`browser version ${b.version()}`);
@@ -47,11 +50,13 @@ const shots = new Map<string, number>();
 
 // What the app said behind the page, per case, since the tester's last call: uncaught errors, console
 // errors, failed requests and 4xx/5xx responses (D31). Drained into the next goto/click/press/snapshot result.
+// Each line is redacted before it is cut (D9): registerBrowserTools sets the transport's redactor here.
 const events = new Map<string, string[]>();
 const EVENTS_MAX = 30;
+let redactLine = (t: string) => t;
 function note(caseId: string, line: string) {
   const list = events.get(caseId) ?? [];
-  if (list.length < EVENTS_MAX) list.push(line.length > 300 ? `${line.slice(0, 300)}…` : line);
+  if (list.length < EVENTS_MAX) list.push(truncate(line, 300, redactLine, "…"));
   else if (list.length === EVENTS_MAX) list.push("… and more; the rest is dropped until the next call");
   events.set(caseId, list);
 }
@@ -94,13 +99,7 @@ export async function closeContexts() {
 export const SCOUT = "scout";
 
 function viewportOf(caseId: string, config: Config): string {
-  if (caseId === SCOUT) return config.viewports[0];
-  if (!current) {
-    throw new Error("No running session. Call session_start first; browser tools take a case id from its result (or `scout` for the look before a run).");
-  }
-  const c = current.session.cases.find((c) => c.id === caseId);
-  if (!c) throw new Error(`Unknown case "${caseId}". Cases in this run: ${current.session.cases.map((c) => c.id).join(", ")}.`);
-  return c.viewport;
+  return caseId === SCOUT ? config.viewports[0] : caseOf(caseId).c.viewport;
 }
 
 // Drop a case's page only if the map still holds that same promise, not one created after it.
@@ -149,14 +148,17 @@ async function settled(caseId: string, p: Page) {
   return ok({ url: p.url(), title: await p.title(), ...(heard && { console: heard }) });
 }
 
-const SNAPSHOT_MAX = 90_000; // just under Claude Code's default 25k-token MCP output cap (D14)
+// The whole snapshot result, console tail included. Claude Code would save a text result over 50,000 characters to a file
+// the tester cannot read, so snapshot declares its own limit, anthropic/maxResultSizeChars (D14, D39).
+const SNAPSHOT_MAX = 90_000;
 
-// redact: the transport's account-value redactor (D9), applied to a snapshot before it is cut (D30).
+// redact: the transport's account-value redactor (D9), applied to a snapshot and each console line before they are cut (D30).
 export function registerBrowserTools(
   server: McpServer,
   getContext: () => { root: string; config: Config },
   redact: (text: string) => string,
 ) {
+  redactLine = redact;
   const caseId = z.string().describe("Case id from session_start, e.g. t1-390x844; or scout for the look before a run");
 
   server.registerTool(
@@ -260,13 +262,15 @@ export function registerBrowserTools(
         "The page's accessibility tree as text: roles, names, text. Your main way of reading the page. It does not show layout: use screenshot with look: true for visual questions. Ends with the app's console events since your last call (errors, failed or 4xx/5xx requests), when there were any.",
       inputSchema: { case: caseId },
       annotations: { readOnlyHint: true },
+      _meta: { "anthropic/maxResultSizeChars": SNAPSHOT_MAX },
     },
     async (a) => {
       try {
         const p = await page(a.case, getContext().config);
-        const text = clip(await p.locator("body").ariaSnapshot(), SNAPSHOT_MAX, redact);
-        const heard = drain(a.case);
-        return { content: [{ type: "text", text: heard ? `${text}\n\nConsole since your last call:\n${heard.map((l) => `- ${l}`).join("\n")}` : text }] };
+        const aria = await p.locator("body").ariaSnapshot();
+        const heard = drain(a.case); // lines already redacted and cut; the page text gives way to them
+        const tail = heard ? `\n\nConsole since your last call:\n${heard.map((l) => `- ${l}`).join("\n")}` : "";
+        return { content: [{ type: "text", text: truncate(aria, SNAPSHOT_MAX - tail.length, redact) + tail }] };
       } catch (e) {
         return fail(e);
       }
@@ -280,7 +284,7 @@ export function registerBrowserTools(
         "Save a PNG of this case's page as evidence and return its file name. Set look: true to also see the image, for visual questions (layout, overlap, cut-off or off-screen elements); otherwise prefer snapshot. Viewport only unless fullPage is true. For case scout nothing is saved: it returns the image only.",
       inputSchema: {
         case: caseId,
-        label: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "lowercase words joined by '-'").optional(),
+        label: Slug.optional(),
         fullPage: z.boolean().default(false),
         look: z.boolean().default(false),
       },
@@ -290,7 +294,7 @@ export function registerBrowserTools(
         const run = current;
         const p = await page(a.case, getContext().config);
         const png = await p.screenshot({ fullPage: a.fullPage });
-        if (a.case !== SCOUT && (current !== run || run?.session.status !== "running")) {
+        if (a.case !== SCOUT && !stillCurrent(run)) {
           throw new Error("The run ended or was replaced while the screenshot was taken; nothing was saved.");
         }
         if (a.case === SCOUT) {

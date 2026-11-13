@@ -3,10 +3,10 @@
 // the MCP server reads them and sets their status. Every path is built here from a checked id or file name.
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
-import { parse, stringify } from "yaml";
+import { stringify } from "yaml";
 import { z } from "zod";
 import { MAX_FRAMES } from "./recording.js";
-import { runDirOf, splitFront } from "./shared.js";
+import { parseFront, runDirOf, withStatus } from "./shared.js";
 
 export const FEEDBACK_STATUSES = ["open", "processed", "done", "wontfix"] as const;
 export type FeedbackStatus = (typeof FEEDBACK_STATUSES)[number];
@@ -64,18 +64,10 @@ export function readFeedback(root: string): FeedbackItem[] {
     .map((file) => {
       const source = readFileSync(join(dir, file), "utf8");
       const item: FeedbackItem = { path: file, id: file.slice(0, -3), text: "", source, errors: [] };
-      const m = splitFront(source);
-      if (!m) return { ...item, errors: ["no YAML frontmatter between --- lines"] };
-      item.text = m[2].trim();
-      let raw: unknown;
-      try {
-        raw = parse(m[1]);
-      } catch (e) {
-        return { ...item, errors: [`frontmatter is not valid YAML: ${(e as Error).message.split("\n")[0]}`] };
-      }
-      const r = FeedbackFront.safeParse(raw);
-      if (!r.success) return { ...item, errors: r.error.issues.map((i) => `frontmatter ${i.path.join(".") || "(root)"}: ${i.message}`) };
-      const front = (item.front = r.data);
+      const { front, body = "", errors } = parseFront(source, FeedbackFront);
+      item.text = body.trim();
+      if (!front) return { ...item, errors };
+      item.front = front;
       if (front.id !== item.id) item.errors.push(`id ${front.id} does not match the file name`);
       if (front.capture === "snap" && front.frames.length !== 1) item.errors.push("a snap has exactly one frame");
       if (front.source === "evidence" && !(front.run && front.evidence)) item.errors.push("feedback on evidence names its run and evidence");
@@ -142,26 +134,19 @@ export function createFeedback(root: string, input: NewFeedback, now = new Date(
 }
 
 // Status (any of the four, by the studio or update_status) and the text (only while open; the capture never changes).
+// The note stays until a new one is given; going back to open clears it (the "what changed" line of processed outlives done).
 export function updateFeedback(root: string, id: string, change: { status?: FeedbackStatus; note?: string; text?: string }): FeedbackFront {
   const path = itemFile(root, id);
-  const m = splitFront(readFileSync(path, "utf8"));
-  const r = m ? FeedbackFront.safeParse(parse(m[1])) : undefined;
-  if (!m || !r?.success) throw new Error(`.jeyna/feedback/${id}.md has no readable frontmatter; fix it by hand.`);
-  const front = r.data;
-  let text = m[2].trim();
+  const { front, body = "", errors } = parseFront(readFileSync(path, "utf8"), FeedbackFront);
+  if (!front) throw new Error(`.jeyna/feedback/${id}.md has no readable frontmatter (${errors.join("; ")}); fix it by hand.`);
+  let text = body.trim();
   if (change.text !== undefined) {
     if (front.status !== "open") throw new Error(`${id} is ${front.status}; only an open item's text can change. Reopen it first.`);
     text = change.text.trim();
     if (!text) throw new Error("write what should change");
   }
-  // Rebuild in place so note sits right after status, as update_status does for findings. A new status drops the old note.
-  const note = change.status ? change.note : front.note;
-  const next: Record<string, unknown> = {};
-  for (const [k, v] of Object.entries(front)) {
-    if (k === "note") continue;
-    next[k] = k === "status" ? (change.status ?? v) : v;
-    if (k === "status" && note) next.note = note;
-  }
+  const note = change.note ?? (change.status === "open" ? undefined : front.note);
+  const next = withStatus(front, change.status ?? front.status, { note });
   writeFileSync(path, `---\n${stringify(next)}---\n\n${text}\n`);
   return next as FeedbackFront;
 }

@@ -249,6 +249,37 @@ test("report.md compares verdicts with the latest done run of the same flow, and
   expect(md).toContain(`## Since last run\n\nCompared with ${firstId}: 2 cases in both runs, 1 changed.\n\n| Scenario | Viewport | Was | Now |\n|---|---|---|---|\n| Sign in | 390x844 | pass | fail |`);
 });
 
+test("update_status takes only finding-shaped ids: a path-shaped id or of is refused and nothing outside findings/ changes", async () => {
+  const { root, call, text, runDir } = await started();
+  mkdirSync(join(root, ".jeyna", "flows"));
+  const flow = join(root, ".jeyna", "flows", "login.md");
+  writeFileSync(flow, "---\nname: login\n---\n");
+  const run = basename(runDir);
+  const shape = (x: string) => `A finding id looks like PT-<flow>-<nnn>, e.g. PT-login-003 (a feedback id like FB-007), not ${x}.`;
+  expect(text(await call("update_status", { id: "../../../flows/login", status: "wontfix", run }))).toBe(shape("../../../flows/login"));
+  expect(text(await call("update_status", { id: "PT-login-001", status: "duplicate", of: "../../../flows/login", run }))).toBe(shape("../../../flows/login"));
+  expect(text(await call("update_status", { id: "../../feedback/FB-001", status: "wontfix", run }))).toBe(shape("../../feedback/FB-001"));
+  expect(readFileSync(flow, "utf8")).toBe("---\nname: login\n---\n");
+});
+
+test("update_status on a finding whose frontmatter is broken YAML says which file to fix by hand", async () => {
+  const { call, text, runDir } = await started();
+  const id = JSON.parse(text(await call("record_finding", { case: "t1-390x844", finding: A11Y }))).id;
+  const path = join(runDir, "findings", `${id}.md`);
+  writeFileSync(path, readFileSync(path, "utf8").replace("status: open", "status: [open"));
+  expect(text(await call("update_status", { id, status: "wontfix" }))).toMatch(new RegExp(`^${path} has no readable frontmatter \\(frontmatter is not valid YAML: .*\\); fix it by hand\\.$`));
+});
+
+test("get_feedback loads an evidence item that lacks its run, with its errors, instead of failing", async () => {
+  const { root, call, text } = await started();
+  mkdirSync(join(root, ".jeyna", "feedback"));
+  writeFileSync(join(root, ".jeyna", "feedback", "FB-001.png"), Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==", "base64"));
+  writeFileSync(join(root, ".jeyna", "feedback", "FB-001.md"), "---\nschema: 1\nid: FB-001\nstatus: open\ncapture: snap\nframes:\n  - file: FB-001.png\n    ms: 0\nsource: evidence\ncreated: 2026-10-20T10:00:00.000Z\n---\n\nBigger button\n");
+  const r = await call("get_feedback", { id: "FB-001" });
+  expect(r.isError, text(r)).toBeFalsy();
+  expect(JSON.parse(text(r))).toMatchObject({ id: "FB-001", errors: ["feedback on evidence names its run and evidence"] });
+});
+
 test("update_status sets a feedback item's status; finding-only statuses and arguments are refused for it (D36)", async () => {
   const { root, call, text } = await started();
   mkdirSync(join(root, ".jeyna", "feedback"));

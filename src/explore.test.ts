@@ -179,6 +179,11 @@ test("save_flow writes the run's scenarios as a flow that get_flow reads back th
   expect(refused.isError).toBe(true);
   expect(c.text(refused)).toMatch(/Nothing was written|not make a valid flow/);
   expect(readdirSync(join(root, ".jeyna", "flows"))).toEqual(["authentication.md"]);
+
+  // A hand-broken session.json is refused with what is wrong and what to do, not a crash.
+  writeFileSync(join(odd.runDir, "session.json"), JSON.stringify({ schema: 1, id: odd.id }));
+  const broken = await c.call("save_flow", { run: odd.id, name: "broken" });
+  expect(c.text(broken)).toMatch(new RegExp(`^Run ${odd.id} cannot be saved as a flow: session.json does not match the schema: .*\\. Choose another run, or fix its session.json by hand\\.$`));
 }, 30_000);
 
 type Tester = { id: string; scenario: string; account?: string; batch: number; cases: { id: string; viewport: string }[] };

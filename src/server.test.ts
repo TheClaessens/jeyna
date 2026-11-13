@@ -151,3 +151,13 @@ test("an account value in place of an env variable name is refused", async () =>
   expect(r.isError).toBe(true);
   expect(r.text).toMatch(/environment variable name/);
 });
+
+test("the server reports the plugin's version, snapshot declares its own result size limit, and no tool text carries spec ids", async () => {
+  const { client } = await getContext({ args: ["--project", project(VALID)] });
+  expect(client.getServerVersion()).toMatchObject({ name: "jeyna", version: JSON.parse(readFileSync("plugin/.claude-plugin/plugin.json", "utf8")).version });
+  // Claude Code saves a text result over 50,000 characters to a file unless the tool declares a higher limit (D39).
+  const { tools } = await client.listTools();
+  expect(tools.find((t) => t.name === "snapshot")?._meta).toEqual({ "anthropic/maxResultSizeChars": 90_000 });
+  // The model cannot look up D11, F2.4, AC3 and the like.
+  for (const t of tools) expect(JSON.stringify([t.description, t.inputSchema]), t.name).not.toMatch(/\b(D\d+|F\d+(\.\d+)?|AC\d+|N\d+|P\d+)\b/);
+});

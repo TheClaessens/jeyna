@@ -1,10 +1,11 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { appendFileSync, existsSync, readFileSync, statSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { join } from "node:path";
 import { parseArgs, parseEnv } from "node:util";
 import { parse } from "yaml";
 import { z } from "zod";
+import plugin from "../plugin/.claude-plugin/plugin.json" with { type: "json" };
 import { Config } from "./schema.js";
 import { current, registerSessionTools } from "./session.js";
 import { registerBrowserTools } from "./browser.js";
@@ -78,7 +79,7 @@ function currentRedactor(): (text: string) => string {
 }
 const redact = (text: string) => currentRedactor()(text);
 
-const server = new McpServer({ name: "jeyna", version: "0.0.1" });
+const server = new McpServer({ name: "jeyna", version: plugin.version }); // the plugin's version, read at build time
 
 // Every tool call logs start and end to stderr, so concurrent calls show as overlapping spans (P8), and
 // to the running run's server.log, so a run folder records what its testers called and got (D33).
@@ -144,10 +145,10 @@ server.registerTool(
   },
 );
 
-registerSessionTools(server, getContext);
+registerSessionTools(server, getContext, redact);
 registerBrowserTools(server, getContext, redact);
-registerFindingTools(server);
-registerFinishTools(server, getContext);
+registerFindingTools(server, redact);
+registerFinishTools(server, getContext, redact);
 registerFlowTools(server, getContext);
 
 // `node jeyna-mcp.mjs validate [runDir]` lints a run folder from a shell instead of serving MCP (F8.2).

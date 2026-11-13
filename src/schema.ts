@@ -1,5 +1,18 @@
 import { z } from "zod";
 
+// Lowercase words joined by '-': run slugs, flow names and screenshot labels.
+export const SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+export const Slug = z.string().regex(SLUG, "lowercase words joined by '-'");
+
+// A finding id: PT-<slug>-<nnn>, the slug being the run's flow name (§5.2).
+export const FINDING_ID = /^PT-[a-z0-9]+(-[a-z0-9]+)*-\d{3,}$/;
+
+// A viewport, <width>x<height> in CSS pixels.
+export const VIEWPORT = /^\d+x\d+$/;
+
+// A case's verdict against its scenario's Pass: line.
+export const RESULTS = ["pass", "fail", "blocked", "skipped"] as const;
+
 // Env variable names only; values never live in the config (D18).
 const envName = z.string().regex(/^[A-Za-z_][A-Za-z0-9_]*$/, "must be an environment variable name, not a value");
 
@@ -11,7 +24,7 @@ export const Config = z.strictObject({
     build: z.string().nullish(),
     reset: z.string().min(1).nullish().describe("Shell command that resets the app's state; run before every run"),
   }),
-  viewports: z.array(z.string().regex(/^\d+x\d+$/, "must look like 1440x900")).min(1),
+  viewports: z.array(z.string().regex(VIEWPORT, "must look like 1440x900")).min(1),
   browser: z.strictObject({ headed: z.boolean().default(false) }).default({ headed: false }),
   tester: z
     .strictObject({ model: z.string().default("sonnet"), effort: z.string().default("medium") })
@@ -49,7 +62,7 @@ export type FindingInput = z.infer<typeof FindingInput>;
 // fields, and the studio must still read older files. The studio validates on read (architecture, "one schema").
 export const Verdict = z.object({
   case: z.string(),
-  result: z.enum(["pass", "fail", "blocked", "skipped"]),
+  result: z.enum(RESULTS),
   note: z.string().optional(),
   findings: z.array(z.string()),
 });

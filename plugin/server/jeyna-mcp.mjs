@@ -2995,7 +2995,7 @@ var require_compile = __commonJS2({
       const schOrFunc = root.refs[ref];
       if (schOrFunc)
         return schOrFunc;
-      let _sch = resolve4.call(this, root, ref);
+      let _sch = resolve3.call(this, root, ref);
       if (_sch === void 0) {
         const schema = (_a3 = root.localRefs) === null || _a3 === void 0 ? void 0 : _a3[ref];
         const { schemaId } = this.opts;
@@ -3022,7 +3022,7 @@ var require_compile = __commonJS2({
     function sameSchemaEnv(s1, s2) {
       return s1.schema === s2.schema && s1.root === s2.root && s1.baseId === s2.baseId;
     }
-    function resolve4(root, ref) {
+    function resolve3(root, ref) {
       let sch;
       while (typeof (sch = this.refs[ref]) == "string")
         ref = sch;
@@ -3848,11 +3848,11 @@ var require_fast_uri = __commonJS2({
         normalizeString(uri, options2);
       } else if (typeof uri === "object") {
         uri = /** @type {T} */
-        parse8(serialize2(uri, options2), options2);
+        parse6(serialize2(uri, options2), options2);
       }
       return uri;
     }
-    function resolve4(baseURI, relativeURI, options2) {
+    function resolve3(baseURI, relativeURI, options2) {
       const schemelessOptions = options2 ? Object.assign({ scheme: "null" }, options2) : { scheme: "null" };
       const {
         parsed: baseParsed,
@@ -3888,8 +3888,8 @@ var require_fast_uri = __commonJS2({
     function resolveComponent(base, relative2, options2, skipNormalization) {
       const target = {};
       if (!skipNormalization) {
-        base = parse8(serialize2(base, options2), options2);
-        relative2 = parse8(serialize2(relative2, options2), options2);
+        base = parse6(serialize2(base, options2), options2);
+        relative2 = parse6(serialize2(relative2, options2), options2);
       }
       options2 = options2 || {};
       if (!options2.tolerant && relative2.scheme) {
@@ -4188,7 +4188,7 @@ var require_fast_uri = __commonJS2({
       }
       return { parsed, malformedAuthorityOrPort, malformedPercentEncoding, malformedSchemeSpecific, malformedHost, malformedScheme };
     }
-    function parse8(uri, opts) {
+    function parse6(uri, opts) {
       return parseWithStatus(uri, opts).parsed;
     }
     function normalizeString(uri, opts) {
@@ -4221,11 +4221,11 @@ var require_fast_uri = __commonJS2({
     var fastUri = {
       SCHEMES,
       normalize,
-      resolve: resolve4,
+      resolve: resolve3,
       resolveComponent,
       equal,
       serialize: serialize2,
-      parse: parse8
+      parse: parse6
     };
     module3.exports = fastUri;
     module3.exports.default = fastUri;
@@ -14440,7 +14440,7 @@ var require_public_api = __commonJS2({
       }
       return doc;
     }
-    function parse8(src, reviver, options2) {
+    function parse6(src, reviver, options2) {
       let _reviver = void 0;
       if (typeof reviver === "function") {
         _reviver = reviver;
@@ -14481,7 +14481,7 @@ var require_public_api = __commonJS2({
         return value2.toString(options2);
       return new Document.Document(value2, _replacer, options2).toString(options2);
     }
-    exports2.parse = parse8;
+    exports2.parse = parse6;
     exports2.parseAllDocuments = parseAllDocuments;
     exports2.parseDocument = parseDocument;
     exports2.stringify = stringify5;
@@ -24774,11 +24774,11 @@ var require_utilsBundle = __commonJS2({
         "use strict";
         var __awaiter = exports22 && exports22.__awaiter || function(thisArg, _arguments, P, generator) {
           function adopt(value2) {
-            return value2 instanceof P ? value2 : new P(function(resolve32) {
-              resolve32(value2);
+            return value2 instanceof P ? value2 : new P(function(resolve3) {
+              resolve3(value2);
             });
           }
-          return new (P || (P = Promise))(function(resolve32, reject) {
+          return new (P || (P = Promise))(function(resolve3, reject) {
             function fulfilled(value2) {
               try {
                 step(generator.next(value2));
@@ -24794,7 +24794,7 @@ var require_utilsBundle = __commonJS2({
               }
             }
             function step(result2) {
-              result2.done ? resolve32(result2.value) : adopt(result2.value).then(fulfilled, rejected);
+              result2.done ? resolve3(result2.value) : adopt(result2.value).then(fulfilled, rejected);
             }
             step((generator = generator.apply(thisArg, _arguments || [])).next());
           });
@@ -24828,13 +24828,13 @@ var require_utilsBundle = __commonJS2({
            * @returns { Promise }
            */
           static createConnection(options2, callback) {
-            return new Promise((resolve32, reject) => {
+            return new Promise((resolve3, reject) => {
               try {
                 (0, helpers_1.validateSocksClientOptions)(options2, ["connect"]);
               } catch (err) {
                 if (typeof callback === "function") {
                   callback(err);
-                  return resolve32(err);
+                  return resolve3(err);
                 } else {
                   return reject(err);
                 }
@@ -24845,16 +24845,16 @@ var require_utilsBundle = __commonJS2({
                 client.removeAllListeners();
                 if (typeof callback === "function") {
                   callback(null, info);
-                  resolve32(info);
+                  resolve3(info);
                 } else {
-                  resolve32(info);
+                  resolve3(info);
                 }
               });
               client.once("error", (err) => {
                 client.removeAllListeners();
                 if (typeof callback === "function") {
                   callback(err);
-                  resolve32(err);
+                  resolve3(err);
                 } else {
                   reject(err);
                 }
@@ -24871,13 +24871,13 @@ var require_utilsBundle = __commonJS2({
            * @returns { Promise }
            */
           static createConnectionChain(options2, callback) {
-            return new Promise((resolve32, reject) => __awaiter(this, void 0, void 0, function* () {
+            return new Promise((resolve3, reject) => __awaiter(this, void 0, void 0, function* () {
               try {
                 (0, helpers_1.validateSocksClientChainOptions)(options2);
               } catch (err) {
                 if (typeof callback === "function") {
                   callback(err);
-                  return resolve32(err);
+                  return resolve3(err);
                 } else {
                   return reject(err);
                 }
@@ -24903,14 +24903,14 @@ var require_utilsBundle = __commonJS2({
                 }
                 if (typeof callback === "function") {
                   callback(null, { socket: sock });
-                  resolve32({ socket: sock });
+                  resolve3({ socket: sock });
                 } else {
-                  resolve32({ socket: sock });
+                  resolve3({ socket: sock });
                 }
               } catch (err) {
                 if (typeof callback === "function") {
                   callback(err);
-                  resolve32(err);
+                  resolve3(err);
                 } else {
                   reject(err);
                 }
@@ -41042,8 +41042,8 @@ ${end.comment}` : end.comment;
             throw new Error("expected prompt to have a custom render method");
           }
           run() {
-            return new Promise(async (resolve32, reject) => {
-              this.once("submit", resolve32);
+            return new Promise(async (resolve3, reject) => {
+              this.once("submit", resolve3);
               this.once("cancel", reject);
               if (await this.skip()) {
                 this.render = () => {
@@ -41560,14 +41560,14 @@ ${end.comment}` : end.comment;
               return this.render();
             };
             clearTimeout(this.numberTimeout);
-            return new Promise((resolve32) => {
+            return new Promise((resolve3) => {
               let len = this.choices.length;
               let num2 = this.num;
               let handle = (val = false, res) => {
                 clearTimeout(this.numberTimeout);
                 if (val) res = number42(num2);
                 this.num = "";
-                resolve32(res);
+                resolve3(res);
               };
               if (num2 === "0" || num2.length === 1 && Number(num2 + "0") > len) {
                 return handle(true);
@@ -45552,34 +45552,34 @@ ${end.comment}` : end.comment;
         exports22.LocalFileHeader = LocalFileHeader;
         exports22.RandomAccessReader = RandomAccessReader;
         function openPromise(path4, options2) {
-          return new Promise((resolve32, reject) => {
+          return new Promise((resolve3, reject) => {
             open42(path4, { ...options2, lazyEntries: true }, function(err, zipfile) {
               if (err) return reject(err);
-              resolve32(zipfile);
+              resolve3(zipfile);
             });
           });
         }
         function fromFdPromise(fd, options2) {
-          return new Promise((resolve32, reject) => {
+          return new Promise((resolve3, reject) => {
             fromFd(fd, { ...options2, lazyEntries: true }, function(err, zipfile) {
               if (err) return reject(err);
-              resolve32(zipfile);
+              resolve3(zipfile);
             });
           });
         }
         function fromBufferPromise(buffer, options2) {
-          return new Promise((resolve32, reject) => {
+          return new Promise((resolve3, reject) => {
             fromBuffer(buffer, { ...options2, lazyEntries: true }, function(err, zipfile) {
               if (err) return reject(err);
-              resolve32(zipfile);
+              resolve3(zipfile);
             });
           });
         }
         function fromRandomAccessReaderPromise(reader, totalSize, options2) {
-          return new Promise((resolve32, reject) => {
+          return new Promise((resolve3, reject) => {
             fromRandomAccessReader(reader, totalSize, { ...options2, lazyEntries: true }, function(err, zipfile) {
               if (err) return reject(err);
-              resolve32(zipfile);
+              resolve3(zipfile);
             });
           });
         }
@@ -45863,15 +45863,15 @@ ${end.comment}` : end.comment;
             if (self2.autoClose) self2.close();
           }
           function onEntry(entry) {
-            let { resolve: resolve32 } = pendingResolveReject;
+            let { resolve: resolve3 } = pendingResolveReject;
             pendingResolveReject = null;
-            resolve32({ value: entry });
+            resolve3({ value: entry });
           }
           function onEnd() {
-            let { resolve: resolve32 } = pendingResolveReject;
+            let { resolve: resolve3 } = pendingResolveReject;
             pendingResolveReject = null;
             cleanup();
-            resolve32({ done: true });
+            resolve3({ done: true });
           }
           function onError(err) {
             let { reject } = pendingResolveReject;
@@ -45884,9 +45884,9 @@ ${end.comment}` : end.comment;
               return this;
             },
             next() {
-              const promise22 = new Promise((resolve32, reject) => {
+              const promise22 = new Promise((resolve3, reject) => {
                 if (pendingResolveReject != null) throw new Error("next() called before previous Promise was resolved.");
-                pendingResolveReject = { resolve: resolve32, reject };
+                pendingResolveReject = { resolve: resolve3, reject };
               });
               self2.readEntry();
               return promise22;
@@ -46075,26 +46075,26 @@ ${end.comment}` : end.comment;
           });
         };
         ZipFile2.prototype.openReadStreamPromise = function(entry, options2) {
-          return new Promise((resolve32, reject) => {
+          return new Promise((resolve3, reject) => {
             this.openReadStream(entry, options2, function(err, readStream) {
               if (err) return reject(err);
-              resolve32(readStream);
+              resolve3(readStream);
             });
           });
         };
         ZipFile2.prototype.openReadStreamLowLevelPromise = function(fileDataStart, compressedSize, relativeStart, relativeEnd, decompress, uncompressedSize) {
-          return new Promise((resolve32, reject) => {
+          return new Promise((resolve3, reject) => {
             this.openReadStream(fileDataStart, compressedSize, relativeStart, relativeEnd, decompress, uncompressedSize, function(err, readStream) {
               if (err) return reject(err);
-              resolve32(readStream);
+              resolve3(readStream);
             });
           });
         };
         ZipFile2.prototype.readLocalFileHeaderPromise = function(entry, options2) {
-          return new Promise((resolve32, reject) => {
+          return new Promise((resolve3, reject) => {
             this.readLocalFileHeader(entry, options2, function(err, localFileHeader) {
               if (err) return reject(err);
-              resolve32(localFileHeader);
+              resolve3(localFileHeader);
             });
           });
         };
@@ -50282,7 +50282,7 @@ ${end.comment}` : end.comment;
           const schOrFunc = root.refs[ref];
           if (schOrFunc)
             return schOrFunc;
-          let _sch = resolve32.call(this, root, ref);
+          let _sch = resolve3.call(this, root, ref);
           if (_sch === void 0) {
             const schema = (_a4 = root.localRefs) === null || _a4 === void 0 ? void 0 : _a4[ref];
             const { schemaId } = this.opts;
@@ -50309,7 +50309,7 @@ ${end.comment}` : end.comment;
         function sameSchemaEnv(s1, s2) {
           return s1.schema === s2.schema && s1.root === s2.root && s1.baseId === s2.baseId;
         }
-        function resolve32(root, ref) {
+        function resolve3(root, ref) {
           let sch;
           while (typeof (sch = this.refs[ref]) == "string")
             ref = sch;
@@ -51131,7 +51131,7 @@ ${end.comment}` : end.comment;
           }
           return uri;
         }
-        function resolve32(baseURI, relativeURI, options2) {
+        function resolve3(baseURI, relativeURI, options2) {
           const schemelessOptions = options2 ? Object.assign({ scheme: "null" }, options2) : { scheme: "null" };
           const {
             parsed: baseParsed,
@@ -51499,7 +51499,7 @@ ${end.comment}` : end.comment;
         var fastUri = {
           SCHEMES,
           normalize: normalize2,
-          resolve: resolve32,
+          resolve: resolve3,
           resolveComponent,
           equal,
           serialize: serialize2,
@@ -57162,7 +57162,7 @@ ${end.comment}` : end.comment;
           const schOrFunc = root.refs[ref];
           if (schOrFunc)
             return schOrFunc;
-          let _sch = resolve32.call(this, root, ref);
+          let _sch = resolve3.call(this, root, ref);
           if (_sch === void 0) {
             const schema = (_a4 = root.localRefs) === null || _a4 === void 0 ? void 0 : _a4[ref];
             const { schemaId } = this.opts;
@@ -57189,7 +57189,7 @@ ${end.comment}` : end.comment;
         function sameSchemaEnv(s1, s2) {
           return s1.schema === s2.schema && s1.root === s2.root && s1.baseId === s2.baseId;
         }
-        function resolve32(root, ref) {
+        function resolve3(root, ref) {
           let sch;
           while (typeof (sch = this.refs[ref]) == "string")
             ref = sch;
@@ -60240,12 +60240,12 @@ ${end.comment}` : end.comment;
             if (typeof Promise !== "function") {
               throw new TypeError("callback not provided");
             }
-            return new Promise(function(resolve32, reject) {
+            return new Promise(function(resolve3, reject) {
               isexe(path4, options2 || {}, function(er, is) {
                 if (er) {
                   reject(er);
                 } else {
-                  resolve32(is);
+                  resolve3(is);
                 }
               });
             });
@@ -60309,27 +60309,27 @@ ${end.comment}` : end.comment;
             opt = {};
           const { pathEnv, pathExt, pathExtExe } = getPathInfo(cmd, opt);
           const found = [];
-          const step = (i2) => new Promise((resolve32, reject) => {
+          const step = (i2) => new Promise((resolve3, reject) => {
             if (i2 === pathEnv.length)
-              return opt.all && found.length ? resolve32(found) : reject(getNotFoundError(cmd));
+              return opt.all && found.length ? resolve3(found) : reject(getNotFoundError(cmd));
             const ppRaw = pathEnv[i2];
             const pathPart = /^".*"$/.test(ppRaw) ? ppRaw.slice(1, -1) : ppRaw;
             const pCmd = path4.join(pathPart, cmd);
             const p = !pathPart && /^\.[\\\/]/.test(cmd) ? cmd.slice(0, 2) + pCmd : pCmd;
-            resolve32(subStep(p, i2, 0));
+            resolve3(subStep(p, i2, 0));
           });
-          const subStep = (p, i2, ii) => new Promise((resolve32, reject) => {
+          const subStep = (p, i2, ii) => new Promise((resolve3, reject) => {
             if (ii === pathExt.length)
-              return resolve32(step(i2 + 1));
+              return resolve3(step(i2 + 1));
             const ext2 = pathExt[ii];
             isexe(p + ext2, { pathExt: pathExtExe }, (er, is) => {
               if (!er && is) {
                 if (opt.all)
                   found.push(p + ext2);
                 else
-                  return resolve32(p + ext2);
+                  return resolve3(p + ext2);
               }
-              return resolve32(subStep(p, i2, ii + 1));
+              return resolve3(subStep(p, i2, ii + 1));
             });
           });
           return cb ? step(0).then((res) => cb(null, res), cb) : step(0);
@@ -62484,7 +62484,7 @@ ${end.comment}` : end.comment;
     var import_debug = __toESM3(require_src(), 1);
     var debug17 = (0, import_debug.default)("https-proxy-agent:parse-proxy-response");
     function parseProxyResponse(socket) {
-      return new Promise((resolve32, reject) => {
+      return new Promise((resolve3, reject) => {
         let buffersLength = 0;
         const buffers = [];
         function read() {
@@ -62550,7 +62550,7 @@ ${end.comment}` : end.comment;
           }
           debug17("got proxy server response: %o %o", firstLine, headers);
           cleanup();
-          resolve32({
+          resolve3({
             connect: {
               statusCode,
               statusText: statusText2,
@@ -66199,19 +66199,19 @@ tell application "System Events" to get value of property list item "CFBundleNam
       }
       const subprocess = import_node_child_process7.default.spawn(command, cliArguments, childProcessOptions);
       if (options2.wait) {
-        return new Promise((resolve32, reject) => {
+        return new Promise((resolve3, reject) => {
           subprocess.once("error", reject);
           subprocess.once("close", (exitCode) => {
             if (!options2.allowNonzeroExitCode && exitCode !== 0) {
               reject(new Error(`Exited with code ${exitCode}`));
               return;
             }
-            resolve32(subprocess);
+            resolve3(subprocess);
           });
         });
       }
       if (isFallbackAttempt) {
-        return new Promise((resolve32, reject) => {
+        return new Promise((resolve3, reject) => {
           subprocess.once("error", reject);
           subprocess.once("spawn", () => {
             subprocess.once("close", (exitCode) => {
@@ -66221,17 +66221,17 @@ tell application "System Events" to get value of property list item "CFBundleNam
                 return;
               }
               subprocess.unref();
-              resolve32(subprocess);
+              resolve3(subprocess);
             });
           });
         });
       }
       subprocess.unref();
-      return new Promise((resolve32, reject) => {
+      return new Promise((resolve3, reject) => {
         subprocess.once("error", reject);
         subprocess.once("spawn", () => {
           subprocess.off("error", reject);
-          resolve32(subprocess);
+          resolve3(subprocess);
         });
       });
     };
@@ -69746,12 +69746,12 @@ Expecting one of '${allowedValues.join("', '")}'`);
         let { host } = opts;
         const { port, lookup: lookupFn = dns.lookup } = opts;
         if (shouldLookup) {
-          host = await new Promise((resolve32, reject) => {
+          host = await new Promise((resolve3, reject) => {
             lookupFn(host, {}, (err, address) => {
               if (err) {
                 reject(err);
               } else {
-                resolve32(typeof address === "string" ? address : address[0].address);
+                resolve3(typeof address === "string" ? address : address[0].address);
               }
             });
           });
@@ -70676,7 +70676,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
             this._addToNodeFs(path4, initialAdd, wh, depth + 1);
           }
         }).on(EV.ERROR, this._boundHandleError);
-        return new Promise((resolve32, reject) => {
+        return new Promise((resolve3, reject) => {
           if (!stream)
             return reject();
           stream.once(STR_END, () => {
@@ -70685,7 +70685,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
               return;
             }
             const wasThrottled = throttler ? throttler.clear() : false;
-            resolve32(void 0);
+            resolve3(void 0);
             previous.getChildren().filter((item) => {
               return item !== directory && !current2.has(item);
             }).forEach((item) => {
@@ -72894,7 +72894,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
       isValidJWT: () => isValidJWT3,
       locales: () => locales_exports2,
       meta: () => meta3,
-      parse: () => parse8,
+      parse: () => parse6,
       parseAsync: () => parseAsync3,
       prettifyError: () => prettifyError2,
       process: () => process11,
@@ -73831,7 +73831,7 @@ Expecting one of '${allowedValues.join("', '")}'`);
       }
       return result2.value;
     };
-    var parse8 = /* @__PURE__ */ _parse3($ZodRealError2);
+    var parse6 = /* @__PURE__ */ _parse3($ZodRealError2);
     var _parseAsync3 = (_Err) => async (schema, value2, _ctx, params2) => {
       const ctx = _ctx ? { ..._ctx, async: true } : { async: true };
       let result2 = schema._zod.run({ value: value2, issues: [] }, ctx);
@@ -76613,10 +76613,10 @@ Expecting one of '${allowedValues.join("', '")}'`);
           throw new Error("implement() must be called with a function");
         }
         return function(...args) {
-          const parsedArgs = inst._def.input ? parse8(inst._def.input, args) : args;
+          const parsedArgs = inst._def.input ? parse6(inst._def.input, args) : args;
           const result2 = Reflect.apply(func, this, parsedArgs);
           if (inst._def.output) {
-            return parse8(inst._def.output, result2);
+            return parse6(inst._def.output, result2);
           }
           return result2;
         };
@@ -93923,7 +93923,7 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
               return;
             }
             const pollInterval = task2.pollInterval ?? this._options?.defaultTaskPollInterval ?? 1e3;
-            await new Promise((resolve32) => setTimeout(resolve32, pollInterval));
+            await new Promise((resolve3) => setTimeout(resolve3, pollInterval));
             options2?.signal?.throwIfAborted();
           }
         } catch (error512) {
@@ -93940,7 +93940,7 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
        */
       request(request3, resultSchema, options2) {
         const { relatedRequestId, resumptionToken, onresumptiontoken, task, relatedTask } = options2 ?? {};
-        return new Promise((resolve32, reject) => {
+        return new Promise((resolve3, reject) => {
           const earlyReject = (error512) => {
             reject(error512);
           };
@@ -94018,7 +94018,7 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
               if (!parseResult2.success) {
                 reject(parseResult2.error);
               } else {
-                resolve32(parseResult2.data);
+                resolve3(parseResult2.data);
               }
             } catch (error512) {
               reject(error512);
@@ -94279,12 +94279,12 @@ Set the \`cycles\` parameter to \`"ref"\` to resolve cyclical schemas with defs.
           }
         } catch {
         }
-        return new Promise((resolve32, reject) => {
+        return new Promise((resolve3, reject) => {
           if (signal.aborted) {
             reject(new McpError2(ErrorCode2.InvalidRequest, "Request cancelled"));
             return;
           }
-          const timeoutId = setTimeout(resolve32, interval);
+          const timeoutId = setTimeout(resolve3, interval);
           signal.addEventListener("abort", () => {
             clearTimeout(timeoutId);
             reject(new McpError2(ErrorCode2.InvalidRequest, "Request cancelled"));
@@ -97119,7 +97119,7 @@ ${value2}`, dataLines++;
       }
       _startOrAuth() {
         const fetchImpl = this?._eventSourceInit?.fetch ?? this._fetch ?? fetch;
-        return new Promise((resolve32, reject) => {
+        return new Promise((resolve3, reject) => {
           this._eventSource = new EventSource(this._url.href, {
             ...this._eventSourceInit,
             fetch: async (url22, init) => {
@@ -97140,7 +97140,7 @@ ${value2}`, dataLines++;
           this._abortController = new AbortController();
           this._eventSource.onerror = (event) => {
             if (event.code === 401 && this._authProvider) {
-              this._authThenStart().then(resolve32, reject);
+              this._authThenStart().then(resolve3, reject);
               return;
             }
             const error512 = new SseError(event.code, event.message, event);
@@ -97162,7 +97162,7 @@ ${value2}`, dataLines++;
               void this.close();
               return;
             }
-            resolve32();
+            resolve3();
           });
           this._eventSource.onmessage = (event) => {
             const messageEvent = event;
@@ -97255,7 +97255,7 @@ ${value2}`, dataLines++;
     var import_bytes = __toESM3(require_bytes());
     function getRawBody(req, { limit, encoding }) {
       const limitNumber = import_bytes.default.parse(limit);
-      return new Promise((resolve32, reject) => {
+      return new Promise((resolve3, reject) => {
         let received = 0;
         const chunks = [];
         req.on("data", (chunk) => {
@@ -97266,7 +97266,7 @@ ${value2}`, dataLines++;
         });
         req.on("end", () => {
           try {
-            resolve32(Buffer.concat(chunks).toString(encoding));
+            resolve3(Buffer.concat(chunks).toString(encoding));
           } catch (error512) {
             reject(error512);
           }
@@ -97499,7 +97499,7 @@ data: ${JSON.stringify(message)}
         if (this._process) {
           throw new Error("StdioClientTransport already started! If using Client class, note that connect() calls start() automatically.");
         }
-        return new Promise((resolve32, reject) => {
+        return new Promise((resolve3, reject) => {
           this._process = (0, import_cross_spawn.default)(this._serverParams.command, this._serverParams.args ?? [], {
             // merge default env with server env because mcp server needs some env vars
             env: {
@@ -97516,7 +97516,7 @@ data: ${JSON.stringify(message)}
             this.onerror?.(error512);
           });
           this._process.on("spawn", () => {
-            resolve32();
+            resolve3();
           });
           this._process.on("close", (_code) => {
             this._process = void 0;
@@ -97575,22 +97575,22 @@ data: ${JSON.stringify(message)}
         if (this._process) {
           const processToClose = this._process;
           this._process = void 0;
-          const closePromise = new Promise((resolve32) => {
+          const closePromise = new Promise((resolve3) => {
             processToClose.once("close", () => {
-              resolve32();
+              resolve3();
             });
           });
           try {
             processToClose.stdin?.end();
           } catch {
           }
-          await Promise.race([closePromise, new Promise((resolve32) => setTimeout(resolve32, 2e3).unref())]);
+          await Promise.race([closePromise, new Promise((resolve3) => setTimeout(resolve3, 2e3).unref())]);
           if (processToClose.exitCode === null) {
             try {
               processToClose.kill("SIGTERM");
             } catch {
             }
-            await Promise.race([closePromise, new Promise((resolve32) => setTimeout(resolve32, 2e3).unref())]);
+            await Promise.race([closePromise, new Promise((resolve3) => setTimeout(resolve3, 2e3).unref())]);
           }
           if (processToClose.exitCode === null) {
             try {
@@ -97602,15 +97602,15 @@ data: ${JSON.stringify(message)}
         this._readBuffer.clear();
       }
       send(message) {
-        return new Promise((resolve32) => {
+        return new Promise((resolve3) => {
           if (!this._process?.stdin) {
             throw new Error("Not connected");
           }
           const json22 = serializeMessage2(message);
           if (this._process.stdin.write(json22)) {
-            resolve32();
+            resolve3();
           } else {
-            this._process.stdin.once("drain", resolve32);
+            this._process.stdin.once("drain", resolve3);
           }
         });
       }
@@ -97665,12 +97665,12 @@ data: ${JSON.stringify(message)}
         this.onclose?.();
       }
       send(message) {
-        return new Promise((resolve32) => {
+        return new Promise((resolve3) => {
           const json22 = serializeMessage2(message);
           if (this._stdout.write(json22)) {
-            resolve32();
+            resolve3();
           } else {
-            this._stdout.once("drain", resolve32);
+            this._stdout.once("drain", resolve3);
           }
         });
       }
@@ -98167,7 +98167,7 @@ data: ${JSON.stringify(message)}
             });
             if (!chunk) {
               if (i2 === 1) {
-                await new Promise((resolve32) => setTimeout(resolve32));
+                await new Promise((resolve3) => setTimeout(resolve3));
                 maxReadCount = 3;
                 continue;
               }
@@ -98665,9 +98665,9 @@ data:
           const initRequest = messages.find((m) => isInitializeRequest(m));
           const clientProtocolVersion = initRequest ? initRequest.params.protocolVersion : req.headers.get("mcp-protocol-version") ?? DEFAULT_NEGOTIATED_PROTOCOL_VERSION;
           if (this._enableJsonResponse) {
-            return new Promise((resolve32) => {
+            return new Promise((resolve3) => {
               this._streamMapping.set(streamId, {
-                resolveJson: resolve32,
+                resolveJson: resolve3,
                 cleanup: () => {
                   this._streamMapping.delete(streamId);
                 }
@@ -102995,8 +102995,8 @@ ${escaped2}
         return { promise: Promise.resolve(), dispose: () => {
         } };
       let dispose;
-      const promise2 = new Promise((resolve4) => {
-        const onAbort = () => resolve4();
+      const promise2 = new Promise((resolve3) => {
+        const onAbort = () => resolve3();
         signal.addEventListener("abort", onAbort, { once: true });
         dispose = () => signal.removeEventListener("abort", onAbort);
       });
@@ -103016,14 +103016,14 @@ ${escaped2}
         "use strict";
         ManualPromise = class extends Promise {
           constructor() {
-            let resolve4;
+            let resolve3;
             let reject;
             super((f, r) => {
-              resolve4 = f;
+              resolve3 = f;
               reject = r;
             });
             this._isDone = false;
-            this._resolve = resolve4;
+            this._resolve = resolve3;
             this._reject = reject;
           }
           isDone() {
@@ -104193,10 +104193,10 @@ ${escaped2}
         cb().then((result2) => {
           return { result: result2, timedOut: false };
         }),
-        new Promise((resolve4) => {
+        new Promise((resolve3) => {
           if (!deadline)
             return;
-          timer = setTimeout(() => resolve4({ timedOut: true }), Math.max(0, deadline - monotonicTime()));
+          timer = setTimeout(() => resolve3({ timedOut: true }), Math.max(0, deadline - monotonicTime()));
         })
       ]).finally(() => {
         clearTimeout(timer);
@@ -107693,8 +107693,8 @@ ${escaped2}
               var info = getWasmImports();
               var instantiateWasm = Module2["instantiateWasm"];
               if (instantiateWasm) {
-                return new Promise((resolve4) => {
-                  instantiateWasm(info, (inst) => resolve4(receiveInstance(inst)));
+                return new Promise((resolve3) => {
+                  instantiateWasm(info, (inst) => resolve3(receiveInstance(inst)));
                 });
               }
               wasmBinaryFile ??= findWasmBinary();
@@ -107850,7 +107850,7 @@ ${escaped2}
               var setStatus = Module2["setStatus"];
               if (setStatus) {
                 setStatus("Running...");
-                await new Promise((resolve4) => setTimeout(resolve4, 1));
+                await new Promise((resolve3) => setTimeout(resolve3, 1));
                 setTimeout(setStatus, 1, "");
               }
               if (ABORT) return;
@@ -108583,7 +108583,7 @@ ${escaped2}
         import_os2 = __toESM(__require("os"));
         import_path3 = __toESM(__require("path"));
         init_crypto();
-        existsAsync = (path66) => new Promise((resolve4) => import_fs3.default.stat(path66, (err) => resolve4(!err)));
+        existsAsync = (path66) => new Promise((resolve3) => import_fs3.default.stat(path66, (err) => resolve3(!err)));
         UNIX_SOCKET_PATH_MAX = 103;
       }
     });
@@ -109012,9 +109012,9 @@ ${lines.join("\n")}`;
       return error62;
     }
     async function createSocket(host, port) {
-      return new Promise((resolve4, reject) => {
+      return new Promise((resolve3, reject) => {
         const socket = import_net.default.createConnection({ host, port, ...happyEyeballsOptions });
-        socket.on("connect", () => resolve4(socket));
+        socket.on("connect", () => resolve3(socket));
         socket.on("error", (error62) => reject(flattenAggregateError(error62)));
       });
     }
@@ -109058,7 +109058,7 @@ ${lines.join("\n")}`;
       return statusCode >= 200 && statusCode < 404;
     }
     async function httpStatusCode(url3, ignoreHTTPSErrors, onLog, onStdErr) {
-      return new Promise((resolve4) => {
+      return new Promise((resolve3) => {
         onLog?.(`HTTP GET: ${url3}`);
         httpRequest({
           url: url3.toString(),
@@ -109068,12 +109068,12 @@ ${lines.join("\n")}`;
           res.resume();
           const statusCode = res.statusCode ?? 0;
           onLog?.(`HTTP Status: ${statusCode}`);
-          resolve4(statusCode);
+          resolve3(statusCode);
         }, (error62) => {
           if (error62.code === "DEPTH_ZERO_SELF_SIGNED_CERT")
             onStdErr?.(`[WebServer] Self-signed certificate detected. Try adding ignoreHTTPSErrors: true to config.webServer.`);
           onLog?.(`Error while checking if ${url3} is available: ${error62.message}`);
-          resolve4(0);
+          resolve3(0);
         });
       });
     }
@@ -109611,7 +109611,7 @@ ${lines.join("\n")}`;
     function spawnAsync(cmd, args, options2 = {}) {
       const { timeout, ...spawnOptions } = options2;
       const child = childProcess.spawn(cmd, args, { windowsHide: true, ...spawnOptions });
-      return new Promise((resolve4) => {
+      return new Promise((resolve3) => {
         let stdout = "";
         let stderr = "";
         if (child.stdout)
@@ -109621,15 +109621,15 @@ ${lines.join("\n")}`;
         const timer = timeout ? setTimeout(() => {
           if (child.pid)
             killProcessTree(child.pid);
-          resolve4({ stdout, stderr, code: null, timedOut: true });
+          resolve3({ stdout, stderr, code: null, timedOut: true });
         }, timeout) : void 0;
         child.on("close", (code) => {
           clearTimeout(timer);
-          resolve4({ stdout, stderr, code });
+          resolve3({ stdout, stderr, code });
         });
         child.on("error", (error62) => {
           clearTimeout(timer);
-          resolve4({ stdout, stderr, code: 0, error: error62 });
+          resolve3({ stdout, stderr, code: 0, error: error62 });
         });
       });
     }
@@ -110338,7 +110338,7 @@ ${lines.join("\n")}`;
             const server3 = createHttpServer((request22, response2) => this._onRequest(request22, response2));
             server3.on("error", (error62) => debugLogger.log("server", String(error62)));
             this.server = server3;
-            const wsEndpoint = await new Promise((resolve4, reject) => {
+            const wsEndpoint = await new Promise((resolve3, reject) => {
               server3.listen(port, hostname3, () => {
                 const address = server3.address();
                 if (!address) {
@@ -110346,11 +110346,11 @@ ${lines.join("\n")}`;
                   return;
                 }
                 if (typeof address === "string") {
-                  resolve4(`${address}${defaultPath}`);
+                  resolve3(`${address}${defaultPath}`);
                   return;
                 }
                 this._allowedHosts = computeAllowedHosts(hostname3, address.address);
-                resolve4(`ws://${urlHostFromAddress(address)}:${address.port}${defaultPath}`);
+                resolve3(`ws://${urlHostFromAddress(address)}:${address.port}${defaultPath}`);
               }).on("error", reject);
             });
             debugLogger.log("server", "Listening at " + wsEndpoint);
@@ -110477,7 +110477,7 @@ ${lines.join("\n")}`;
             const entry = this._entries.get(entryPath);
             if (!entry)
               throw new Error(`${entryPath} not found in file ${this._fileName}`);
-            return new Promise((resolve4, reject) => {
+            return new Promise((resolve3, reject) => {
               this._zipFile.openReadStream(entry, (error62, readStream) => {
                 if (error62 || !readStream) {
                   reject(error62 || "Entry not found");
@@ -110485,7 +110485,7 @@ ${lines.join("\n")}`;
                 }
                 const buffers = [];
                 readStream.on("data", (data) => buffers.push(data));
-                readStream.on("end", () => resolve4(Buffer.concat(buffers)));
+                readStream.on("end", () => resolve3(Buffer.concat(buffers)));
               });
             });
           }
@@ -110572,7 +110572,7 @@ ${lines.join("\n")}`;
             debug2("opening", this.zipPath, "with opts", this.opts);
             this.zipfile = await openZip(this.zipPath, { lazyEntries: true });
             this.canceled = false;
-            return new Promise((resolve4, reject) => {
+            return new Promise((resolve3, reject) => {
               this.zipfile.on("error", (err) => {
                 this.canceled = true;
                 reject(err);
@@ -110581,7 +110581,7 @@ ${lines.join("\n")}`;
               this.zipfile.on("close", () => {
                 if (!this.canceled) {
                   debug2("zip extraction complete");
-                  resolve4();
+                  resolve3();
                 }
               });
               this.zipfile.on("entry", async (entry) => {
@@ -110879,12 +110879,12 @@ ${lines.join("\n")}`;
       });
     }
     function toPromise(method2) {
-      return (...args) => new Promise((resolve4, reject) => {
+      return (...args) => new Promise((resolve3, reject) => {
         args.push((err, result2) => {
           if (err)
             reject(err);
           else
-            resolve4(result2);
+            resolve3(result2);
         });
         method2(...args);
       });
@@ -113330,8 +113330,8 @@ function inject(globalThis) {
               return;
             this._pauseAt = {};
             metadata.pauseStartTime = monotonicTime();
-            const result2 = new Promise((resolve4) => {
-              this._pausedCall = { metadata, sdkObject, resolve: resolve4 };
+            const result2 = new Promise((resolve3) => {
+              this._pausedCall = { metadata, sdkObject, resolve: resolve3 };
             });
             this.emit(_Debugger.Events.PausedStateChanged);
             return result2;
@@ -114777,7 +114777,7 @@ content-type: ${value2.mimeType || mime2.getType(value2.name) || "application/oc
             });
           }
           async _upgradeToTLSIfNeeded(socket, alpnProtocol) {
-            this._brorwserDecrypted ??= new Promise((resolve4, reject) => {
+            this._brorwserDecrypted ??= new Promise((resolve3, reject) => {
               const dummyServer = import_tls.default.createServer({
                 ...dummyServerTlsOptions,
                 ALPNProtocols: [alpnProtocol || "http/1.1"]
@@ -114785,7 +114785,7 @@ content-type: ${value2.mimeType || mime2.getType(value2.name) || "application/oc
               dummyServer.emit("connection", socket);
               dummyServer.once("secureConnection", (tlsSocket) => {
                 dummyServer.close();
-                resolve4(tlsSocket);
+                resolve3(tlsSocket);
               });
               dummyServer.once("error", (error62) => {
                 dummyServer.close();
@@ -121669,12 +121669,12 @@ ${snapshottedObjectBuiltins.map((n) => `  const ${n} = (typeof globalThis.${n} =
           static waitForEvent(progress2, emitter, event, predicate) {
             const listeners = [];
             const dispose = () => eventsHelper.removeEventListeners(listeners);
-            const promise2 = progress2.race(new Promise((resolve4, reject) => {
+            const promise2 = progress2.race(new Promise((resolve3, reject) => {
               listeners.push(eventsHelper.addEventListener(emitter, event, (eventArg) => {
                 try {
                   if (predicate && !predicate(eventArg))
                     return;
-                  resolve4(eventArg);
+                  resolve3(eventArg);
                 } catch (e) {
                   reject(e);
                 }
@@ -122300,14 +122300,14 @@ ${snapshottedObjectBuiltins.map((n) => `  const ${n} = (typeof globalThis.${n} =
         delete window.__pwCleanupScreenshot;
       };
     }
-    function trimClipToSize(clip2, size) {
+    function trimClipToSize(clip, size) {
       const p1 = {
-        x: Math.max(0, Math.min(clip2.x, size.width)),
-        y: Math.max(0, Math.min(clip2.y, size.height))
+        x: Math.max(0, Math.min(clip.x, size.width)),
+        y: Math.max(0, Math.min(clip.y, size.height))
       };
       const p2 = {
-        x: Math.max(0, Math.min(clip2.x + clip2.width, size.width)),
-        y: Math.max(0, Math.min(clip2.y + clip2.height, size.height))
+        x: Math.max(0, Math.min(clip.x + clip.width, size.width)),
+        y: Math.max(0, Math.min(clip.y + clip.height, size.height))
       };
       const result2 = { x: p1.x, y: p1.y, width: p2.x - p1.x, height: p2.y - p1.y };
       assert(result2.width > 0 && result2.height > 0, "Clipped area is either empty or outside the resulting image");
@@ -124742,13 +124742,13 @@ ${snapshottedObjectBuiltins.map((n) => `  const ${n} = (typeof globalThis.${n} =
             let error62;
             let cspMessage;
             const actionPromise = func().then((r) => result2 = r).catch((e) => error62 = e);
-            const errorPromise = new Promise((resolve4) => {
+            const errorPromise = new Promise((resolve3) => {
               listeners.push(eventsHelper.addEventListener(this._page.browserContext, BrowserContext.Events.Console, (message) => {
                 if (message.page() !== this._page || message.type() !== "error")
                   return;
                 if (message.text().includes("Content-Security-Policy") || message.text().includes("Content Security Policy")) {
                   cspMessage = message;
-                  resolve4();
+                  resolve3();
                 }
               }));
             });
@@ -132916,8 +132916,8 @@ with sync_playwright() as playwright:
       if (elevatedPermissions)
         console.log("Switching to root user to install dependencies...");
       const child = childProcess2.spawn(command, args, { stdio: "inherit" });
-      await new Promise((resolve4, reject) => {
-        child.on("exit", (code) => code === 0 ? resolve4() : reject(new Error(`Installation process exited with code: ${code}`)));
+      await new Promise((resolve3, reject) => {
+        child.on("exit", (code) => code === 0 ? resolve3() : reject(new Error(`Installation process exited with code: ${code}`)));
         child.on("error", reject);
       });
     }
@@ -133103,12 +133103,12 @@ ${details.join("\n")}`;
     }
     async function missingFileDependenciesWindows(sdkLanguage, filePath) {
       const executable = registry.findExecutable("winldd").executablePathOrDie(sdkLanguage);
-      const dirname3 = import_path16.default.dirname(filePath);
+      const dirname2 = import_path16.default.dirname(filePath);
       const { stdout, code } = await spawnAsync(executable, [filePath], {
-        cwd: dirname3,
+        cwd: dirname2,
         env: {
           ...process.env,
-          LD_LIBRARY_PATH: process.env.LD_LIBRARY_PATH ? `${process.env.LD_LIBRARY_PATH}:${dirname3}` : dirname3
+          LD_LIBRARY_PATH: process.env.LD_LIBRARY_PATH ? `${process.env.LD_LIBRARY_PATH}:${dirname2}` : dirname2
         }
       });
       if (code !== 0)
@@ -133117,12 +133117,12 @@ ${details.join("\n")}`;
       return missingDeps;
     }
     async function missingFileDependencies(filePath, extraLDPaths) {
-      const dirname3 = import_path16.default.dirname(filePath);
+      const dirname2 = import_path16.default.dirname(filePath);
       let LD_LIBRARY_PATH = extraLDPaths.join(":");
       if (process.env.LD_LIBRARY_PATH)
         LD_LIBRARY_PATH = `${process.env.LD_LIBRARY_PATH}:${LD_LIBRARY_PATH}`;
       const { stdout, code } = await spawnAsync("ldd", [filePath], {
-        cwd: dirname3,
+        cwd: dirname2,
         env: {
           ...process.env,
           LD_LIBRARY_PATH
@@ -135840,8 +135840,8 @@ ${e.stack}`);
             if (this._crashed || this._closed || this._connection._closed || this._connection._browserDisconnectedLogs)
               throw new ProtocolError(this._crashed ? "crashed" : "closed", void 0, this._connection._browserDisconnectedLogs);
             const id = this._connection._rawSend(this._sessionId, method2, params2);
-            return new Promise((resolve4, reject) => {
-              this._callbacks.set(id, { resolve: resolve4, reject, error: new ProtocolError("error", method2) });
+            return new Promise((resolve3, reject) => {
+              this._callbacks.set(id, { resolve: resolve3, reject, error: new ProtocolError("error", method2) });
             });
           }
           _sendMayFail(method2, params2) {
@@ -138312,12 +138312,12 @@ ${e.stack}`);
                 })
               };
             }
-            const clip2 = { ...documentRect, scale: viewportRect ? visualViewport.scale : 1 };
+            const clip = { ...documentRect, scale: viewportRect ? visualViewport.scale : 1 };
             if (scale === "css") {
               const deviceScaleFactor = this._mainFrameSession._metricsOverride?.deviceScaleFactor || contentSize.width / cssContentSize.width || 1;
-              clip2.scale /= deviceScaleFactor;
+              clip.scale /= deviceScaleFactor;
             }
-            const result2 = await progress2.race(this._mainFrameSession._client.send("Page.captureScreenshot", { format: format2, quality, clip: clip2, captureBeyondViewport: !fitsViewport }));
+            const result2 = await progress2.race(this._mainFrameSession._client.send("Page.captureScreenshot", { format: format2, quality, clip, captureBeyondViewport: !fitsViewport }));
             if (!fitsViewport && this._browserContext._options.hasTouch) {
               await progress2.race(this._mainFrameSession._client.send("Emulation.setTouchEmulationEnabled", { enabled: true }));
             }
@@ -140757,7 +140757,7 @@ ${Buffer.concat(chunks)}` : errorPrefix;
               try {
                 await Promise.race([
                   gracefullyClose(),
-                  new Promise((resolve4, reject) => timer = setTimeout(reject, timeout))
+                  new Promise((resolve3, reject) => timer = setTimeout(reject, timeout))
                 ]);
               } catch (ignored) {
                 await kill().catch((ignored2) => {
@@ -140995,8 +140995,8 @@ ${updatedLog}`);
             const id = this.connection.nextMessageId();
             const messageObj = { id, method: method2, params: params2 };
             this._rawSend(messageObj);
-            return new Promise((resolve4, reject) => {
-              this._callbacks.set(id, { resolve: resolve4, reject, error: new ProtocolError("error", method2) });
+            return new Promise((resolve3, reject) => {
+              this._callbacks.set(id, { resolve: resolve3, reject, error: new ProtocolError("error", method2) });
             });
           }
           sendMayFail(method2, params2) {
@@ -143922,11 +143922,11 @@ This does not look like a DevTools server, try connecting via ws://.`)
       return url3;
     }
     function streamToString(stream4) {
-      return new Promise((resolve4, reject) => {
+      return new Promise((resolve3, reject) => {
         const chunks = [];
         stream4.on("data", (chunk) => chunks.push(Buffer.from(chunk)));
         stream4.on("error", reject);
-        stream4.on("end", () => resolve4(Buffer.concat(chunks).toString("utf8")));
+        stream4.on("end", () => resolve3(Buffer.concat(chunks).toString("utf8")));
       });
     }
     function parseSeleniumRemoteParams(env, progress2) {
@@ -144797,10 +144797,10 @@ Workaround: Set the HOME=/root environment variable${process.env.GITHUB_ACTION ?
           async _attemptToGracefullyCloseBrowser(transport2) {
             if (!transport2.onmessage) {
               transport2.send({ method: "session.new", params: { capabilities: {} }, id: kShutdownSessionNewMessageId });
-              await new Promise((resolve4) => {
+              await new Promise((resolve3) => {
                 transport2.onmessage = (message) => {
                   if (message.id === kShutdownSessionNewMessageId)
-                    resolve4(true);
+                    resolve3(true);
                 };
               });
             }
@@ -145388,8 +145388,8 @@ Workaround: Set the HOME=/root environment variable${process.env.GITHUB_ACTION ?
               throw new ProtocolError("closed", void 0, this._connection._browserDisconnectedLogs);
             const id = this._connection.nextMessageId();
             this._rawSend({ method: method2, params: params2, id });
-            return new Promise((resolve4, reject) => {
-              this._callbacks.set(id, { resolve: resolve4, reject, error: new ProtocolError("error", method2) });
+            return new Promise((resolve3, reject) => {
+              this._callbacks.set(id, { resolve: resolve3, reject, error: new ProtocolError("error", method2) });
             });
           }
           sendMayFail(method2, params2) {
@@ -146973,8 +146973,8 @@ Workaround: Set the HOME=/root environment variable${process.env.GITHUB_ACTION ?
             const id = this.connection.nextMessageId();
             const messageObj = { id, method: method2, params: params2 };
             this._rawSend(messageObj);
-            return new Promise((resolve4, reject) => {
-              this._callbacks.set(id, { resolve: resolve4, reject, error: new ProtocolError("error", method2) });
+            return new Promise((resolve3, reject) => {
+              this._callbacks.set(id, { resolve: resolve3, reject, error: new ProtocolError("error", method2) });
             });
           }
           sendMayFail(method2, params2) {
@@ -149085,11 +149085,11 @@ Workaround: Set the HOME=/root environment variable${process.env.GITHUB_ACTION ?
           }
           static async start() {
             const server3 = createHttpServer();
-            await new Promise((resolve4, reject) => {
+            await new Promise((resolve3, reject) => {
               server3.once("error", reject);
               server3.listen(0, "127.0.0.1", () => {
                 server3.removeListener("error", reject);
-                resolve4();
+                resolve3();
               });
             });
             const address = server3.address();
@@ -149107,7 +149107,7 @@ Workaround: Set the HOME=/root environment variable${process.env.GITHUB_ACTION ?
           }
           async close() {
             this._handlers.clear();
-            await new Promise((resolve4) => this._server.close(() => resolve4()));
+            await new Promise((resolve3) => this._server.close(() => resolve3()));
           }
           _writeCorsHeaders(res) {
             res.setHeader("Access-Control-Allow-Origin", "*");
@@ -149227,8 +149227,8 @@ Workaround: Set the HOME=/root environment variable${process.env.GITHUB_ACTION ?
             const id = this.connection.nextMessageId();
             const messageObj = { id, method: method2, params: params2 };
             this._rawSend(messageObj);
-            return new Promise((resolve4, reject) => {
-              this._callbacks.set(id, { resolve: resolve4, reject, error: new ProtocolError("error", method2) });
+            return new Promise((resolve3, reject) => {
+              this._callbacks.set(id, { resolve: resolve3, reject, error: new ProtocolError("error", method2) });
             });
           }
           sendMayFail(method2, params2) {
@@ -150594,12 +150594,12 @@ function installDialogBridge(window, endpoint) {
               throw new Error(`Invalid dialog type: ${type3}`);
             const message = typeof body?.message === "string" ? body.message : "";
             const defaultValue = typeof body?.defaultValue === "string" ? body.defaultValue : "";
-            return await new Promise((resolve4) => {
+            return await new Promise((resolve3) => {
               this._page.browserContext.dialogManager.dialogDidOpen(new Dialog(
                 this._page,
                 type3,
                 message,
-                async (accept, promptText) => resolve4({ accept, promptText }),
+                async (accept, promptText) => resolve3({ accept, promptText }),
                 defaultValue
               ));
             });
@@ -150725,8 +150725,8 @@ function installDialogBridge(window, endpoint) {
             return await this._navigateMainFrame(frame, url3);
           }
           async _navigateMainFrame(frame, url3) {
-            const loaderIdPromise = new Promise((resolve4) => {
-              this._pendingMainFrameLoaderResolvers.set(frame._id, resolve4);
+            const loaderIdPromise = new Promise((resolve3) => {
+              this._pendingMainFrameLoaderResolvers.set(frame._id, resolve3);
             });
             try {
               this._session.sendMayFail("Runtime.evaluate", {
@@ -153216,8 +153216,8 @@ if (self.ServiceWorkerContainer) ServiceWorkerContainer.prototype.register = asy
               transport2.on("close", () => this._connections.delete(connection));
             });
             decorateServer(this._server);
-            await new Promise((resolve4, reject) => {
-              this._server.listen(pipeName, () => resolve4());
+            await new Promise((resolve3, reject) => {
+              this._server.listen(pipeName, () => resolve3());
               this._server.on("error", reject);
             });
             debugLogger.log("server", `Pipe server listening at ${pipeName}`);
@@ -153302,21 +153302,21 @@ if (self.ServiceWorkerContainer) ServiceWorkerContainer.prototype.register = asy
       if (!descriptor.endpoint)
         return false;
       if (descriptor.endpoint.startsWith("ws://") || descriptor.endpoint.startsWith("wss://")) {
-        return await new Promise((resolve4) => {
+        return await new Promise((resolve3) => {
           const url3 = new URL(descriptor.endpoint);
           const socket = import_net6.default.createConnection(Number(url3.port), url3.hostname, () => {
             socket.destroy();
-            resolve4(true);
+            resolve3(true);
           });
-          socket.on("error", () => resolve4(false));
+          socket.on("error", () => resolve3(false));
         });
       }
-      return await new Promise((resolve4) => {
+      return await new Promise((resolve3) => {
         const socket = import_net6.default.createConnection(descriptor.endpoint ?? descriptor.pipeName, () => {
           socket.destroy();
-          resolve4(true);
+          resolve3(true);
         });
-        socket.on("error", () => resolve4(false));
+        socket.on("error", () => resolve3(false));
       });
     }
     function computeDefaultCacheDirectory2() {
@@ -153476,8 +153476,8 @@ if (self.ServiceWorkerContainer) ServiceWorkerContainer.prototype.register = asy
               awaitWriteFinish: { stabilityThreshold: 50, pollInterval: 20 }
             });
             this._watcher = watcher;
-            this._ready = new Promise((resolve4, reject) => {
-              watcher.once("ready", () => resolve4());
+            this._ready = new Promise((resolve3, reject) => {
+              watcher.once("ready", () => resolve3());
               watcher.once("error", reject);
             });
             watcher.on("add", (file2) => this._onAddOrChange(file2, "added"));
@@ -153860,7 +153860,7 @@ if (self.ServiceWorkerContainer) ServiceWorkerContainer.prototype.register = asy
             return { value: path66 };
           }
           async saveAs(params2, progress2) {
-            return await progress2.race(new Promise((resolve4, reject) => {
+            return await progress2.race(new Promise((resolve3, reject) => {
               this._object.saveAs(progress2, async (localPath, error62) => {
                 if (error62) {
                   reject(error62);
@@ -153869,7 +153869,7 @@ if (self.ServiceWorkerContainer) ServiceWorkerContainer.prototype.register = asy
                 try {
                   await mkdirIfNeeded(params2.path);
                   await import_fs34.default.promises.copyFile(localPath, params2.path);
-                  resolve4();
+                  resolve3();
                 } catch (e) {
                   reject(e);
                 }
@@ -153877,7 +153877,7 @@ if (self.ServiceWorkerContainer) ServiceWorkerContainer.prototype.register = asy
             }));
           }
           async saveAsStream(params2, progress2) {
-            return await progress2.race(new Promise((resolve4, reject) => {
+            return await progress2.race(new Promise((resolve3, reject) => {
               this._object.saveAs(progress2, async (localPath, error62) => {
                 if (error62) {
                   reject(error62);
@@ -153886,7 +153886,7 @@ if (self.ServiceWorkerContainer) ServiceWorkerContainer.prototype.register = asy
                 try {
                   const readable = import_fs34.default.createReadStream(localPath, { highWaterMark: 1024 * 1024 });
                   const stream4 = new StreamDispatcher(this, readable);
-                  resolve4({ stream: stream4 });
+                  resolve3({ stream: stream4 });
                   await new Promise((resolve22) => {
                     readable.on("close", resolve22);
                     readable.on("end", resolve22);
@@ -154914,8 +154914,8 @@ function inject(globalThis) {
               args: args.map(serializeResult)
             });
             this._type_BindingCall = true;
-            this._promise = new Promise((resolve4, reject) => {
-              this._resolve = resolve4;
+            this._promise = new Promise((resolve3, reject) => {
+              this._resolve = resolve3;
               this._reject = reject;
             });
           }
@@ -157104,8 +157104,8 @@ This does not look like a Playwright server, try connecting via ws://.`);
             return { pipe: pipe2, headers: transport2.headers };
           }
           async _connectOverPipe(params2) {
-            const socket = await new Promise((resolve4, reject) => {
-              const conn = import_net7.default.connect(params2.endpoint, () => resolve4(conn));
+            const socket = await new Promise((resolve3, reject) => {
+              const conn = import_net7.default.connect(params2.endpoint, () => resolve3(conn));
               conn.on("error", reject);
             });
             const transport2 = new PipeTransport2(socket, socket);
@@ -159075,8 +159075,8 @@ ${uaError}` };
             const result2 = await this._channel.saveAsStream({}, kNoTimeout);
             const stream4 = Stream.from(result2.stream);
             await mkdirIfNeeded2(path66);
-            await new Promise((resolve4, reject) => {
-              stream4.stream().pipe(import_fs42.default.createWriteStream(path66)).on("finish", resolve4).on("error", reject);
+            await new Promise((resolve3, reject) => {
+              stream4.stream().pipe(import_fs42.default.createWriteStream(path66)).on("finish", resolve3).on("error", reject);
             });
           }
           async failure() {
@@ -159089,13 +159089,13 @@ ${uaError}` };
           }
           async readIntoBuffer() {
             const stream4 = await this.createReadStream();
-            return await new Promise((resolve4, reject) => {
+            return await new Promise((resolve3, reject) => {
               const chunks = [];
               stream4.on("data", (chunk) => {
                 chunks.push(chunk);
               });
               stream4.on("end", () => {
-                resolve4(Buffer.concat(chunks));
+                resolve3(Buffer.concat(chunks));
               });
               stream4.on("error", reject);
             });
@@ -159615,14 +159615,14 @@ ${uaError}` };
     });
     function waitForEvent(emitter, event, savedZone, predicate) {
       let listener;
-      const promise2 = new Promise((resolve4, reject) => {
+      const promise2 = new Promise((resolve3, reject) => {
         listener = async (eventArg) => {
           await savedZone.run(async () => {
             try {
               if (predicate && !await predicate(eventArg))
                 return;
               emitter.removeListener(event, listener);
-              resolve4(eventArg);
+              resolve3(eventArg);
             } catch (e) {
               emitter.removeListener(event, listener);
               reject(e);
@@ -159636,7 +159636,7 @@ ${uaError}` };
     }
     function waitForTimeout(timeout) {
       let timeoutId;
-      const promise2 = new Promise((resolve4) => timeoutId = setTimeout(resolve4, timeout));
+      const promise2 = new Promise((resolve3) => timeoutId = setTimeout(resolve3, timeout));
       const dispose = () => clearTimeout(timeoutId);
       return { promise: promise2, dispose };
     }
@@ -160089,10 +160089,10 @@ ${"=".repeat(headerLength)}`;
       };
     }
     async function readStreamToJson(stream4) {
-      const buffer = await new Promise((resolve4, reject) => {
+      const buffer = await new Promise((resolve3, reject) => {
         const chunks = [];
         stream4.on("data", (chunk) => chunks.push(chunk));
-        stream4.on("end", () => resolve4(Buffer.concat(chunks)));
+        stream4.on("end", () => resolve3(Buffer.concat(chunks)));
         stream4.on("error", (err) => reject(err));
       });
       const streamPath = Buffer.isBuffer(stream4.path) ? stream4.path.toString("utf8") : stream4.path;
@@ -164850,7 +164850,7 @@ ${colors3.dim(log22.join("\n"))}
               signal.addEventListener("abort", abortListener, { once: true });
             }
             try {
-              return await new Promise((resolve4, reject) => this._callbacks.set(id, { resolve: resolve4, reject, signal, title: options2.title, type: type3, method: method2 }));
+              return await new Promise((resolve3, reject) => this._callbacks.set(id, { resolve: resolve3, reject, signal, title: options2.title, type: type3, method: method2 }));
             } finally {
               if (abortListener)
                 signal.removeEventListener("abort", abortListener);
@@ -165109,7 +165109,7 @@ ${colors3.dim(log22.join("\n"))}
           promises2.push(request22.response().catch(() => {
           }));
       }
-      const timeout = new Promise((resolve4) => setTimeout(resolve4, 5e3));
+      const timeout = new Promise((resolve3) => setTimeout(resolve3, 5e3));
       await Promise.race([Promise.all(promises2), timeout]);
       if (requests2.length)
         await tab2.waitForTimeout(settleMs);
@@ -165117,13 +165117,13 @@ ${colors3.dim(log22.join("\n"))}
     }
     function eventWaiter(page2, event, timeout) {
       const disposables = [];
-      const eventPromise = new Promise((resolve4, reject) => {
-        page2.on(event, resolve4);
-        disposables.push(() => page2.off(event, resolve4));
+      const eventPromise = new Promise((resolve3, reject) => {
+        page2.on(event, resolve3);
+        disposables.push(() => page2.off(event, resolve3));
       });
       let abort;
-      const abortPromise = new Promise((resolve4, reject) => {
-        abort = () => resolve4(void 0);
+      const abortPromise = new Promise((resolve3, reject) => {
+        abort = () => resolve3(void 0);
       });
       const timeoutPromise = new Promise((f) => {
         const timeoutId = setTimeout(() => f(void 0), timeout);
@@ -166085,7 +166085,7 @@ ${pretty}`);
               const download = await downloadEvent;
               if (!download)
                 throw e;
-              await new Promise((resolve4) => setTimeout(resolve4, 500));
+              await new Promise((resolve3) => setTimeout(resolve3, 500));
               return;
             }
             if (modalStates.length)
@@ -167504,17 +167504,17 @@ ${z5.prettifyError(error62)}`);
           },
           handle: async (context, params2, response2) => {
             const browserContext = await context.ensureBrowserContext();
-            const pausedPromise = new Promise((resolve4) => {
+            const pausedPromise = new Promise((resolve3) => {
               const listener = () => {
                 if (browserContext.debugger.pausedDetails()) {
                   browserContext.debugger.off("pausedstatechanged", listener);
-                  resolve4();
+                  resolve3();
                 }
               };
               browserContext.debugger.on("pausedstatechanged", listener);
               browserContext.once("close", () => {
                 browserContext.debugger.off("pausedstatechanged", listener);
-                resolve4();
+                resolve3();
               });
             });
             if (params2.location) {
@@ -167598,7 +167598,7 @@ ${z5.prettifyError(error62)}`);
             signal?.addEventListener("abort", onAbort);
             const stdoutChunks = [];
             client.stdout.on("data", (chunk) => stdoutChunks.push(chunk));
-            const exitCode = await new Promise((resolve4) => client.on("exit", (code) => resolve4(code)));
+            const exitCode = await new Promise((resolve3) => client.on("exit", (code) => resolve3(code)));
             signal?.removeEventListener("abort", onAbort);
             if (signal?.aborted) {
               response2.addTextResult("Annotation cancelled.");
@@ -171426,7 +171426,7 @@ ${itemTexts.map((t) => `  - listitem: ${escapeWithQuotes(t, '"')}`).join("\n")}`
       await navigator.serviceWorker.register(swUrl, { scope: "/" });
       await navigator.serviceWorker.ready;
       if (!navigator.serviceWorker.controller)
-        await new Promise((resolve4) => navigator.serviceWorker.addEventListener("controllerchange", resolve4, { once: true }));
+        await new Promise((resolve3) => navigator.serviceWorker.addEventListener("controllerchange", resolve3, { once: true }));
       location.replace(snapshotUrl);
     }
     async function runCommandOnSnapshot(server3, browserArgs) {
@@ -172252,11 +172252,11 @@ To uninstall Playwright browsers for all installations, re-run with --all flag.`
       return `http://localhost:${port}`;
     }
     async function isPortOpen(port) {
-      return new Promise((resolve4) => {
+      return new Promise((resolve3) => {
         const socket = import_net8.default.createConnection(port, "127.0.0.1");
         const done = (value2) => {
           socket.destroy();
-          resolve4(value2);
+          resolve3(value2);
         };
         socket.once("connect", () => done(true));
         socket.once("error", () => done(false));
@@ -172829,13 +172829,13 @@ To uninstall Playwright browsers for all installations, re-run with --all flag.`
             socket.on("error", (e) => console.error(`error: ${e.message}`));
           }
           async send(message) {
-            await new Promise((resolve4, reject) => {
+            await new Promise((resolve3, reject) => {
               this._socket.write(`${JSON.stringify(message)}
 `, (error62) => {
                 if (error62)
                   reject(error62);
                 else
-                  resolve4(void 0);
+                  resolve3(void 0);
               });
             });
           }
@@ -172938,7 +172938,7 @@ to start the browser session.`);
                 } catch (e) {
                   if (e.code === "ENOENT")
                     break;
-                  await new Promise((resolve4) => setTimeout(resolve4, 1e3));
+                  await new Promise((resolve3) => setTimeout(resolve3, 1e3));
                   if (i === 4)
                     throw e;
                 }
@@ -172947,16 +172947,16 @@ to start the browser session.`);
             return { existed: true, deletedUserDataDir };
           }
           async _connect() {
-            return await new Promise((resolve4) => {
+            return await new Promise((resolve3) => {
               const socket = import_net9.default.createConnection(this.config.socketPath, () => {
-                resolve4({ socket });
+                resolve3({ socket });
               });
               socket.on("error", (error62) => {
                 if (import_os24.default.platform() !== "win32")
                   void import_fs62.default.promises.unlink(this.config.socketPath).catch(() => {
-                  }).then(() => resolve4({ error: error62 }));
+                  }).then(() => resolve3({ error: error62 }));
                 else
-                  resolve4({ error: error62 });
+                  resolve3({ error: error62 });
               });
             });
           }
@@ -173020,11 +173020,11 @@ to start the browser session.`);
             process.on("SIGTERM", sigtermHandler2);
             let outLog = "";
             const rejectWithPid = (reject, message) => reject(Object.assign(new Error(`Daemon pid=${child.pid}: ${message}`), { daemonPid: child.pid }));
-            await new Promise((resolve4, reject) => {
+            await new Promise((resolve3, reject) => {
               child.stdout.on("data", (data) => {
                 outLog += data.toString();
                 if (outLog.includes("Daemon listening on"))
-                  resolve4();
+                  resolve3();
               });
               child.on("close", (code) => {
                 if (!signalled) {
@@ -173068,8 +173068,8 @@ to start the browser session.`);
               method: method2,
               params: params2
             };
-            const responsePromise = new Promise((resolve4, reject) => {
-              this._callbacks.set(messageId, { resolve: resolve4, reject, method: method2, params: params2 });
+            const responsePromise = new Promise((resolve3, reject) => {
+              this._callbacks.set(messageId, { resolve: resolve3, reject, method: method2, params: params2 });
             });
             const [result2] = await Promise.all([responsePromise, this._connection.send(message)]);
             return result2;
@@ -173249,7 +173249,7 @@ to start the browser session.`);
           if (args.kill) {
             daemonArgs.push(`--kill`);
             const child2 = (0, import_child_process4.spawn)(process.execPath, daemonArgs, { stdio: "ignore" });
-            await new Promise((resolve4) => child2.on("exit", () => resolve4()));
+            await new Promise((resolve3) => child2.on("exit", () => resolve3()));
             return;
           }
           if (args.annotate) {
@@ -173268,21 +173268,21 @@ to start the browser session.`);
             windowsHide: true
           });
           if (foreground) {
-            await new Promise((resolve4) => child.on("exit", () => resolve4()));
+            await new Promise((resolve3) => child.on("exit", () => resolve3()));
             return;
           }
           const timer = setTimeout(() => child.stdin.destroy(), 6e4);
           child.unref();
           let daemonPid;
           try {
-            await new Promise((resolve4, reject) => {
+            await new Promise((resolve3, reject) => {
               let outLog = "";
               child.stdout.on("data", (data) => {
                 outLog += data.toString();
                 const match = outLog.match(/Dashboard is running pid=(\d+)/);
                 if (match) {
                   daemonPid = Number(match[1]);
-                  resolve4();
+                  resolve3();
                 }
               });
               child.once("exit", (code, signal) => reject(new Error(`Dashboard daemon exited (code=${code}, signal=${signal}) before signaling READY${outLog ? "\n" + outLog : ""}`)));
@@ -173339,14 +173339,14 @@ to start the browser session.`);
         "--init-workspace",
         ...args.skills ? [args.global ? "--init-skills-global" : "--init-skills", String(args.skills)] : []
       ];
-      await new Promise((resolve4, reject) => {
+      await new Promise((resolve3, reject) => {
         const child = (0, import_child_process4.spawn)(process.execPath, daemonArgs, {
           stdio: output2.installStdio(),
           cwd: process.cwd()
         });
         child.on("close", (code) => {
           if (code === 0)
-            resolve4();
+            resolve3();
           else
             reject(new Error(`Workspace initialization failed with exit code ${code}`));
         });
@@ -175017,8 +175017,8 @@ ${data.toString()}
             const id = ++this._lastId;
             this._ws.send(JSON.stringify({ id, method: method2, params: params2 }));
             const error62 = new Error(`Protocol error: ${method2}`);
-            return new Promise((resolve4, reject) => {
-              this._callbacks.set(id, { resolve: resolve4, reject, error: error62 });
+            return new Promise((resolve3, reject) => {
+              this._callbacks.set(id, { resolve: resolve3, reject, error: error62 });
             });
           }
           close(message) {
@@ -176064,9 +176064,9 @@ ${c.title}:`);
         if (options2?.exitOnClose)
           gracefullyProcessExitDoNotHang(0);
       }));
-      await new Promise((resolve4, reject) => {
+      await new Promise((resolve3, reject) => {
         server3.on("error", reject);
-        server3.listen(socketPath, () => resolve4());
+        server3.listen(socketPath, () => resolve3());
       });
       await saveSessionFile(clientInfo, sessionConfig);
       options2.idleTimer?.poke();
@@ -176313,14 +176313,14 @@ ${c.title}:`);
         const blob = await response2.blob();
         if (!blob.type.startsWith("image/"))
           return void 0;
-        return await new Promise((resolve4, reject) => {
+        return await new Promise((resolve3, reject) => {
           const reader = new FileReader();
-          reader.onloadend = () => resolve4(reader.result);
+          reader.onloadend = () => resolve3(reader.result);
           reader.onerror = reject;
           reader.readAsDataURL(blob);
         });
       })).catch(() => void 0);
-      const timeout = new Promise((resolve4) => setTimeout(() => resolve4(void 0), 3e3));
+      const timeout = new Promise((resolve3) => setTimeout(() => resolve3(void 0), 3e3));
       return await Promise.race([url3, timeout]);
     }
     var import_path64;
@@ -176537,9 +176537,9 @@ ${c.title}:`);
             this.sendEvent?.("debuggerSource", { source: source14 });
           }
           emitAnnotate({ signal }) {
-            return new Promise((resolve4) => {
+            return new Promise((resolve3) => {
               if (signal.aborted) {
-                resolve4({ type: "cancelled" });
+                resolve3({ type: "cancelled" });
                 return;
               }
               this._resolvePendingAnnotate({ type: "cancelled" });
@@ -176549,10 +176549,10 @@ ${c.title}:`);
                 this._pendingAnnotate = void 0;
                 pending.dispose();
                 this.sendEvent?.("cancelAnnotate", {});
-                resolve4({ type: "cancelled" });
+                resolve3({ type: "cancelled" });
               };
               const pending = {
-                resolve: resolve4,
+                resolve: resolve3,
                 dispose: () => signal.removeEventListener("abort", onAbort)
               };
               this._pendingAnnotate = pending;
@@ -177329,9 +177329,9 @@ ${c.title}:`);
       const socketPath = dashboardSocketPath();
       if (process.platform !== "win32")
         await import_fs69.default.promises.mkdir(import_path65.default.dirname(socketPath), { recursive: true });
-      return await new Promise((resolve4, reject) => {
+      return await new Promise((resolve3, reject) => {
         const server3 = import_net12.default.createServer(onConnection);
-        server3.listen(socketPath, () => resolve4({ role: "winner", server: server3 }));
+        server3.listen(socketPath, () => resolve3({ role: "winner", server: server3 }));
         server3.on("error", (err) => {
           if (err.code !== "EADDRINUSE" && err.code !== "EEXIST")
             return reject(err);
@@ -177345,7 +177345,7 @@ ${c.title}:`);
           client.on("end", () => {
             try {
               const { pid } = JSON.parse(ackBuffer.trim());
-              resolve4({ role: "loser", daemonPid: pid });
+              resolve3({ role: "loser", daemonPid: pid });
             } catch (e) {
               reject(e);
             }
@@ -177353,7 +177353,7 @@ ${c.title}:`);
           client.on("error", () => {
             if (process.platform !== "win32")
               import_fs69.default.unlinkSync(socketPath);
-            server3.listen(socketPath, () => resolve4({ role: "winner", server: server3 }));
+            server3.listen(socketPath, () => resolve3({ role: "winner", server: server3 }));
           });
         });
       });
@@ -177461,28 +177461,28 @@ ${c.title}:`);
     }
     async function runKillClient() {
       const socketPath = dashboardSocketPath();
-      await new Promise((resolve4) => {
+      await new Promise((resolve3) => {
         const client = import_net12.default.connect(socketPath);
         client.once("connect", () => {
           client.write(JSON.stringify({ kill: true }) + "\n");
         });
-        client.once("end", () => resolve4());
-        client.once("error", () => resolve4());
+        client.once("end", () => resolve3());
+        client.once("error", () => resolve3());
       });
     }
     async function runAnnotateClient(options2) {
       selfDestructOnParentGone();
       process.stdin.resume().unref();
       const socketPath = dashboardSocketPath();
-      const tryConnect = () => new Promise((resolve4) => {
+      const tryConnect = () => new Promise((resolve3) => {
         const s = import_net12.default.connect(socketPath);
         const onError = () => {
           s.destroy();
-          resolve4(void 0);
+          resolve3(void 0);
         };
         s.once("connect", () => {
           s.off("error", onError);
-          resolve4(s);
+          resolve3(s);
         });
         s.once("error", onError);
       });
@@ -177501,9 +177501,9 @@ ${c.title}:`);
       }
       socket.write(JSON.stringify(options2) + "\n");
       const chunks = [];
-      await new Promise((resolve4, reject) => {
+      await new Promise((resolve3, reject) => {
         socket.on("data", (chunk) => chunks.push(chunk));
-        socket.on("end", () => resolve4());
+        socket.on("end", () => resolve3());
         socket.on("error", reject);
       });
       socket.destroy();
@@ -183129,18 +183129,18 @@ var validateAsync = async (schema, value2, _ctx) => {
   return result2.issues.length === 0;
 };
 var _encode = (_Err) => {
-  const parse8 = _parse(_Err);
+  const parse6 = _parse(_Err);
   const fn = (schema, value2, _ctx, _params) => {
     const ctx = _ctx ? { ..._ctx, direction: "backward" } : { direction: "backward" };
-    return parse8(schema, value2, ctx, finalizeParams(fn, _params));
+    return parse6(schema, value2, ctx, finalizeParams(fn, _params));
   };
   return fn;
 };
 var encode = /* @__PURE__ */ _encode($ZodRealError);
 var _decode = (_Err) => {
-  const parse8 = _parse(_Err);
+  const parse6 = _parse(_Err);
   const fn = (schema, value2, _ctx, _params) => {
-    return parse8(schema, value2, _ctx, finalizeParams(fn, _params));
+    return parse6(schema, value2, _ctx, finalizeParams(fn, _params));
   };
   return fn;
 };
@@ -184635,7 +184635,7 @@ function capSize(inst, size) {
   if (!caps.length)
     return;
   const cap = Math.min(...caps.map((c) => c[0]));
-  const parse8 = inst._zod.parse;
+  const parse6 = inst._zod.parse;
   inst._zod.parse = (payload, ctx) => {
     const n = size(payload.value);
     if (n > cap && !ctx?.skipChecks && ctx?.direction !== "backward") {
@@ -184649,7 +184649,7 @@ function capSize(inst, size) {
         }
       }
     }
-    return parse8(payload, ctx);
+    return parse6(payload, ctx);
   };
 }
 var arraySize = (input2) => Array.isArray(input2) ? input2.length : -1;
@@ -186338,7 +186338,7 @@ var recursive = /* @__PURE__ */ new WeakMap();
 var NONE = 0;
 var ASSUMED = 1;
 var PROVEN = 2;
-function isRecursive(inst, stack, resolve4) {
+function isRecursive(inst, stack, resolve3) {
   const cached3 = recursive.get(inst);
   if (cached3 !== void 0)
     return cached3 ? PROVEN : NONE;
@@ -186348,7 +186348,7 @@ function isRecursive(inst, stack, resolve4) {
   let result2 = NONE;
   const check4 = (child) => {
     if (result2 !== PROVEN && child?._zod) {
-      const answer = isRecursive(child, stack, resolve4);
+      const answer = isRecursive(child, stack, resolve3);
       if (answer > result2)
         result2 = answer;
     }
@@ -186359,7 +186359,7 @@ function isRecursive(inst, stack, resolve4) {
       const desc = Object.getOwnPropertyDescriptor(sh, key);
       if (spread && !desc.enumerable)
         continue;
-      const child = desc.get ? ASSUMED : desc.value?._zod ? isRecursive(desc.value, stack, resolve4) : NONE;
+      const child = desc.get ? ASSUMED : desc.value?._zod ? isRecursive(desc.value, stack, resolve3) : NONE;
       if (child > answer)
         answer = child;
     }
@@ -186423,7 +186423,7 @@ function isRecursive(inst, stack, resolve4) {
       break;
     // `$ZodLazy` caches its inner on the def, so a resolved edge is followed exactly
     case "lazy": {
-      const inner = def._cachedInner ?? (resolve4 ? inst._zod.innerType : void 0);
+      const inner = def._cachedInner ?? (resolve3 ? inst._zod.innerType : void 0);
       merge2(inner ? isRecursive(inner, stack, false) : ASSUMED);
       break;
     }
@@ -204861,7 +204861,7 @@ var Protocol = class {
           return;
         }
         const pollInterval = task2.pollInterval ?? this._options?.defaultTaskPollInterval ?? 1e3;
-        await new Promise((resolve4) => setTimeout(resolve4, pollInterval));
+        await new Promise((resolve3) => setTimeout(resolve3, pollInterval));
         options2?.signal?.throwIfAborted();
       }
     } catch (error62) {
@@ -204878,7 +204878,7 @@ var Protocol = class {
    */
   request(request3, resultSchema, options2) {
     const { relatedRequestId, resumptionToken, onresumptiontoken, task, relatedTask } = options2 ?? {};
-    return new Promise((resolve4, reject) => {
+    return new Promise((resolve3, reject) => {
       const earlyReject = (error62) => {
         reject(error62);
       };
@@ -204956,7 +204956,7 @@ var Protocol = class {
           if (!parseResult2.success) {
             reject(parseResult2.error);
           } else {
-            resolve4(parseResult2.data);
+            resolve3(parseResult2.data);
           }
         } catch (error62) {
           reject(error62);
@@ -205218,12 +205218,12 @@ var Protocol = class {
       }
     } catch {
     }
-    return new Promise((resolve4, reject) => {
+    return new Promise((resolve3, reject) => {
       if (signal.aborted) {
         reject(new McpError(ErrorCode.InvalidRequest, "Request cancelled"));
         return;
       }
-      const timeoutId = setTimeout(resolve4, interval);
+      const timeoutId = setTimeout(resolve3, interval);
       signal.addEventListener("abort", () => {
         clearTimeout(timeoutId);
         reject(new McpError(ErrorCode.InvalidRequest, "Request cancelled"));
@@ -206354,7 +206354,7 @@ var McpServer = class {
     let task = createTaskResult.task;
     const pollInterval = task.pollInterval ?? 5e3;
     while (task.status !== "completed" && task.status !== "failed" && task.status !== "cancelled") {
-      await new Promise((resolve4) => setTimeout(resolve4, pollInterval));
+      await new Promise((resolve3) => setTimeout(resolve3, pollInterval));
       const updatedTask = await extra.taskStore.getTask(taskId);
       if (!updatedTask) {
         throw new McpError(ErrorCode.InternalError, `Task ${taskId} not found during polling`);
@@ -207018,12 +207018,12 @@ var StdioServerTransport2 = class {
     this.onclose?.();
   }
   send(message) {
-    return new Promise((resolve4) => {
+    return new Promise((resolve3) => {
       const json2 = serializeMessage(message);
       if (this._stdout.write(json2)) {
-        resolve4();
+        resolve3();
       } else {
-        this._stdout.once("drain", resolve4);
+        this._stdout.once("drain", resolve3);
       }
     });
   }
@@ -207035,7 +207035,23 @@ import { appendFileSync, existsSync as existsSync9, readFileSync as readFileSync
 import { join as join10 } from "node:path";
 import { parseArgs, parseEnv as parseEnv2 } from "node:util";
 
+// plugin/.claude-plugin/plugin.json
+var plugin_default = {
+  name: "jeyna",
+  version: "0.2.0",
+  description: "Playtest a web app with Claude Code subagents, and turn feedback captured on it into changes",
+  author: {
+    name: "Thomas Claessens"
+  },
+  types: "./types/index.d.ts"
+};
+
 // src/schema.ts
+var SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+var Slug = external_exports.string().regex(SLUG, "lowercase words joined by '-'");
+var FINDING_ID = /^PT-[a-z0-9]+(-[a-z0-9]+)*-\d{3,}$/;
+var VIEWPORT = /^\d+x\d+$/;
+var RESULTS = ["pass", "fail", "blocked", "skipped"];
 var envName = external_exports.string().regex(/^[A-Za-z_][A-Za-z0-9_]*$/, "must be an environment variable name, not a value");
 var Config = external_exports.strictObject({
   app: external_exports.strictObject({
@@ -207044,7 +207060,7 @@ var Config = external_exports.strictObject({
     build: external_exports.string().nullish(),
     reset: external_exports.string().min(1).nullish().describe("Shell command that resets the app's state; run before every run")
   }),
-  viewports: external_exports.array(external_exports.string().regex(/^\d+x\d+$/, "must look like 1440x900")).min(1),
+  viewports: external_exports.array(external_exports.string().regex(VIEWPORT, "must look like 1440x900")).min(1),
   browser: external_exports.strictObject({ headed: external_exports.boolean().default(false) }).default({ headed: false }),
   tester: external_exports.strictObject({ model: external_exports.string().default("sonnet"), effort: external_exports.string().default("medium") }).default({ model: "sonnet", effort: "medium" }),
   accounts: external_exports.array(external_exports.strictObject({ handle: external_exports.string().min(1), user_env: envName, pass_env: envName })).default([])
@@ -207068,7 +207084,7 @@ var FindingInput = external_exports.strictObject({
 });
 var Verdict = external_exports.object({
   case: external_exports.string(),
-  result: external_exports.enum(["pass", "fail", "blocked", "skipped"]),
+  result: external_exports.enum(RESULTS),
   note: external_exports.string().optional(),
   findings: external_exports.array(external_exports.string())
 });
@@ -207094,8 +207110,8 @@ var SessionFile = external_exports.object({
 
 // src/session.ts
 import { execFileSync, spawnSync } from "node:child_process";
-import { existsSync as existsSync4, mkdirSync as mkdirSync2, readdirSync as readdirSync2, readFileSync as readFileSync3, renameSync, writeFileSync as writeFileSync3 } from "node:fs";
-import { join as join5 } from "node:path";
+import { existsSync as existsSync5, mkdirSync as mkdirSync2, readdirSync as readdirSync3, readFileSync as readFileSync4, renameSync, writeFileSync as writeFileSync3 } from "node:fs";
+import { join as join6 } from "node:path";
 
 // src/browser.ts
 import { writeFileSync } from "node:fs";
@@ -207223,6 +207239,7 @@ async function launchChrome(open6) {
 }
 
 // src/shared.ts
+var import_yaml = __toESM2(require_dist2(), 1);
 import { existsSync as existsSync2 } from "node:fs";
 import { dirname, join as join2, resolve } from "node:path";
 var splitFront = (md) => /^---\n([\s\S]*?)\n?---\n([\s\S]*)$/.exec(md);
@@ -207239,10 +207256,33 @@ function appUrl(path, app) {
   base.hash = rel.hash;
   return base.href;
 }
-function clip(text2, max, redact2) {
+function truncate(text2, max, redact2, more = "\n[truncated, the page continues]") {
   const safe = redact2(text2);
-  return safe.length > max ? `${safe.slice(0, max)}
-[truncated at ${max} characters, the page continues]` : safe;
+  return safe.length > max ? `${safe.slice(0, Math.max(0, max - more.length))}${more}` : safe;
+}
+function parseFront(md, schema) {
+  const m = splitFront(md);
+  if (!m) return { errors: ["no YAML frontmatter between --- lines"] };
+  let raw;
+  try {
+    raw = (0, import_yaml.parse)(m[1]);
+  } catch (e) {
+    return { body: m[2], errors: [`frontmatter is not valid YAML: ${e.message.split("\n")[0]}`] };
+  }
+  const r = schema.safeParse(raw);
+  if (!r.success) return { body: m[2], errors: r.error.issues.map((i) => `frontmatter ${i.path.join(".") || "(root)"}: ${i.message}`) };
+  return { front: r.data, body: m[2], errors: [] };
+}
+function withStatus(front, status, after) {
+  const next = {};
+  for (const [k, v] of Object.entries(front)) {
+    if (k === "of" || k === "note") continue;
+    next[k] = k === "status" ? status : v;
+    if (k === "status") {
+      for (const [ak, av] of Object.entries(after)) if (av !== void 0) next[ak] = av;
+    }
+  }
+  return next;
 }
 function runDirOf(root, run) {
   const playtests = resolve(root, ".jeyna", "playtests");
@@ -207284,6 +207324,7 @@ function getBrowser(headed) {
   );
   return browser = launching;
 }
+var launchBrowser = async (headed) => void await getBrowser(headed);
 async function launch(headed) {
   const b = await launchChrome((channel) => chromium.launch({ channel, headless: !headed }));
   log3(`browser version ${b.version()}`);
@@ -207293,9 +207334,10 @@ var pages = /* @__PURE__ */ new Map();
 var shots = /* @__PURE__ */ new Map();
 var events = /* @__PURE__ */ new Map();
 var EVENTS_MAX = 30;
+var redactLine = (t) => t;
 function note(caseId, line) {
   const list = events.get(caseId) ?? [];
-  if (list.length < EVENTS_MAX) list.push(line.length > 300 ? `${line.slice(0, 300)}\u2026` : line);
+  if (list.length < EVENTS_MAX) list.push(truncate(line, 300, redactLine, "\u2026"));
   else if (list.length === EVENTS_MAX) list.push("\u2026 and more; the rest is dropped until the next call");
   events.set(caseId, list);
 }
@@ -207329,13 +207371,7 @@ async function closeContexts() {
 }
 var SCOUT = "scout";
 function viewportOf(caseId, config2) {
-  if (caseId === SCOUT) return config2.viewports[0];
-  if (!current) {
-    throw new Error("No running session. Call session_start first; browser tools take a case id from its result (or `scout` for the look before a run).");
-  }
-  const c = current.session.cases.find((c2) => c2.id === caseId);
-  if (!c) throw new Error(`Unknown case "${caseId}". Cases in this run: ${current.session.cases.map((c2) => c2.id).join(", ")}.`);
-  return c.viewport;
+  return caseId === SCOUT ? config2.viewports[0] : caseOf(caseId).c.viewport;
 }
 function forget(caseId, p) {
   if (pages.get(caseId) === p) pages.delete(caseId);
@@ -207376,6 +207412,7 @@ async function settled(caseId, p) {
 }
 var SNAPSHOT_MAX = 9e4;
 function registerBrowserTools(server3, getContext2, redact2) {
+  redactLine = redact2;
   const caseId = external_exports.string().describe("Case id from session_start, e.g. t1-390x844; or scout for the look before a run");
   server3.registerTool(
     "goto",
@@ -207467,17 +207504,19 @@ ${near.map((n) => `- ${n}`).join("\n")}` : "The page has no clickable controls."
     {
       description: "The page's accessibility tree as text: roles, names, text. Your main way of reading the page. It does not show layout: use screenshot with look: true for visual questions. Ends with the app's console events since your last call (errors, failed or 4xx/5xx requests), when there were any.",
       inputSchema: { case: caseId },
-      annotations: { readOnlyHint: true }
+      annotations: { readOnlyHint: true },
+      _meta: { "anthropic/maxResultSizeChars": SNAPSHOT_MAX }
     },
     async (a) => {
       try {
         const p = await page(a.case, getContext2().config);
-        const text2 = clip(await p.locator("body").ariaSnapshot(), SNAPSHOT_MAX, redact2);
+        const aria = await p.locator("body").ariaSnapshot();
         const heard2 = drain(a.case);
-        return { content: [{ type: "text", text: heard2 ? `${text2}
+        const tail = heard2 ? `
 
 Console since your last call:
-${heard2.map((l) => `- ${l}`).join("\n")}` : text2 }] };
+${heard2.map((l) => `- ${l}`).join("\n")}` : "";
+        return { content: [{ type: "text", text: truncate(aria, SNAPSHOT_MAX - tail.length, redact2) + tail }] };
       } catch (e) {
         return fail(e);
       }
@@ -207489,7 +207528,7 @@ ${heard2.map((l) => `- ${l}`).join("\n")}` : text2 }] };
       description: "Save a PNG of this case's page as evidence and return its file name. Set look: true to also see the image, for visual questions (layout, overlap, cut-off or off-screen elements); otherwise prefer snapshot. Viewport only unless fullPage is true. For case scout nothing is saved: it returns the image only.",
       inputSchema: {
         case: caseId,
-        label: external_exports.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "lowercase words joined by '-'").optional(),
+        label: Slug.optional(),
         fullPage: external_exports.boolean().default(false),
         look: external_exports.boolean().default(false)
       }
@@ -207499,7 +207538,7 @@ ${heard2.map((l) => `- ${l}`).join("\n")}` : text2 }] };
         const run = current;
         const p = await page(a.case, getContext2().config);
         const png = await p.screenshot({ fullPage: a.fullPage });
-        if (a.case !== SCOUT && (current !== run || run?.session.status !== "running")) {
+        if (a.case !== SCOUT && !stillCurrent(run)) {
           throw new Error("The run ended or was replaced while the screenshot was taken; nothing was saved.");
         }
         if (a.case === SCOUT) {
@@ -207536,22 +207575,143 @@ process.on("SIGTERM", shutdown);
 process.on("SIGINT", shutdown);
 
 // src/flows.ts
-var import_yaml = __toESM2(require_dist2(), 1);
-import { existsSync as existsSync3, mkdirSync, readdirSync, readFileSync as readFileSync2, writeFileSync as writeFileSync2 } from "node:fs";
+var import_yaml2 = __toESM2(require_dist2(), 1);
+import { existsSync as existsSync4, mkdirSync, readdirSync as readdirSync2, readFileSync as readFileSync3, writeFileSync as writeFileSync2 } from "node:fs";
+import { join as join5 } from "node:path";
+
+// src/validate.ts
+import { existsSync as existsSync3, readdirSync, readFileSync as readFileSync2 } from "node:fs";
 import { join as join4 } from "node:path";
-var FlowName = external_exports.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "lowercase words joined by '-', the same as the file name");
+var SEVERITIES = FindingInput.shape.severity.options;
+var KINDS = FindingInput.shape.kind.options;
+var STATUSES = ["open", "duplicate", "wontfix", "fixed"];
+var SECTIONS = ["Steps", "Expected", "Actual", "Evidence", "Suggested next step"];
+var FindingFront = external_exports.strictObject({
+  schema: external_exports.literal(1),
+  id: external_exports.string(),
+  kind: external_exports.enum(KINDS),
+  severity: external_exports.enum(SEVERITIES),
+  status: external_exports.enum(STATUSES),
+  of: external_exports.string().optional(),
+  note: external_exports.string().optional(),
+  flow: external_exports.string(),
+  case: external_exports.string(),
+  scenario: external_exports.string(),
+  route: external_exports.string(),
+  viewport: external_exports.string(),
+  browser: external_exports.string(),
+  build: external_exports.string(),
+  author: external_exports.string().optional(),
+  created: external_exports.string(),
+  evidence: external_exports.array(external_exports.string())
+});
+function readFindings(runDir, session) {
+  const dir = join4(runDir, "findings");
+  if (!existsSync3(dir)) return [];
+  return readdirSync(dir).filter((f) => f.endsWith(".md")).sort().map((file2) => {
+    const text2 = readFileSync2(join4(dir, file2), "utf8");
+    const f = { path: `findings/${file2}`, id: file2.slice(0, -3), source: text2, errors: [] };
+    const { front, body = "", errors: errors2 } = parseFront(text2, FindingFront);
+    if (!front) return { ...f, errors: errors2 };
+    f.front = front;
+    f.title = /^# (.+)$/m.exec(body)?.[1];
+    if (front.id !== f.id) f.errors.push(`id ${front.id} does not match the file name`);
+    if (!session.cases.some((c) => c.id === front.case)) f.errors.push(`case ${front.case} is not a case of this run`);
+    if (!f.title) f.errors.push("missing the # title line");
+    for (const s of SECTIONS) if (!new RegExp(`^## ${s}$`, "m").test(body)) f.errors.push(`missing the ## ${s} section`);
+    for (const e of front.evidence) if (!existsSync3(join4(runDir, "evidence", e))) f.errors.push(`evidence ${e} does not exist in evidence/`);
+    if (front.kind === "bug" && !front.evidence.length) f.errors.push("a bug needs evidence");
+    if (front.status === "duplicate" && !front.of) f.errors.push("status duplicate needs of: PT-\u2026");
+    return f;
+  });
+}
+function readSession(runDir) {
+  if (!existsSync3(join4(runDir, "session.json"))) throw new Error(`${runDir} is not a run folder: it has no session.json.`);
+  let raw;
+  try {
+    raw = JSON.parse(readFileSync2(join4(runDir, "session.json"), "utf8"));
+  } catch (e) {
+    throw new Error(`session.json is not valid JSON: ${e.message}`);
+  }
+  const r = SessionFile.safeParse(raw);
+  if (!r.success) throw new Error(`session.json does not match the schema: ${external_exports.prettifyError(r.error).split("\n").slice(0, 3).join("; ")}`);
+  return r.data;
+}
+function validateRun(runDir) {
+  let session;
+  try {
+    session = readSession(runDir);
+  } catch (e) {
+    return [`session.json: ${e.message}`];
+  }
+  const findings = readFindings(runDir, session);
+  const ids = new Set(findings.map((f) => f.id));
+  const errors2 = findings.flatMap((f) => {
+    const of = f.front?.of;
+    const dangling = of && !ids.has(of) ? [`of ${of} is not a finding of this run`] : [];
+    return [...f.errors, ...dangling].map((e) => `${f.path}: ${e}`);
+  });
+  for (const c of session.cases) {
+    const v = session.verdicts.find((v2) => v2.case === c.id);
+    if (!v) errors2.push(`session.json: case ${c.id} has no verdict`);
+    for (const id of v?.findings ?? []) if (!ids.has(id)) errors2.push(`session.json: verdict of ${c.id} lists ${id}, which has no file in findings/`);
+  }
+  if (session.status === "done" && !existsSync3(join4(runDir, "report.md"))) errors2.push("report.md: missing, but the run is done");
+  return errors2;
+}
+function runs(root) {
+  const dir = join4(root, ".jeyna", "playtests");
+  if (!existsSync3(dir)) return [];
+  const started = (d) => {
+    try {
+      return readSession(d).started;
+    } catch {
+      return "";
+    }
+  };
+  return readdirSync(dir).map((d) => join4(dir, d)).filter((d) => started(d)).sort((a, b) => started(b).localeCompare(started(a)));
+}
+function previousRun(runDir, session) {
+  const dir = join4(runDir, "..");
+  return readdirSync(dir).flatMap((d) => {
+    try {
+      return [readSession(join4(dir, d))];
+    } catch {
+      return [];
+    }
+  }).filter((s) => s.flow === session.flow && s.status === "done" && s.started < session.started).sort((a, b) => b.started.localeCompare(a.started))[0];
+}
+function since(session, prev) {
+  if (!prev) return void 0;
+  const verdictOf = (s, scenario, viewport) => {
+    const c = s.cases.find((c2) => c2.scenario === scenario && c2.viewport === viewport);
+    return c && s.verdicts.find((v) => v.case === c.id)?.result;
+  };
+  const out = { run: prev.id, compared: 0, changed: [] };
+  for (const { scenario, viewport } of session.cases) {
+    const now = verdictOf(session, scenario, viewport);
+    const was = verdictOf(prev, scenario, viewport);
+    if (!now || !was) continue;
+    out.compared++;
+    if (now !== was) out.changed.push({ scenario, viewport, was, now });
+  }
+  return out;
+}
+
+// src/flows.ts
+var FlowName = external_exports.string().regex(SLUG, "lowercase words joined by '-', the same as the file name");
 var FlowFront = external_exports.strictObject({
   name: FlowName,
   entry: external_exports.string().min(1),
-  viewports: external_exports.array(external_exports.string().regex(/^\d+x\d+$/, "must look like 1440x900")).min(1).optional(),
+  viewports: external_exports.array(external_exports.string().regex(VIEWPORT, "must look like 1440x900")).min(1).optional(),
   accounts: external_exports.array(external_exports.string().min(1)).min(1).optional()
 });
-var flowsDir = (root) => join4(root, ".jeyna", "flows");
-var flowNames = (root) => existsSync3(flowsDir(root)) ? readdirSync(flowsDir(root)).filter((f) => f.endsWith(".md")).map((f) => f.slice(0, -3)).sort() : [];
+var flowsDir = (root) => join5(root, ".jeyna", "flows");
+var flowNames = (root) => existsSync4(flowsDir(root)) ? readdirSync2(flowsDir(root)).filter((f) => f.endsWith(".md")).map((f) => f.slice(0, -3)).sort() : [];
 function parseFlow(md, file2) {
   const m = splitFront(md);
   if (!m) throw new Error(`${file2}: no YAML frontmatter between --- lines.`);
-  const front = FlowFront.safeParse((0, import_yaml.parse)(m[1]) ?? {});
+  const front = FlowFront.safeParse((0, import_yaml2.parse)(m[1]) ?? {});
   if (!front.success) throw new Error(`${file2}: frontmatter is invalid:
 ${external_exports.prettifyError(front.error)}`);
   if (`${front.data.name}.md` !== file2) throw new Error(`${file2}: frontmatter name ${front.data.name} does not match the file name.`);
@@ -207579,7 +207739,7 @@ ${external_exports.prettifyError(front.error)}`);
 function readFlow(root, name) {
   const names = flowNames(root);
   if (!names.includes(name)) throw new Error(`No flow "${name}". Flows in .jeyna/flows/: ${names.join(", ") || "none"}.`);
-  return parseFlow(readFileSync2(join4(flowsDir(root), `${name}.md`), "utf8"), `${name}.md`);
+  return parseFlow(readFileSync3(join5(flowsDir(root), `${name}.md`), "utf8"), `${name}.md`);
 }
 var listFlows = (root) => flowNames(root).map((name) => {
   try {
@@ -207593,7 +207753,7 @@ function flowMarkdown(name, session) {
   const scenarios = session.scenarios.map((s) => ({ ...s, description: oneLine(s.description), pass: oneLine(s.pass) }));
   const md = [
     `---
-${(0, import_yaml.stringify)({ name, entry: session.entry ?? "/" })}---`,
+${(0, import_yaml2.stringify)({ name, entry: session.entry ?? "/" })}---`,
     `Saved by save_flow from run ${session.id}. Edit it freely: \`/jeyna:playtest ${name}\` now runs these scenarios guided.`,
     "## Scenarios",
     ...scenarios.map((s) => [`### ${s.name}`, s.description, `Pass: ${s.pass}`, ...s.account ? [`Account: ${s.account}`] : []].join("\n"))
@@ -207631,7 +207791,7 @@ function registerFlowTools(server3, getContext2) {
   server3.registerTool(
     "save_flow",
     {
-      description: "Save a run's scenarios as .jeyna/flows/<name>.md, copied from that run's session.json, so the next /jeyna:playtest <name> runs them guided (F2.4). Refuses if the file exists. Offer it at the end of an exploratory run.",
+      description: "Save a run's scenarios as .jeyna/flows/<name>.md, copied from that run's session.json, so the next /jeyna:playtest <name> runs them guided. Refuses if the file exists. Offer it at the end of an exploratory run.",
       inputSchema: {
         run: external_exports.string().min(1).describe("Run id, as session_start returned it, e.g. 2026-10-15-authentication"),
         name: FlowName.describe("Flow name and file name, e.g. authentication")
@@ -207641,11 +207801,16 @@ function registerFlowTools(server3, getContext2) {
       try {
         const root = getContext2().root;
         const runDir = runDirOf(root, run);
-        const file2 = join4(runDir, "session.json");
-        if (!existsSync3(file2)) throw new Error(`No run ${run}: ${file2} does not exist.`);
-        const session = JSON.parse(readFileSync2(file2, "utf8"));
-        const path = join4(flowsDir(root), `${name}.md`);
-        if (existsSync3(path)) throw new Error(`.jeyna/flows/${name}.md already exists; save_flow never overwrites a flow. Choose another name, or edit that file.`);
+        const file2 = join5(runDir, "session.json");
+        if (!existsSync4(file2)) throw new Error(`No run ${run}: ${file2} does not exist.`);
+        let session;
+        try {
+          session = readSession(runDir);
+        } catch (e) {
+          throw new Error(`Run ${run} cannot be saved as a flow: ${e.message.replace(/\.$/, "")}. Choose another run, or fix its session.json by hand.`);
+        }
+        const path = join5(flowsDir(root), `${name}.md`);
+        if (existsSync4(path)) throw new Error(`.jeyna/flows/${name}.md already exists; save_flow never overwrites a flow. Choose another name, or edit that file.`);
         const md = flowMarkdown(name, session);
         mkdirSync(flowsDir(root), { recursive: true });
         writeFileSync2(path, md, { flag: "wx" });
@@ -207658,12 +207823,12 @@ function registerFlowTools(server3, getContext2) {
 }
 
 // src/session.ts
-function planTesters(scenarios, pool, viewports) {
+function planTesters(scenarios, pool, viewports, first = 1) {
   const testers = scenarios.map((s, i) => ({
-    id: `t${i + 1}`,
+    id: `t${first + i}`,
     scenario: s.name,
     batch: 1,
-    cases: viewports.map((v) => ({ id: `t${i + 1}-${v}`, scenario: s.name, viewport: v }))
+    cases: viewports.map((v) => ({ id: `t${first + i}-${v}`, scenario: s.name, viewport: v }))
   }));
   const needing = [
     ...testers.filter((_, i) => !scenarios[i].account),
@@ -207686,9 +207851,23 @@ function planTesters(scenarios, pool, viewports) {
 }
 var current;
 var endRun = () => current = void 0;
+var stillCurrent = (run) => current === run && (!run || run.session.status === "running");
+var retired = /* @__PURE__ */ new Set();
+var testerNo = (caseId) => Number(/^t(\d+)-/.exec(caseId)?.[1] ?? 0);
+function caseOf(caseId) {
+  if (retired.has(caseId)) {
+    throw new Error(`Case ${caseId} belongs to a run that was aborted: a new run replaced it. Stop now: make no more calls and report that your run was aborted.`);
+  }
+  if (!current) {
+    throw new Error("No running session. Call session_start first and use the case ids it returns (browser tools also take `scout`, for the look before a run).");
+  }
+  const c = current.session.cases.find((c2) => c2.id === caseId);
+  if (!c) throw new Error(`Unknown case "${caseId}". Cases in this run: ${current.session.cases.map((c2) => c2.id).join(", ")}.`);
+  return { run: current, c };
+}
 function save(runDir, session) {
-  writeFileSync3(join5(runDir, "session.json.tmp"), JSON.stringify(session, null, 2) + "\n");
-  renameSync(join5(runDir, "session.json.tmp"), join5(runDir, "session.json"));
+  writeFileSync3(join6(runDir, "session.json.tmp"), JSON.stringify(session, null, 2) + "\n");
+  renameSync(join6(runDir, "session.json.tmp"), join6(runDir, "session.json"));
 }
 function buildId(root, config2) {
   if (config2.app.build) return config2.app.build;
@@ -207711,10 +207890,10 @@ No run was started. Fix the command in jeyna.config.yaml, or set reset: null.`);
   }
 }
 function runningRuns(dir) {
-  if (!existsSync4(dir)) return [];
-  return readdirSync2(dir).map((d) => join5(dir, d)).filter((d) => {
+  if (!existsSync5(dir)) return [];
+  return readdirSync3(dir).map((d) => join6(dir, d)).filter((d) => {
     try {
-      return JSON.parse(readFileSync3(join5(d, "session.json"), "utf8")).status === "running";
+      return JSON.parse(readFileSync4(join6(d, "session.json"), "utf8")).status === "running";
     } catch {
       return false;
     }
@@ -207722,22 +207901,23 @@ function runningRuns(dir) {
 }
 var ok = (v) => ({ content: [{ type: "text", text: JSON.stringify(v) }] });
 var fail = (e) => ({ isError: true, content: [{ type: "text", text: e.message }] });
-function registerSessionTools(server3, getContext2) {
+function registerSessionTools(server3, getContext2, redact2) {
   server3.registerTool(
     "session_start",
     {
-      description: "Start a playtest run, guided from a flow in .jeyna/flows/ or exploratory from an explicit scenario list (with its slug and entry path). Closes the scout look. only and viewports narrow the run; unknown names are refused with the valid ones. Runs app.reset from jeyna.config.yaml first, if set, and refuses the run when it fails. Plans one tester per scenario, one case per viewport, one account per tester, and the batch to spawn each tester in (no account is held by two testers in one batch). Refused while another run is running unless force is true.",
+      description: "Start a playtest run, guided from a flow in .jeyna/flows/ or exploratory from an explicit scenario list (with its slug and entry path). Launches the browser first and refuses the run when there is none. Closes the scout look. only and viewports narrow the run; unknown names are refused with the valid ones. Runs app.reset from jeyna.config.yaml first, if set, and refuses the run when it fails. Plans one tester per scenario, one case per viewport, one account per tester, and the batch to spawn each tester in (no account is held by two testers in one batch). Refused while another run is running unless force is true.",
       inputSchema: {
         flow: external_exports.string().optional().describe("Flow name from get_context (guided run)"),
         scenarios: external_exports.array(Scenario).min(1).optional().describe("Explicit scenario list (exploratory run)"),
         only: external_exports.array(external_exports.string()).min(1).optional().describe("Scenario names to run; default all"),
         entry: external_exports.string().min(1).optional().describe("Entry path of an exploratory run, e.g. /login; save_flow writes it to the flow. Default /"),
-        slug: external_exports.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "lowercase words joined by '-'").optional().describe("Run folder slug of an exploratory run; default exploratory"),
-        viewports: external_exports.array(external_exports.string()).min(1).optional(),
+        slug: Slug.optional().describe("Run folder slug of an exploratory run; default exploratory"),
+        viewports: external_exports.array(external_exports.string()).min(1).optional().describe("Viewports to run, e.g. 390x844. A guided run takes its flow's (else the configured ones); an exploratory run any <width>x<height>. Default all of those"),
+        accounts: external_exports.array(external_exports.string().min(1)).min(1).optional().describe("Account handles an exploratory run deals from, e.g. the account a retested finding was found with; default all configured"),
         force: external_exports.boolean().default(false)
       }
     },
-    async ({ flow: flowName, scenarios: given, only, entry, slug, viewports, force }) => {
+    async ({ flow: flowName, scenarios: given, only, entry, slug, viewports, accounts, force }) => {
       try {
         const { root, config: config2 } = getContext2();
         if (flowName && given) throw new Error("session_start needs flow (guided) or scenarios (exploratory), not both.");
@@ -207745,6 +207925,7 @@ function registerSessionTools(server3, getContext2) {
         const flow = flowName ? readFlow(root, flowName) : void 0;
         if (flow && slug) throw new Error("slug is for exploratory runs; a guided run is named after its flow.");
         if (flow && entry) throw new Error("entry is for exploratory runs; a guided run starts at its flow's entry.");
+        if (flow && accounts) throw new Error("accounts is for exploratory runs; a guided run deals its flow's accounts (or all configured).");
         let scenarios = flow?.scenarios ?? given;
         if (only) {
           const unknownScenarios = only.filter((n) => !scenarios.some((s) => s.name === n));
@@ -207755,35 +207936,43 @@ function registerSessionTools(server3, getContext2) {
           scenarios = scenarios.filter((s) => only.includes(s.name));
         }
         const valid = flow?.frontmatter.viewports ?? config2.viewports;
-        const unknown2 = (viewports ?? []).filter((v) => !valid.includes(v));
+        const unknown2 = (viewports ?? []).filter((v) => flow ? !valid.includes(v) : !VIEWPORT.test(v));
+        if (unknown2.length && !flow) throw new Error(`Viewports look like 1440x900 (<width>x<height>), not: ${unknown2.join(", ")}. Configured: ${valid.join(", ")}.`);
         if (unknown2.length) {
           const where = flow?.frontmatter.viewports ? `Flow ${flowName} runs at` : "Configured";
           throw new Error(`Unknown viewports: ${unknown2.join(", ")}. ${where}: ${valid.join(", ")}.`);
         }
         const handles = config2.accounts.map((a) => a.handle);
-        const strangers = (flow?.frontmatter.accounts ?? []).filter((h) => !handles.includes(h));
-        if (strangers.length) throw new Error(`Flow ${flowName} names accounts not in jeyna.config.yaml: ${strangers.join(", ")}. Configured: ${handles.join(", ") || "none"}.`);
-        const pool = flow?.frontmatter.accounts ?? handles;
+        const strangers = (flow?.frontmatter.accounts ?? accounts ?? []).filter((h) => !handles.includes(h));
+        if (strangers.length) {
+          const who = flow ? `Flow ${flowName} names accounts not in jeyna.config.yaml` : "Unknown accounts";
+          throw new Error(`${who}: ${strangers.join(", ")}. Configured: ${handles.join(", ") || "none"}.`);
+        }
+        const pool = flow?.frontmatter.accounts ?? accounts ?? handles;
         const dupes = duplicateNames(scenarios);
         if (dupes.length) throw new Error(`Scenario names must be unique: ${dupes.join(", ")}.`);
-        const dir = join5(root, ".jeyna", "playtests");
+        const dir = join6(root, ".jeyna", "playtests");
+        const busy = (runDir2) => `A run is still running: ${runDir2}. Call session_start with force: true to abort it.`;
         const stale = runningRuns(dir);
-        if (stale.length && !force) {
-          throw new Error(`A run is still running: ${stale.join(", ")}. Call session_start with force: true to abort it.`);
-        }
-        const testers = planTesters(scenarios, pool, viewports ?? valid);
-        for (const d of stale) {
-          const s = d === current?.runDir ? current.session : JSON.parse(readFileSync3(join5(d, "session.json"), "utf8"));
-          save(d, { ...s, status: "aborted", finished: (/* @__PURE__ */ new Date()).toISOString() });
-        }
+        if (stale.length && !force) throw new Error(busy(stale.join(", ")));
+        const aborted2 = stale.map((d) => ({ d, s: d === current?.runDir ? current.session : JSON.parse(readFileSync4(join6(d, "session.json"), "utf8")) }));
+        const abortedCases = aborted2.flatMap(({ s }) => (s.cases ?? []).map((c) => c.id));
+        const first = Math.max(0, ...[...retired, ...abortedCases].map(testerNo)) + 1;
+        const testers = planTesters(scenarios, pool, viewports ?? valid, first);
+        const seen = current;
+        await launchBrowser(config2.browser.headed);
+        if (!stillCurrent(seen)) throw new Error(current ? busy(current.runDir) : "The running run ended while this run was starting; call session_start again.");
+        for (const { d, s } of aborted2) save(d, { ...s, status: "aborted", finished: (/* @__PURE__ */ new Date()).toISOString() });
+        for (const id2 of abortedCases) retired.add(id2);
         current = void 0;
         await closeContexts();
+        if (!stillCurrent(void 0)) throw new Error(busy(current.runDir));
         if (config2.app.reset) resetApp(root, config2.app.reset);
         const base = `${(/* @__PURE__ */ new Date()).toLocaleDateString("sv")}-${flowName ?? slug ?? "exploratory"}`;
         let id = base;
-        for (let n = 2; existsSync4(join5(dir, id)); n++) id = `${base}-${n}`;
-        const runDir = join5(dir, id);
-        mkdirSync2(join5(runDir, "evidence"), { recursive: true });
+        for (let n = 2; existsSync5(join6(dir, id)); n++) id = `${base}-${n}`;
+        const runDir = join6(dir, id);
+        mkdirSync2(join6(runDir, "evidence"), { recursive: true });
         const session = {
           schema: 1,
           id,
@@ -207814,31 +208003,29 @@ function registerSessionTools(server3, getContext2) {
   server3.registerTool(
     "scenario_verdict",
     {
-      description: "Record this case's verdict against the scenario's Pass: line. One per case; calling again replaces it. blocked (could not get far enough to judge) and skipped need a note saying why.",
+      description: "Record this case's verdict against the scenario's Pass: line. One per case; calling again replaces it. blocked (could not get far enough to judge) and skipped need a note saying why. findings lists ids recorded by any of your own cases: a problem already recorded at another of your viewports is cited, not recorded again.",
       inputSchema: {
         case: external_exports.string().describe("Case id from your prompt's jeyna-tester-cases line, e.g. t1-390x844"),
-        result: external_exports.enum(["pass", "fail", "blocked", "skipped"]),
+        result: external_exports.enum(RESULTS),
         note: external_exports.string().min(1).optional(),
         findings: external_exports.array(external_exports.string()).default([])
       }
     },
     async ({ case: caseId, result: result2, note: note2, findings }) => {
       try {
-        if (!current) throw new Error("No running session. Call session_start first.");
-        const { runDir, session } = current;
-        if (!session.cases.some((c) => c.id === caseId)) {
-          throw new Error(`Unknown case "${caseId}". Cases in this run: ${session.cases.map((c) => c.id).join(", ")}.`);
-        }
+        const { run } = caseOf(caseId);
+        const { runDir, session } = run;
         if ((result2 === "blocked" || result2 === "skipped") && !note2) throw new Error(`A ${result2} verdict needs a note saying why.`);
-        const ofCase = current.findings.filter((f) => f.case === caseId).map((f) => f.id);
-        const foreign = findings.filter((id) => !ofCase.includes(id));
+        const own2 = session.testers.find((t) => t.cases.includes(caseId))?.cases ?? [caseId];
+        const mine = run.findings.filter((f) => own2.includes(f.case)).map((f) => f.id);
+        const foreign = findings.filter((id) => !mine.includes(id));
         if (foreign.length) {
-          throw new Error(`Not findings of case ${caseId}: ${foreign.join(", ")}. Its findings: ${ofCase.join(", ") || "none"}.`);
+          throw new Error(`Not findings of your cases (${own2.join(", ")}): ${foreign.join(", ")}. Their findings: ${mine.join(", ") || "none"}.`);
         }
         if (result2 === "fail" && !findings.length) {
-          throw new Error(`A fail needs at least one finding of case ${caseId}: record it with record_finding, then list its id in findings.`);
+          throw new Error(`A fail needs at least one finding: record it with record_finding (or cite one your other cases recorded), then list its id in findings.`);
         }
-        const verdict = { case: caseId, result: result2, ...note2 && { note: note2 }, findings };
+        const verdict = { case: caseId, result: result2, ...note2 && { note: redact2(note2) }, findings };
         session.verdicts = [...session.verdicts.filter((v) => v.case !== caseId), verdict];
         save(runDir, session);
         return ok({ recorded: verdict });
@@ -207850,13 +208037,13 @@ function registerSessionTools(server3, getContext2) {
 }
 
 // src/findings.ts
-var import_yaml2 = __toESM2(require_dist2(), 1);
-import { existsSync as existsSync5, mkdirSync as mkdirSync3, readdirSync as readdirSync3, writeFileSync as writeFileSync4 } from "node:fs";
-import { basename, join as join6 } from "node:path";
+var import_yaml3 = __toESM2(require_dist2(), 1);
+import { existsSync as existsSync6, mkdirSync as mkdirSync3, readdirSync as readdirSync4, writeFileSync as writeFileSync4 } from "node:fs";
+import { basename, join as join7 } from "node:path";
 function findingMarkdown(front, f) {
   return [
     `---
-${(0, import_yaml2.stringify)(front)}---`,
+${(0, import_yaml3.stringify)(front)}---`,
     `# ${f.title}`,
     `## Steps
 
@@ -207875,32 +208062,30 @@ ${f.evidence.map((e) => `![${e}](../evidence/${e})`).join("\n") || "None."}`,
 ${f.next ?? "None given."}`
   ].join("\n\n") + "\n";
 }
-function registerFindingTools(server3) {
+function registerFindingTools(server3, redact2) {
   server3.registerTool(
     "record_finding",
     {
       description: "Record one distinct problem seen in this case as a finding; returns its id (PT-<slug>-<nnn>) to list in scenario_verdict. A bug needs evidence: take a screenshot first and pass its file name. Evidence names must be files screenshot returned in this run.",
       inputSchema: { case: external_exports.string().describe("Case id from session_start, e.g. t1-390x844"), finding: FindingInput }
     },
-    async ({ case: caseId, finding }) => {
+    async ({ case: caseId, finding: given }) => {
       try {
-        if (!current) throw new Error("No running session. Call session_start first.");
-        const run = current;
-        const c = run.session.cases.find((c2) => c2.id === caseId);
-        if (!c) throw new Error(`Unknown case "${caseId}". Cases in this run: ${run.session.cases.map((c2) => c2.id).join(", ")}.`);
-        const evidenceDir = join6(run.runDir, "evidence");
-        const have = () => readdirSync3(evidenceDir).filter((f) => f.startsWith(`${caseId}-`));
+        const { run, c } = caseOf(caseId);
+        const finding = redactDeep(given, redact2);
+        const evidenceDir = join7(run.runDir, "evidence");
+        const have = () => readdirSync4(evidenceDir).filter((f) => f.startsWith(`${caseId}-`));
         if (finding.kind === "bug" && !finding.evidence.length) {
           throw new Error(
             `A bug needs evidence. Call screenshot {case: "${caseId}"} on the page that shows it, then call record_finding again with its file name in evidence. Screenshots of this case so far: ${have().join(", ") || "none"}.`
           );
         }
-        const missing = finding.evidence.filter((e) => basename(e) !== e || !existsSync5(join6(evidenceDir, e)));
+        const missing = finding.evidence.filter((e) => basename(e) !== e || !existsSync6(join7(evidenceDir, e)));
         if (missing.length) {
           throw new Error(`No such evidence: ${missing.join(", ")}. Screenshots of this case: ${have().join(", ") || "none"}.`);
         }
         const browser2 = await browserName();
-        if (current !== run || run.session.status !== "running") {
+        if (!stillCurrent(run)) {
           throw new Error(`The run ${run.session.id} ended or was replaced while this finding was being recorded; nothing was written.`);
         }
         const slug = run.session.flow.replace(/^exploratory:/, "");
@@ -207922,8 +208107,8 @@ function registerFindingTools(server3) {
           created: (/* @__PURE__ */ new Date()).toISOString(),
           evidence: finding.evidence
         };
-        mkdirSync3(join6(run.runDir, "findings"), { recursive: true });
-        const path = join6(run.runDir, "findings", `${id}.md`);
+        mkdirSync3(join7(run.runDir, "findings"), { recursive: true });
+        const path = join7(run.runDir, "findings", `${id}.md`);
         writeFileSync4(path, findingMarkdown(front, finding), { flag: "wx" });
         run.findings.push({ id, case: caseId });
         return ok({ id, path });
@@ -207940,9 +208125,9 @@ import { existsSync as existsSync8, readFileSync as readFileSync6, writeFileSync
 import { basename as basename3, join as join9, relative, resolve as resolve2 } from "node:path";
 
 // src/feedback.ts
-var import_yaml3 = __toESM2(require_dist2(), 1);
-import { existsSync as existsSync6, mkdirSync as mkdirSync4, readdirSync as readdirSync4, readFileSync as readFileSync4, rmSync, writeFileSync as writeFileSync5 } from "node:fs";
-import { basename as basename2, join as join7 } from "node:path";
+var import_yaml4 = __toESM2(require_dist2(), 1);
+import { existsSync as existsSync7, mkdirSync as mkdirSync4, readdirSync as readdirSync5, readFileSync as readFileSync5, rmSync, writeFileSync as writeFileSync5 } from "node:fs";
+import { basename as basename2, join as join8 } from "node:path";
 
 // src/recording.ts
 var MAX_FRAMES = 40;
@@ -207969,35 +208154,27 @@ var FeedbackFront = external_exports.strictObject({
   viewport: Viewport.optional(),
   created: external_exports.string()
 });
-var feedbackDir = (root) => join7(root, ".jeyna", "feedback");
+var feedbackDir = (root) => join8(root, ".jeyna", "feedback");
 function itemFile(root, id) {
   if (!ID.test(id)) throw new Error(`A feedback id looks like FB-001, not ${id || "an empty string"}.`);
-  const path = join7(feedbackDir(root), `${id}.md`);
-  if (!existsSync6(path)) throw new Error(`No feedback ${id} under .jeyna/feedback/.`);
+  const path = join8(feedbackDir(root), `${id}.md`);
+  if (!existsSync7(path)) throw new Error(`No feedback ${id} under .jeyna/feedback/.`);
   return path;
 }
 function readFeedback(root) {
   const dir = feedbackDir(root);
-  if (!existsSync6(dir)) return [];
-  return readdirSync4(dir).filter((f) => /^FB-\d{3,}\.md$/.test(f)).sort((a, b) => num(a) - num(b)).map((file2) => {
-    const source14 = readFileSync4(join7(dir, file2), "utf8");
+  if (!existsSync7(dir)) return [];
+  return readdirSync5(dir).filter((f) => /^FB-\d{3,}\.md$/.test(f)).sort((a, b) => num(a) - num(b)).map((file2) => {
+    const source14 = readFileSync5(join8(dir, file2), "utf8");
     const item = { path: file2, id: file2.slice(0, -3), text: "", source: source14, errors: [] };
-    const m = splitFront(source14);
-    if (!m) return { ...item, errors: ["no YAML frontmatter between --- lines"] };
-    item.text = m[2].trim();
-    let raw;
-    try {
-      raw = (0, import_yaml3.parse)(m[1]);
-    } catch (e) {
-      return { ...item, errors: [`frontmatter is not valid YAML: ${e.message.split("\n")[0]}`] };
-    }
-    const r = FeedbackFront.safeParse(raw);
-    if (!r.success) return { ...item, errors: r.error.issues.map((i) => `frontmatter ${i.path.join(".") || "(root)"}: ${i.message}`) };
-    const front = item.front = r.data;
+    const { front, body = "", errors: errors2 } = parseFront(source14, FeedbackFront);
+    item.text = body.trim();
+    if (!front) return { ...item, errors: errors2 };
+    item.front = front;
     if (front.id !== item.id) item.errors.push(`id ${front.id} does not match the file name`);
     if (front.capture === "snap" && front.frames.length !== 1) item.errors.push("a snap has exactly one frame");
     if (front.source === "evidence" && !(front.run && front.evidence)) item.errors.push("feedback on evidence names its run and evidence");
-    for (const f of front.frames) if (!existsSync6(join7(dir, f.file))) item.errors.push(`capture ${f.file} does not exist in .jeyna/feedback/`);
+    for (const f of front.frames) if (!existsSync7(join8(dir, f.file))) item.errors.push(`capture ${f.file} does not exist in .jeyna/feedback/`);
     if (!item.text) item.errors.push("no feedback text");
     return item;
   });
@@ -208017,159 +208194,22 @@ var NewFeedback = external_exports.strictObject({
 });
 function updateFeedback(root, id, change) {
   const path = itemFile(root, id);
-  const m = splitFront(readFileSync4(path, "utf8"));
-  const r = m ? FeedbackFront.safeParse((0, import_yaml3.parse)(m[1])) : void 0;
-  if (!m || !r?.success) throw new Error(`.jeyna/feedback/${id}.md has no readable frontmatter; fix it by hand.`);
-  const front = r.data;
-  let text2 = m[2].trim();
+  const { front, body = "", errors: errors2 } = parseFront(readFileSync5(path, "utf8"), FeedbackFront);
+  if (!front) throw new Error(`.jeyna/feedback/${id}.md has no readable frontmatter (${errors2.join("; ")}); fix it by hand.`);
+  let text2 = body.trim();
   if (change.text !== void 0) {
     if (front.status !== "open") throw new Error(`${id} is ${front.status}; only an open item's text can change. Reopen it first.`);
     text2 = change.text.trim();
     if (!text2) throw new Error("write what should change");
   }
-  const note2 = change.status ? change.note : front.note;
-  const next = {};
-  for (const [k, v] of Object.entries(front)) {
-    if (k === "note") continue;
-    next[k] = k === "status" ? change.status ?? v : v;
-    if (k === "status" && note2) next.note = note2;
-  }
+  const note2 = change.note ?? (change.status === "open" ? void 0 : front.note);
+  const next = withStatus(front, change.status ?? front.status, { note: note2 });
   writeFileSync5(path, `---
-${(0, import_yaml3.stringify)(next)}---
+${(0, import_yaml4.stringify)(next)}---
 
 ${text2}
 `);
   return next;
-}
-
-// src/validate.ts
-var import_yaml4 = __toESM2(require_dist2(), 1);
-import { existsSync as existsSync7, readdirSync as readdirSync5, readFileSync as readFileSync5 } from "node:fs";
-import { join as join8 } from "node:path";
-var SEVERITIES = FindingInput.shape.severity.options;
-var KINDS = FindingInput.shape.kind.options;
-var STATUSES = ["open", "duplicate", "wontfix", "fixed"];
-var SECTIONS = ["Steps", "Expected", "Actual", "Evidence", "Suggested next step"];
-var FindingFront = external_exports.strictObject({
-  schema: external_exports.literal(1),
-  id: external_exports.string(),
-  kind: external_exports.enum(KINDS),
-  severity: external_exports.enum(SEVERITIES),
-  status: external_exports.enum(STATUSES),
-  of: external_exports.string().optional(),
-  note: external_exports.string().optional(),
-  flow: external_exports.string(),
-  case: external_exports.string(),
-  scenario: external_exports.string(),
-  route: external_exports.string(),
-  viewport: external_exports.string(),
-  browser: external_exports.string(),
-  build: external_exports.string(),
-  author: external_exports.string().optional(),
-  created: external_exports.string(),
-  evidence: external_exports.array(external_exports.string())
-});
-function readFindings(runDir, session) {
-  const dir = join8(runDir, "findings");
-  if (!existsSync7(dir)) return [];
-  return readdirSync5(dir).filter((f) => f.endsWith(".md")).sort().map((file2) => {
-    const text2 = readFileSync5(join8(dir, file2), "utf8");
-    const f = { path: `findings/${file2}`, id: file2.slice(0, -3), source: text2, errors: [] };
-    const m = splitFront(text2);
-    if (!m) return { ...f, errors: ["no YAML frontmatter between --- lines"] };
-    let raw;
-    try {
-      raw = (0, import_yaml4.parse)(m[1]);
-    } catch (e) {
-      return { ...f, errors: [`frontmatter is not valid YAML: ${e.message.split("\n")[0]}`] };
-    }
-    const r = FindingFront.safeParse(raw);
-    if (!r.success) {
-      return { ...f, errors: r.error.issues.map((i) => `frontmatter ${i.path.join(".") || "(root)"}: ${i.message}`) };
-    }
-    const front = f.front = r.data;
-    f.title = /^# (.+)$/m.exec(m[2])?.[1];
-    if (front.id !== f.id) f.errors.push(`id ${front.id} does not match the file name`);
-    if (!session.cases.some((c) => c.id === front.case)) f.errors.push(`case ${front.case} is not a case of this run`);
-    if (!f.title) f.errors.push("missing the # title line");
-    for (const s of SECTIONS) if (!new RegExp(`^## ${s}$`, "m").test(m[2])) f.errors.push(`missing the ## ${s} section`);
-    for (const e of front.evidence) if (!existsSync7(join8(runDir, "evidence", e))) f.errors.push(`evidence ${e} does not exist in evidence/`);
-    if (front.kind === "bug" && !front.evidence.length) f.errors.push("a bug needs evidence");
-    if (front.status === "duplicate" && !front.of) f.errors.push("status duplicate needs of: PT-\u2026");
-    return f;
-  });
-}
-function readSession(runDir) {
-  if (!existsSync7(join8(runDir, "session.json"))) throw new Error(`${runDir} is not a run folder: it has no session.json.`);
-  let raw;
-  try {
-    raw = JSON.parse(readFileSync5(join8(runDir, "session.json"), "utf8"));
-  } catch (e) {
-    throw new Error(`session.json is not valid JSON: ${e.message}`);
-  }
-  const r = SessionFile.safeParse(raw);
-  if (!r.success) throw new Error(`session.json does not match the schema: ${external_exports.prettifyError(r.error).split("\n").slice(0, 3).join("; ")}`);
-  return r.data;
-}
-function validateRun(runDir) {
-  let session;
-  try {
-    session = readSession(runDir);
-  } catch (e) {
-    return [`session.json: ${e.message}`];
-  }
-  const findings = readFindings(runDir, session);
-  const ids = new Set(findings.map((f) => f.id));
-  const errors2 = findings.flatMap((f) => {
-    const of = f.front?.of;
-    const dangling = of && !ids.has(of) ? [`of ${of} is not a finding of this run`] : [];
-    return [...f.errors, ...dangling].map((e) => `${f.path}: ${e}`);
-  });
-  for (const c of session.cases) {
-    const v = session.verdicts.find((v2) => v2.case === c.id);
-    if (!v) errors2.push(`session.json: case ${c.id} has no verdict`);
-    for (const id of v?.findings ?? []) if (!ids.has(id)) errors2.push(`session.json: verdict of ${c.id} lists ${id}, which has no file in findings/`);
-  }
-  if (session.status === "done" && !existsSync7(join8(runDir, "report.md"))) errors2.push("report.md: missing, but the run is done");
-  return errors2;
-}
-function runs(root) {
-  const dir = join8(root, ".jeyna", "playtests");
-  if (!existsSync7(dir)) return [];
-  const started = (d) => {
-    try {
-      return readSession(d).started;
-    } catch {
-      return "";
-    }
-  };
-  return readdirSync5(dir).map((d) => join8(dir, d)).filter((d) => started(d)).sort((a, b) => started(b).localeCompare(started(a)));
-}
-function previousRun(runDir, session) {
-  const dir = join8(runDir, "..");
-  return readdirSync5(dir).flatMap((d) => {
-    try {
-      return [readSession(join8(dir, d))];
-    } catch {
-      return [];
-    }
-  }).filter((s) => s.flow === session.flow && s.status === "done" && s.started < session.started).sort((a, b) => b.started.localeCompare(a.started))[0];
-}
-function since(session, prev) {
-  if (!prev) return void 0;
-  const verdictOf = (s, scenario, viewport) => {
-    const c = s.cases.find((c2) => c2.scenario === scenario && c2.viewport === viewport);
-    return c && s.verdicts.find((v) => v.case === c.id)?.result;
-  };
-  const out = { run: prev.id, compared: 0, changed: [] };
-  for (const { scenario, viewport } of session.cases) {
-    const now = verdictOf(session, scenario, viewport);
-    const was = verdictOf(prev, scenario, viewport);
-    if (!now || !was) continue;
-    out.compared++;
-    if (now !== was) out.changed.push({ scenario, viewport, was, now });
-  }
-  return out;
 }
 
 // src/finish.ts
@@ -208183,10 +208223,9 @@ function report(runDir, session) {
     (a, b) => SEVERITIES.indexOf(a.front.severity) - SEVERITIES.indexOf(b.front.severity) || KINDS.indexOf(a.front.kind) - KINDS.indexOf(b.front.kind) || a.id.localeCompare(b.id)
   );
   const live = findings.filter((f) => f.front.status !== "duplicate");
-  const results = ["pass", "fail", "blocked", "skipped"];
   const counts = {
     cases: session.cases.length,
-    ...Object.fromEntries(results.map((r) => [r, session.verdicts.filter((v) => v.result === r).length])),
+    ...Object.fromEntries(RESULTS.map((r) => [r, session.verdicts.filter((v) => v.result === r).length])),
     findings: live.length,
     ...Object.fromEntries(SEVERITIES.map((s) => [s, live.filter((f) => f.front.severity === s).length])),
     duplicate: findings.length - live.length
@@ -208218,8 +208257,8 @@ function report(runDir, session) {
 
 ${session.summary}`,
     table(
-      ["Cases", ...results.map((r) => r[0].toUpperCase() + r.slice(1))],
-      [row([counts.cases, ...results.map((r) => counts[r])])]
+      ["Cases", ...RESULTS.map((r) => r[0].toUpperCase() + r.slice(1))],
+      [row([counts.cases, ...RESULTS.map((r) => counts[r])])]
     ),
     table(
       ["Findings", ...SEVERITIES.map((s) => s[0].toUpperCase() + s.slice(1)), "Duplicates"],
@@ -208266,7 +208305,7 @@ function validateCli(arg2, root) {
     return 1;
   }
 }
-function registerFinishTools(server3, getContext2) {
+function registerFinishTools(server3, getContext2, redact2) {
   server3.registerTool(
     "validate",
     {
@@ -208301,7 +208340,7 @@ function registerFinishTools(server3, getContext2) {
           throw new Error(`The run stays running: fix these ${errors2.length} errors, then call session_finish again.
 ${errors2.join("\n")}`);
         }
-        session.summary = summary;
+        session.summary = redact2(summary);
         session.finished = (/* @__PURE__ */ new Date()).toISOString();
         const { counts, since: since2 } = report(runDir, session);
         session.status = "done";
@@ -208317,7 +208356,7 @@ ${errors2.join("\n")}`);
   server3.registerTool(
     "update_status",
     {
-      description: "Change a finding's status (the only mutable field, D11). During a run, mark a cross-scenario duplicate with status duplicate and of: the finding it repeats. wontfix and fixed are for later sessions. Looks in `run` if given, else the current run; with no run running, the one run holding the id. Ids repeat across runs of the same flow, so when several runs hold it, it refuses and lists them: give run. Also a feedback item's status (FB-001): open, processed (you implemented it; the developer still checks it), done (only on the developer's explicit OK), wontfix (D36).",
+      description: "Change a finding's status (the only mutable field). During a run, mark a cross-scenario duplicate with status duplicate and of: the finding it repeats. wontfix and fixed are for later sessions. Looks in `run` if given, else the current run; with no run running, the one run holding the id. Ids repeat across runs of the same flow, so when several runs hold it, it refuses and lists them: give run. Also a feedback item's status (FB-001): open, processed (you implemented it; the developer still checks it), done (only on the developer's explicit OK), wontfix. A feedback item keeps its note until a new one is given; back to open clears it.",
       inputSchema: {
         id: external_exports.string().describe("Finding id, e.g. PT-login-003, or feedback id, e.g. FB-007"),
         status: external_exports.enum([.../* @__PURE__ */ new Set([...STATUSES, ...FEEDBACK_STATUSES])]),
@@ -208331,8 +208370,11 @@ ${errors2.join("\n")}`);
         if (id.startsWith("FB-")) {
           if (!FEEDBACK_STATUSES.includes(status)) throw new Error(`A feedback item's status is one of ${FEEDBACK_STATUSES.join(", ")}, not ${status}.`);
           if (of || run) throw new Error("of and run are for findings, not feedback.");
-          updateFeedback(getContext2().root, id, { status, note: note2 });
+          updateFeedback(getContext2().root, id, { status, note: note2 && redact2(note2) });
           return ok({ id, status, path: `.jeyna/feedback/${id}.md` });
+        }
+        for (const x of [id, of]) {
+          if (x !== void 0 && !FINDING_ID.test(x)) throw new Error(`A finding id looks like PT-<flow>-<nnn>, e.g. PT-login-003 (a feedback id like FB-007), not ${x || "an empty string"}.`);
         }
         if (!STATUSES.includes(status)) throw new Error(`A finding's status is one of ${STATUSES.join(", ")}, not ${status}.`);
         if (status === "duplicate" && !of) throw new Error(`A duplicate needs of: the id of the finding ${id} repeats.`);
@@ -208356,18 +208398,11 @@ ${errors2.join("\n")}`);
         if (of === id) throw new Error("A finding cannot be a duplicate of itself.");
         if (of && !existsSync8(join9(runDir, "findings", `${of}.md`))) throw new Error(`No finding ${of} in ${runDir}; of must name a finding of the same run.`);
         const path = join9(runDir, "findings", `${id}.md`);
-        const m = splitFront(readFileSync6(path, "utf8"));
-        const front = m && (0, import_yaml5.parse)(m[1]);
-        if (!m || !front || typeof front !== "object") throw new Error(`${path} has no readable frontmatter; fix it by hand.`);
-        const next = {};
-        for (const [k, v] of Object.entries(front)) {
-          if (k === "of" || k === "note") continue;
-          next[k] = k === "status" ? status : v;
-          if (k === "status") Object.assign(next, of && { of }, note2 && { note: note2 });
-        }
+        const { front, body, errors: errors2 } = parseFront(readFileSync6(path, "utf8"), external_exports.record(external_exports.string(), external_exports.unknown()));
+        if (!front) throw new Error(`${path} has no readable frontmatter (${errors2.join("; ")}); fix it by hand.`);
         writeFileSync6(path, `---
-${(0, import_yaml5.stringify)(next)}---
-${m[2]}`);
+${(0, import_yaml5.stringify)(withStatus(front, status, { of, note: note2 && redact2(note2) }))}---
+${body}`);
         return ok({ id, status, ...of && { of }, path });
       } catch (e) {
         return fail(e);
@@ -208377,7 +208412,7 @@ ${m[2]}`);
   server3.registerTool(
     "get_feedback",
     {
-      description: "The developer's feedback from Jeyna studio (D36). No arguments: the items still to do, oldest first (open, and processed ones awaiting the developer's check), one line each, no images. id: that item in full: its text, every capture frame as an image (a recording's frames in order, with their time); for feedback on Live the page url and viewport it was captured at, and for feedback on evidence the finding's file and the whole evidence image. next: the same for the oldest open item.",
+      description: "The developer's feedback from Jeyna studio. No arguments: the items still to do, oldest first (open, and processed ones awaiting the developer's check), one line each, no images. id: that item in full: its text, every capture frame as an image (a recording's frames in order, with their time); for feedback on Live the page url and viewport it was captured at, and for feedback on evidence the finding's file and the whole evidence image. next: the same for the oldest open item.",
       inputSchema: {
         id: external_exports.string().optional().describe("Feedback id, e.g. FB-007"),
         next: external_exports.boolean().optional().describe("Load the oldest open item")
@@ -208414,7 +208449,7 @@ ${m[2]}`);
           if (fr.capture === "recording") content.push({ type: "text", text: `Frame ${i + 1} of ${fr.frames.length} at ${(f.ms / 1e3).toFixed(1)} s` });
           if (existsSync8(join9(feedbackDir(root), f.file))) content.push(png(join9(feedbackDir(root), f.file)));
         });
-        if (fr.source === "evidence") {
+        if (fr.source === "evidence" && fr.run && fr.evidence) {
           const run = runDirOf(root, fr.run);
           const finding = fr.finding && join9(run, "findings", `${basename3(fr.finding)}.md`);
           if (finding && existsSync8(finding)) content.push({ type: "text", text: `The finding this was given on, ${fr.finding} (run ${fr.run}):
@@ -208487,7 +208522,7 @@ function currentRedactor() {
   return cached2.redact;
 }
 var redact = (text2) => currentRedactor()(text2);
-var server2 = new McpServer({ name: "jeyna", version: "0.0.1" });
+var server2 = new McpServer({ name: "jeyna", version: plugin_default.version });
 var calls = 0;
 var register = server2.registerTool.bind(server2);
 server2.registerTool = ((name, config2, handler) => register(name, config2, (async (...a) => {
@@ -208546,10 +208581,10 @@ server2.registerTool(
     }
   }
 );
-registerSessionTools(server2, getContext);
+registerSessionTools(server2, getContext, redact);
 registerBrowserTools(server2, getContext, redact);
-registerFindingTools(server2);
-registerFinishTools(server2, getContext);
+registerFindingTools(server2, redact);
+registerFinishTools(server2, getContext, redact);
 registerFlowTools(server2, getContext);
 if (positionals[0] === "validate") process.exit(validateCli(positionals[1], projectRoot));
 var transport = new StdioServerTransport2();

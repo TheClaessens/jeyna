@@ -3,16 +3,17 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 
 import { join } from "node:path";
 import { parse, stringify } from "yaml";
 import { z } from "zod";
-import { Scenario } from "./schema.js";
+import { Scenario, SLUG, VIEWPORT } from "./schema.js";
 import { fail, ok, type Session } from "./session.js";
 import { duplicateNames, runDirOf, splitFront } from "./shared.js";
+import { readSession } from "./validate.js";
 
 // Flow frontmatter (§5.2). The name is the file name, so it doubles as the run slug (D7).
-const FlowName = z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "lowercase words joined by '-', the same as the file name");
+const FlowName = z.string().regex(SLUG, "lowercase words joined by '-', the same as the file name");
 const FlowFront = z.strictObject({
   name: FlowName,
   entry: z.string().min(1),
-  viewports: z.array(z.string().regex(/^\d+x\d+$/, "must look like 1440x900")).min(1).optional(),
+  viewports: z.array(z.string().regex(VIEWPORT, "must look like 1440x900")).min(1).optional(),
   accounts: z.array(z.string().min(1)).min(1).optional(),
 });
 export type Flow = { frontmatter: z.infer<typeof FlowFront>; body: string; scenarios: Scenario[] };
@@ -117,7 +118,7 @@ export function registerFlowTools(server: McpServer, getContext: () => { root: s
     "save_flow",
     {
       description:
-        "Save a run's scenarios as .jeyna/flows/<name>.md, copied from that run's session.json, so the next /jeyna:playtest <name> runs them guided (F2.4). Refuses if the file exists. Offer it at the end of an exploratory run.",
+        "Save a run's scenarios as .jeyna/flows/<name>.md, copied from that run's session.json, so the next /jeyna:playtest <name> runs them guided. Refuses if the file exists. Offer it at the end of an exploratory run.",
       inputSchema: {
         run: z.string().min(1).describe("Run id, as session_start returned it, e.g. 2026-10-15-authentication"),
         name: FlowName.describe("Flow name and file name, e.g. authentication"),
@@ -129,7 +130,12 @@ export function registerFlowTools(server: McpServer, getContext: () => { root: s
         const runDir = runDirOf(root, run);
         const file = join(runDir, "session.json");
         if (!existsSync(file)) throw new Error(`No run ${run}: ${file} does not exist.`);
-        const session = JSON.parse(readFileSync(file, "utf8")) as Session;
+        let session: Session;
+        try {
+          session = readSession(runDir);
+        } catch (e) {
+          throw new Error(`Run ${run} cannot be saved as a flow: ${(e as Error).message.replace(/\.$/, "")}. Choose another run, or fix its session.json by hand.`);
+        }
         const path = join(flowsDir(root), `${name}.md`);
         if (existsSync(path)) throw new Error(`.jeyna/flows/${name}.md already exists; save_flow never overwrites a flow. Choose another name, or edit that file.`);
         const md = flowMarkdown(name, session);

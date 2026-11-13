@@ -1,16 +1,16 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, join, relative, resolve } from "node:path";
-import { parse, stringify } from "yaml";
+import { stringify } from "yaml";
 import { z } from "zod";
 import { closeContexts } from "./browser.js";
 import { FEEDBACK_STATUSES, type FeedbackItem, feedbackDir, type FeedbackStatus, readFeedback, updateFeedback } from "./feedback.js";
+import { FINDING_ID, RESULTS } from "./schema.js";
 import { current, endRun, fail, ok, save, type Session } from "./session.js";
-import { runDirOf, splitFront } from "./shared.js";
+import { parseFront, runDirOf, withStatus } from "./shared.js";
 import { type Finding, type FindingFront, KINDS, previousRun, readFindings, runs, SEVERITIES, since, STATUSES, validateRun } from "./validate.js";
 
 // The checks themselves live in validate.ts, shared with the studio sidecar; this module is the MCP and shell face of them.
-export { validateRun, type Since } from "./validate.js";
 
 const cell = (s: string) => s.replace(/\|/g, "\\|").replace(/\s*\n\s*/g, " ");
 const link = (id: string) => `[${id}](findings/${id}.md)`;
@@ -29,10 +29,9 @@ function report(runDir: string, session: Session) {
       a.id.localeCompare(b.id),
   );
   const live = findings.filter((f) => f.front.status !== "duplicate");
-  const results = ["pass", "fail", "blocked", "skipped"] as const;
   const counts = {
     cases: session.cases.length,
-    ...Object.fromEntries(results.map((r) => [r, session.verdicts.filter((v) => v.result === r).length])),
+    ...Object.fromEntries(RESULTS.map((r) => [r, session.verdicts.filter((v) => v.result === r).length])),
     findings: live.length,
     ...Object.fromEntries(SEVERITIES.map((s) => [s, live.filter((f) => f.front.severity === s).length])),
     duplicate: findings.length - live.length,
@@ -64,8 +63,8 @@ function report(runDir: string, session: Session) {
     ].join("\n"),
     `## Summary\n\n${session.summary}`,
     table(
-      ["Cases", ...results.map((r) => r[0].toUpperCase() + r.slice(1))],
-      [row([counts.cases, ...results.map((r) => counts[r])])],
+      ["Cases", ...RESULTS.map((r) => r[0].toUpperCase() + r.slice(1))],
+      [row([counts.cases, ...RESULTS.map((r) => counts[r])])],
     ),
     table(
       ["Findings", ...SEVERITIES.map((s) => s[0].toUpperCase() + s.slice(1)), "Duplicates"],
@@ -116,7 +115,8 @@ export function validateCli(arg: string | undefined, root: () => string): number
   }
 }
 
-export function registerFinishTools(server: McpServer, getContext: () => { root: string }) {
+// redact: the transport's account-value redactor (D9), run over the summary and status notes before they are written (AC3).
+export function registerFinishTools(server: McpServer, getContext: () => { root: string }, redact: (text: string) => string) {
   server.registerTool(
     "validate",
     {
@@ -153,7 +153,7 @@ export function registerFinishTools(server: McpServer, getContext: () => { root:
         if (errors.length) {
           throw new Error(`The run stays running: fix these ${errors.length} errors, then call session_finish again.\n${errors.join("\n")}`);
         }
-        session.summary = summary;
+        session.summary = redact(summary);
         session.finished = new Date().toISOString();
         const { counts, since } = report(runDir, session);
         session.status = "done";
@@ -171,8 +171,8 @@ export function registerFinishTools(server: McpServer, getContext: () => { root:
     "update_status",
     {
       description:
-        "Change a finding's status (the only mutable field, D11). During a run, mark a cross-scenario duplicate with status duplicate and of: the finding it repeats. wontfix and fixed are for later sessions. Looks in `run` if given, else the current run; with no run running, the one run holding the id. Ids repeat across runs of the same flow, so when several runs hold it, it refuses and lists them: give run. " +
-        "Also a feedback item's status (FB-001): open, processed (you implemented it; the developer still checks it), done (only on the developer's explicit OK), wontfix (D36).",
+        "Change a finding's status (the only mutable field). During a run, mark a cross-scenario duplicate with status duplicate and of: the finding it repeats. wontfix and fixed are for later sessions. Looks in `run` if given, else the current run; with no run running, the one run holding the id. Ids repeat across runs of the same flow, so when several runs hold it, it refuses and lists them: give run. " +
+        "Also a feedback item's status (FB-001): open, processed (you implemented it; the developer still checks it), done (only on the developer's explicit OK), wontfix. A feedback item keeps its note until a new one is given; back to open clears it.",
       inputSchema: {
         id: z.string().describe("Finding id, e.g. PT-login-003, or feedback id, e.g. FB-007"),
         status: z.enum([...new Set([...STATUSES, ...FEEDBACK_STATUSES])] as [string, ...string[]]),
@@ -186,8 +186,12 @@ export function registerFinishTools(server: McpServer, getContext: () => { root:
         if (id.startsWith("FB-")) {
           if (!(FEEDBACK_STATUSES as readonly string[]).includes(status)) throw new Error(`A feedback item's status is one of ${FEEDBACK_STATUSES.join(", ")}, not ${status}.`);
           if (of || run) throw new Error("of and run are for findings, not feedback.");
-          updateFeedback(getContext().root, id, { status: status as FeedbackStatus, note });
+          updateFeedback(getContext().root, id, { status: status as FeedbackStatus, note: note && redact(note) });
           return ok({ id, status, path: `.jeyna/feedback/${id}.md` });
+        }
+        // Ids become file names: only the finding id shape, so no path leaves the run's findings/ (nor reaches feedback/).
+        for (const x of [id, of]) {
+          if (x !== undefined && !FINDING_ID.test(x)) throw new Error(`A finding id looks like PT-<flow>-<nnn>, e.g. PT-login-003 (a feedback id like FB-007), not ${x || "an empty string"}.`);
         }
         if (!(STATUSES as readonly string[]).includes(status)) throw new Error(`A finding's status is one of ${STATUSES.join(", ")}, not ${status}.`);
         if (status === "duplicate" && !of) throw new Error(`A duplicate needs of: the id of the finding ${id} repeats.`);
@@ -211,17 +215,9 @@ export function registerFinishTools(server: McpServer, getContext: () => { root:
         if (of === id) throw new Error("A finding cannot be a duplicate of itself.");
         if (of && !existsSync(join(runDir, "findings", `${of}.md`))) throw new Error(`No finding ${of} in ${runDir}; of must name a finding of the same run.`);
         const path = join(runDir, "findings", `${id}.md`);
-        const m = splitFront(readFileSync(path, "utf8"));
-        const front = m && (parse(m[1]) as Record<string, unknown>);
-        if (!m || !front || typeof front !== "object") throw new Error(`${path} has no readable frontmatter; fix it by hand.`);
-        // Rebuild in place so of and note sit right after status.
-        const next: Record<string, unknown> = {};
-        for (const [k, v] of Object.entries(front)) {
-          if (k === "of" || k === "note") continue;
-          next[k] = k === "status" ? status : v;
-          if (k === "status") Object.assign(next, of && { of }, note && { note });
-        }
-        writeFileSync(path, `---\n${stringify(next)}---\n${m[2]}`);
+        const { front, body, errors } = parseFront(readFileSync(path, "utf8"), z.record(z.string(), z.unknown()));
+        if (!front) throw new Error(`${path} has no readable frontmatter (${errors.join("; ")}); fix it by hand.`);
+        writeFileSync(path, `---\n${stringify(withStatus(front, status, { of, note: note && redact(note) }))}---\n${body}`);
         return ok({ id, status, ...(of && { of }), path });
       } catch (e) {
         return fail(e);
@@ -233,7 +229,7 @@ export function registerFinishTools(server: McpServer, getContext: () => { root:
     "get_feedback",
     {
       description:
-        "The developer's feedback from Jeyna studio (D36). No arguments: the items still to do, oldest first (open, and processed ones awaiting the developer's check), one line each, no images. " +
+        "The developer's feedback from Jeyna studio. No arguments: the items still to do, oldest first (open, and processed ones awaiting the developer's check), one line each, no images. " +
         "id: that item in full: its text, every capture frame as an image (a recording's frames in order, with their time); for feedback on Live the page url and viewport it was captured at, and for feedback on evidence the finding's file and the whole evidence image. next: the same for the oldest open item.",
       inputSchema: {
         id: z.string().optional().describe("Feedback id, e.g. FB-007"),
@@ -266,11 +262,12 @@ export function registerFinishTools(server: McpServer, getContext: () => { root:
           if (fr.capture === "recording") content.push({ type: "text", text: `Frame ${i + 1} of ${fr.frames.length} at ${(f.ms / 1000).toFixed(1)} s` });
           if (existsSync(join(feedbackDir(root), f.file))) content.push(png(join(feedbackDir(root), f.file)));
         });
-        if (fr.source === "evidence") {
-          const run = runDirOf(root, fr.run!);
+        // A hand-broken item without its run or evidence still loads; its errors above say what is missing.
+        if (fr.source === "evidence" && fr.run && fr.evidence) {
+          const run = runDirOf(root, fr.run);
           const finding = fr.finding && join(run, "findings", `${basename(fr.finding)}.md`);
           if (finding && existsSync(finding)) content.push({ type: "text", text: `The finding this was given on, ${fr.finding} (run ${fr.run}):\n\n${readFileSync(finding, "utf8")}` });
-          const evidence = join(run, "evidence", basename(fr.evidence!));
+          const evidence = join(run, "evidence", basename(fr.evidence));
           if (existsSync(evidence)) content.push({ type: "text", text: `The whole evidence image ${fr.evidence}; the capture above is cropped from it:` }, png(evidence));
         }
         return { content };
