@@ -22,7 +22,8 @@ const flowsDir = (root: string) => join(root, ".jeyna", "flows");
 export const flowNames = (root: string) =>
   existsSync(flowsDir(root)) ? readdirSync(flowsDir(root)).filter((f) => f.endsWith(".md")).map((f) => f.slice(0, -3)).sort() : [];
 
-// Under `## Scenarios`: `### <name>`, a description paragraph, one `Pass:` line, an optional `Account:` line (D6, D10).
+// Under `## Scenarios`: `### <name>`, a description paragraph, a `Pass:` line (with the lines that directly follow it,
+// up to a blank line, an `Account:` line or a heading: a hand-wrapped pass text), an optional `Account:` line (D6, D10).
 export function parseFlow(md: string, file: string): Flow {
   const m = splitFront(md);
   if (!m) throw new Error(`${file}: no YAML frontmatter between --- lines.`);
@@ -37,10 +38,13 @@ export function parseFlow(md: string, file: string): Flow {
     .slice(1)
     .map((block) => {
       const [name, ...lines] = block.trim().split("\n").map((l) => l.trim());
-      const at = (key: string) => lines.find((l) => l.startsWith(`${key}:`))?.slice(key.length + 1).trim();
-      const description = lines.filter((l) => l && !/^(Pass|Account):/.test(l)).join(" ");
-      const pass = at("Pass");
-      const account = at("Account");
+      const key = /^(Pass|Account):/;
+      const p = lines.findIndex((l) => l.startsWith("Pass:"));
+      let end = p + 1;
+      if (p >= 0) while (end < lines.length && lines[end] && !key.test(lines[end]) && !lines[end].startsWith("#")) end++;
+      const pass = p < 0 ? undefined : [lines[p].slice(5), ...lines.slice(p + 1, end)].join(" ").trim();
+      const description = lines.filter((l, i) => l && (i < p || i >= end) && !key.test(l)).join(" ");
+      const account = lines.find((l) => l.startsWith("Account:"))?.slice(8).trim();
       if (!description) throw new Error(`${file}: scenario "${name}" has no description paragraph.`);
       if (!pass) throw new Error(`${file}: scenario "${name}" has no Pass: line.`);
       if (account !== undefined && account !== "none" && account !== "consumes") {

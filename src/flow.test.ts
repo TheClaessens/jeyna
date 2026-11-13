@@ -107,6 +107,18 @@ test("get_flow refuses an unknown name with the valid ones, and a malformed flow
   expect(text(await call("get_flow", { name: "badaccount" }))).toMatch(/Account: shared; use none or consumes/);
 });
 
+test("a Pass: line wrapped onto the next lines keeps all of it, and a flow with Windows line endings parses", async () => {
+  const flow = (name: string, scenario: string) => `---\nname: ${name}\nentry: /\n---\n\n## Scenarios\n\n${scenario}`;
+  const wrapped = flow("wrapped", "### Add\nSign in and add a todo.\nPass: the todo appears in the list\nwith High priority.\nAccount: consumes\n\n### Two\nA second paragraph\nover two lines.\nPass: it works.\n\nMore description after a blank line.\n");
+  const crlf = flow("crlf", "### Add\nSign in.\nPass: ok.\n").replaceAll("\n", "\r\n");
+  const { json } = await connect(project({ wrapped, crlf }));
+  expect((await json("get_flow", { name: "wrapped" })).scenarios).toEqual([
+    { name: "Add", description: "Sign in and add a todo.", pass: "the todo appears in the list with High priority.", account: "consumes" },
+    { name: "Two", description: "A second paragraph over two lines. More description after a blank line.", pass: "it works." },
+  ]);
+  expect((await json("get_flow", { name: "crlf" })).scenarios).toEqual([{ name: "Add", description: "Sign in.", pass: "ok." }]);
+});
+
 const sessionOf = (runDir: string) => JSON.parse(readFileSync(join(runDir, "session.json"), "utf8"));
 
 test("session_start with a flow runs guided: the flow's scenarios, its name as slug, testers planned by batch", async () => {

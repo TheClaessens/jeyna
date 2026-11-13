@@ -5,9 +5,9 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { expect, test } from "vitest";
 
-function guard(tool_name: string, tool_input: Record<string, string>) {
+function guard(tool_name: string, tool_input: Record<string, string>, cwd = "/app") {
   const out = execFileSync("sh", ["plugin/hooks/guard-write.sh"], {
-    input: JSON.stringify({ hook_event_name: "PreToolUse", tool_name, tool_input }),
+    input: JSON.stringify({ hook_event_name: "PreToolUse", tool_name, tool_input, cwd }),
     encoding: "utf8",
   });
   return out ? JSON.parse(out).hookSpecificOutput : undefined;
@@ -40,6 +40,23 @@ test("other files, including the config and conventions, are left to the normal 
   expect(guard("Write", { file_path: "/app/.jeyna/jeyna.config.yaml" })).toBeUndefined();
   expect(guard("Edit", { file_path: "/app/.jeyna/CONVENTIONS.md" })).toBeUndefined();
   expect(guard("Write", { file_path: "/app/.env" })).toBeUndefined();
+});
+
+test("Read on .jeyna/.env is denied; reading findings, feedback and the config is not", () => {
+  expect(guard("Read", { file_path: "/app/.jeyna/.env" }).permissionDecision).toBe("deny");
+  expect(guard("Read", { file_path: "/app/.jeyna/playtests/2026-10-15-login/findings/PT-login-001.md" })).toBeUndefined();
+  expect(guard("Read", { file_path: "/app/.jeyna/feedback/FB-001.md" })).toBeUndefined();
+  expect(guard("Read", { file_path: "/app/.jeyna/jeyna.config.yaml" })).toBeUndefined();
+});
+
+test("a path with . or .., in another letter case, or relative to the cwd is guarded as the file it names", () => {
+  expect(guard("Write", { file_path: "/p/.jeyna/./playtests/x.md" }).permissionDecision).toBe("deny");
+  expect(guard("Write", { file_path: "/p/.jeyna/flows/../playtests/x.md" }).permissionDecision).toBe("deny");
+  expect(guard("Write", { file_path: "/p/.JEYNA/Playtests/x.md" }).permissionDecision).toBe("deny");
+  expect(guard("Read", { file_path: "/p/.jeyna/.ENV" }).permissionDecision).toBe("deny");
+  expect(guard("Edit", { file_path: ".jeyna/feedback/FB-001.md" }, "/p").permissionDecision).toBe("deny");
+  expect(guard("Read", { file_path: "sub/../.jeyna/.env" }, "/p").permissionDecision).toBe("deny");
+  expect(guard("Write", { file_path: "/p/.jeyna/playtests/../flows/x.md" })).toBeUndefined();
 });
 
 // Feeds Claude Code's SubagentStop JSON and a tester transcript to the exit check (AC5b, D2, P6, P7).

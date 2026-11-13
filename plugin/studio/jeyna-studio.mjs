@@ -202429,7 +202429,7 @@ var MAX_FRAMES = 40;
 var import_yaml = __toESM2(require_dist(), 1);
 import { existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
-var splitFront = (md) => /^---\n([\s\S]*?)\n?---\n([\s\S]*)$/.exec(md);
+var splitFront = (md) => /^---\n([\s\S]*?)\n?---\n([\s\S]*)$/.exec(md.replaceAll("\r\n", "\n"));
 function parseFront(md, schema) {
   const m = splitFront(md);
   if (!m) return { errors: ["no YAML frontmatter between --- lines"] };

@@ -57,6 +57,10 @@ test("splitFront splits YAML frontmatter from the body", () => {
   expect(splitFront("# no frontmatter")).toBeNull();
 });
 
+test("splitFront reads a file with Windows line endings the same way", () => {
+  expect(splitFront("---\r\nname: x\r\n---\r\n# Body\r\n")?.slice(1)).toEqual(["name: x", "# Body\n"]);
+});
+
 test("duplicateNames lists each repeated name once", () => {
   expect(duplicateNames([{ name: "a" }, { name: "b" }, { name: "a" }, { name: "a" }])).toEqual(["a"]);
   expect(duplicateNames([{ name: "a" }])).toEqual([]);
