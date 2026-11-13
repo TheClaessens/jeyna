@@ -3,7 +3,8 @@ import { existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 
 // YAML frontmatter between --- lines, then the body: [_, yaml, body] (flows §5.2 and findings).
-export const splitFront = (md: string) => /^---\n([\s\S]*?)\n?---\n([\s\S]*)$/.exec(md);
+// CRLF (a Windows checkout of the git-tracked .jeyna/) reads as LF.
+export const splitFront = (md: string) => /^---\n([\s\S]*?)\n?---\n([\s\S]*)$/.exec(md.replaceAll("\r\n", "\n"));
 
 // Names that occur more than once, each listed once (scenario names must be unique per flow and per run).
 export const duplicateNames = (items: { name: string }[]) => {

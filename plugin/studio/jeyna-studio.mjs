@@ -202424,7 +202424,7 @@ var MAX_FRAMES = 40;
 // src/shared.ts
 import { existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
-var splitFront = (md) => /^---\n([\s\S]*?)\n?---\n([\s\S]*)$/.exec(md);
+var splitFront = (md) => /^---\n([\s\S]*?)\n?---\n([\s\S]*)$/.exec(md.replaceAll("\r\n", "\n"));
 function runDirOf(root4, run) {
   const playtests2 = resolve(root4, ".jeyna", "playtests");
   const dir = resolve(playtests2, run);

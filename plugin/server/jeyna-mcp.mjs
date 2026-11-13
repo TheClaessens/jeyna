@@ -207225,7 +207225,7 @@ async function launchChrome(open6) {
 // src/shared.ts
 import { existsSync as existsSync2 } from "node:fs";
 import { dirname, join as join2, resolve } from "node:path";
-var splitFront = (md) => /^---\n([\s\S]*?)\n?---\n([\s\S]*)$/.exec(md);
+var splitFront = (md) => /^---\n([\s\S]*?)\n?---\n([\s\S]*)$/.exec(md.replaceAll("\r\n", "\n"));
 var duplicateNames = (items) => {
   const names = items.map((s) => s.name);
   return [...new Set(names.filter((n, i) => names.indexOf(n) !== i))];
@@ -207560,10 +207560,13 @@ ${external_exports.prettifyError(front.error)}`);
   if (!section) throw new Error(`${file2}: no ## Scenarios section.`);
   const scenarios = section.split(/^### /m).slice(1).map((block) => {
     const [name, ...lines] = block.trim().split("\n").map((l) => l.trim());
-    const at = (key) => lines.find((l) => l.startsWith(`${key}:`))?.slice(key.length + 1).trim();
-    const description = lines.filter((l) => l && !/^(Pass|Account):/.test(l)).join(" ");
-    const pass = at("Pass");
-    const account = at("Account");
+    const key = /^(Pass|Account):/;
+    const p = lines.findIndex((l) => l.startsWith("Pass:"));
+    let end = p + 1;
+    if (p >= 0) while (end < lines.length && lines[end] && !key.test(lines[end]) && !lines[end].startsWith("#")) end++;
+    const pass = p < 0 ? void 0 : [lines[p].slice(5), ...lines.slice(p + 1, end)].join(" ").trim();
+    const description = lines.filter((l, i) => l && (i < p || i >= end) && !key.test(l)).join(" ");
+    const account = lines.find((l) => l.startsWith("Account:"))?.slice(8).trim();
     if (!description) throw new Error(`${file2}: scenario "${name}" has no description paragraph.`);
     if (!pass) throw new Error(`${file2}: scenario "${name}" has no Pass: line.`);
     if (account !== void 0 && account !== "none" && account !== "consumes") {
