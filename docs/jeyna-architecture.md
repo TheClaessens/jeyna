@@ -16,9 +16,9 @@ Decision references (Dn) point to `docs/decisions.md`; terms are defined in `GLO
 Started by the plugin as `node ${CLAUDE_PLUGIN_ROOT}/server/jeyna-mcp.mjs --project ${CLAUDE_PROJECT_DIR}`: a committed bundle, no npm on the user's machine (D13). Server key `mcp`, tools exposed as `mcp__plugin_jeyna_mcp__<tool>` (D1).
 - Tool handlers, run family: `get_context`, `get_flow`, `session_start`, `scenario_verdict`, `record_finding`, `update_status` (findings and feedback items), `validate`, `session_finish`, `save_flow`; `get_feedback` (D36).
 - Tool handlers, browser family (every call carries `case`; `scout` is a reserved session-less case for the exploratory look and writes nothing, D6): `goto`, `click`, `fill`, `press`, `snapshot`, `screenshot`. Every text result passes one redaction step that replaces account values with placeholders (D9).
-- zod schema: finding, session, report, config, flow.
+- zod schema: finding, session, config, flow, feedback item. `report.md` has no schema: it is plain markdown rendered from the session and the findings.
 - Session state: held in memory during a run; `session.json` is a copy written through one queue (temp + rename), never read back mid-run (D11).
-- Converter: JSON → markdown (template), markdown → JSON (gray-matter + headings).
+- Converter: JSON → markdown (template + the `yaml` package), markdown → JSON (a `---` regex, `yaml`, headings).
 - Validator: a function called by `validate` and by `session_finish`, which refuses while errors remain (D2). The same bundle also runs it from a shell as `node jeyna-mcp.mjs validate <runDir>`.
 - Playwright: one headless browser (installed Chrome via `channel: "chrome"`, temporary profile; fallback Playwright's Chromium), one BrowserContext per case, own cookies; the tester's account, never shared by two running testers (D10, D13).
 - Secrets: account values are read at `fill` time from the server's environment, else from `.jeyna/.env`; never returned, never written (D18).
@@ -29,15 +29,17 @@ Started by the plugin as `node ${CLAUDE_PLUGIN_ROOT}/server/jeyna-mcp.mjs --proj
 - `.env` — dotenv — account values; gitignored, written by you, never by Claude (D18).
 - `CONVENTIONS.md` — MD — what counts as a finding per kind; returned by `get_context`, put into every tester prompt.
 - `flows/*.md` — MD+YAML — optional; scenarios, `Pass:` and `Account:` lines.
-- `playtests/<run>/session.json` — JSON — status, scope, build, testers, cases, verdicts. Status, not record.
+- `playtests/<run>/session.json` — JSON — status, scope, build, testers, cases, verdicts. Read back by since-last-run, retests and `save_flow`.
 - `playtests/<run>/findings/PT-*.md` — MD+YAML — one file per finding. The record.
-- `playtests/<run>/report.md` — MD+YAML — summary and scenario matrix.
+- `playtests/<run>/report.md` — MD, no frontmatter — summary, counts, scenario matrix, since last run, findings.
+- `playtests/<run>/hooks.log`, `server.log` — TEXT — the exit check's decisions; one line per tool call (D33).
+- `feedback/FB-*.md` + `FB-*.png` — MD+YAML and PNG — feedback items and their captures, written by the studio (D36).
 - `playtests/<run>/evidence/*` — PNG — screenshots; committed or gitignored per project, chosen at init.
 - Committed with the branch; context for every later session.
 
 **Jeyna studio (ships inside the plugin as committed bundles, started by `/jeyna:studio`, D34; writes only feedback items, D36)**
 - Sidecar (Node, `plugin/studio/jeyna-studio.mjs`): `fs.watch` on `.jeyna/` (recursive, its own `index.json` ignored); reads every run with the server's own `src/validate.ts` (same zod schema, same checks) and renders finding bodies with remark; what does not parse goes to the "needs attention" lane with its source, never dropped; keeps a derived `.jeyna/index.json` (gitignored); serves `evidence/` and feedback captures as files; pushes the whole index over SSE after every change. Creates, edits and deletes `.jeyna/feedback/FB-*` through `src/feedback.ts`, only for requests whose Origin is the studio page (D36).
-- UI (TanStack Router, client-rendered, `plugin/studio/app.js`): `/runs/<id>` with the runs rail, counts as filter chips, scenario × viewport matrix, Since last run, the findings table with duplicates folded; `/runs/<id>/findings/<id>` with Steps / Expected / Actual, evidence at natural size, source. Filters live in the URL. `/live` frames `app.url` and captures it with the Screen Capture API; `/feedback` and `/feedback/<id>` list and edit feedback items; a finding's evidence has Give feedback (D36).
+- UI (TanStack Router, client-rendered, `plugin/studio/app.js`): `/runs/<id>` with the runs rail, counts as filter chips, scenario × viewport matrix, Since last run, the findings table with duplicates folded; `/runs/<id>/findings/<id>` with Steps / Expected / Actual, evidence at natural size, source. Filters live in the URL. `/live` launches Jeyna's own headed Chrome window on `app.url`, where an injected overlay snaps and records over CDP (D37); `/feedback` and `/feedback/<id>` list and edit feedback items; a finding's evidence has Give feedback (D36).
 - You, in a browser tab on localhost, reading along during the run.
 
 **Web app under test**: any URL (dev server, staging, preview; in this repo the `sample-app/`, D16). Reached only from inside jeyna-mcp's Playwright contexts over HTTP + CDP. Nothing else touches a browser.
@@ -83,7 +85,7 @@ flowchart LR
 
   subgraph ST["Jeyna studio · reads runs, writes feedback"]
     SC[sidecar · watch, parse, validate, SSE]
-    UI[UI · TanStack Start]
+    UI[UI · TanStack Router]
     B[You · browser tab]
     SC -->|JSON over SSE/HTTP| UI --> B
   end
@@ -131,7 +133,7 @@ flowchart LR
 | Testers → main agent | Agent tool return | TEXT summary (cases, verdicts, finding ids) | the skill |
 | Agents → jeyna-mcp | MCP tool calls, JSON-RPC over stdio | JSON args in; JSON result out, plus image content for `screenshot` only when `look: true` | jeyna-mcp (zod → JSON Schema in the tool definitions) |
 | jeyna-mcp → web app | Playwright, one context per case | HTTP + CDP | n/a |
-| jeyna-mcp → `.jeyna/` | fs write | JSON `session.json` · MD+YAML findings, report, saved flows · PNG evidence | jeyna-mcp (same zod schema, rendered by the converter) |
+| jeyna-mcp → `.jeyna/` | fs write | JSON `session.json` · MD+YAML findings, saved flows · MD report · PNG evidence | jeyna-mcp (same zod schema, rendered by the converter) |
 | `.jeyna/` → jeyna-mcp | fs read | YAML config · MD conventions · MD+YAML flows · dotenv `.env` (values only at `fill` time) | you, by hand (flows also promoted from exploratory runs) |
 | git → jeyna-mcp | exec `git describe --always --dirty` | TEXT | git |
 | `.jeyna/` → main agent | `Read` | MD+YAML findings (for dedupe) | jeyna-mcp |
@@ -147,7 +149,7 @@ flowchart LR
 ## Formats
 
 - **JSON, while moving.** Tool arguments and results, hook payloads and decisions, `session.json`, the derived `index.json`, what the sidecar pushes to the UI. Anything a program produces for another program. The finding schema is defined once in zod and exported as JSON Schema for the MCP tool definitions.
-- **MD+YAML, while resting.** Findings, reports, flows. Frontmatter is the structured half (the same fields as the JSON) and is what the viewer filters and counts on. The body is prose for people and for Claude in later sessions. Run files are written only by the converter, never by an agent.
+- **MD+YAML, while resting.** Findings, flows, feedback items (`report.md` is plain markdown). Frontmatter is the structured half (the same fields as the JSON) and is what the viewer filters and counts on. The body is prose for people and for Claude in later sessions. Run files are written only by the converter, never by an agent.
 - **YAML, configuration.** Only `jeyna.config.yaml`. Written by `/jeyna:init`, then edited by you; read by jeyna-mcp. No secrets, only env variable names.
 - **dotenv, secrets.** Only `.jeyna/.env`, gitignored, filled in by you. Read by jeyna-mcp at `fill` time; Claude cannot write it (write guard) and never sees its values (redaction).
 - **PNG, evidence.** Screenshots go to `evidence/` straight from the Playwright context. Referenced by relative path from the markdown.

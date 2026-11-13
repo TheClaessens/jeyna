@@ -20,6 +20,7 @@ The product is the **file contract**. The plugin (Claude side) and the studio (h
 - `/jeyna:init`: per-project setup of `.jeyna/` (D13).
 - `jeyna validate`: a linter over a run folder, run inside `session_finish` (D2) and from a shell via the bundle. CI use is v1 (D18).
 - A sample web app with seeded bugs to test the loop against: a small todo app behind a login, specified in §5.10 (D16).
+- Added after this draft: the studio (`/jeyna:studio`, D34, D38) ships in the plugin, and Feedback (D36, D37): the developer captures feedback in the studio as `.jeyna/feedback/FB-<nnn>.md` items, which `/jeyna:feedback` and `/jeyna:feedback-next` load through `get_feedback` and close through `update_status`.
 
 ### 1.2 In scope for v1 (designed for, not built in v0)
 
@@ -73,7 +74,7 @@ Numbered so they can be referenced in grill sessions. "Must" is v0; "should" is 
 - F3.0 The server resolves the project root from its `--project` argument (`.mcp.json` passes `${CLAUDE_PROJECT_DIR}`, which the plugin docs say resolves in MCP `args`; D13), else `CLAUDE_PROJECT_DIR` from its environment, else the nearest folder containing `.jeyna/` above its working directory; if neither, `get_context` fails with an explicit message. `get_context` returns the resolved root and the skill shows it in its first message (D7).
 - F3.1 `session_start` creates `playtests/<yyyy-mm-dd>-<slug>[-<n>]/` (slug = flow name, or the exploratory slug; never a colon) and writes `session.json` with status `running`, the build id, the tester list with the account and batch assigned to each tester, and the case list.
 - F3.2 Build id is `app.build` from config if set, otherwise `git describe --always --dirty` in the project root (e.g. `a1b2c3d-dirty` for uncommitted work), otherwise `"unknown"` (D7).
-- F3.3 Starting a session while another is `running` for the same project is refused unless `force: true`; the stale one is marked `aborted`.
+- F3.3 Starting a session while another is `running` for the same project is refused unless `force: true`; the stale one is marked `aborted`. Its case ids are retired for the rest of the server process: a tester of the aborted run that keeps calling is refused and told to stop, and the new run numbers its testers after the retired ones (D39).
 
 ### F4. Tester behaviour
 - F4.1 A tester receives, in its prompt: a first marker line `jeyna-tester-cases: <case ids>`, the scenario text, each case's viewport, the tester's account handle (if any), the flow's preconditions, and the conventions file. It receives no credentials. It runs its cases in order and treats each as a fresh check, not a repeat of the previous viewport.
@@ -88,7 +89,7 @@ Numbered so they can be referenced in grill sessions. "Must" is v0; "should" is 
 ### F5. Browser actions
 - F5.1 All browser tools take `case`. Calls with an unknown case id are refused.
 - F5.2 `goto`, `click`, `fill`, `press`, `snapshot`, `screenshot`. Nothing else in v0 (no `evaluate`, no raw CDP, no clips; D9). `fill` on a `<select>` element calls Playwright's `selectOption` with the value, so dropdowns need no extra tool.
-- F5.3 `snapshot` returns the page's accessibility tree as text (Playwright aria snapshot), truncated at about 90,000 characters (just under Claude Code's default 25,000-token `MAX_MCP_OUTPUT_TOKENS`) with an explicit note "truncated at N characters, the page continues" (D14). This is a correctness guard, not cost control. This is the tester's primary way of reading the page; `screenshot` is for evidence and for visual questions.
+- F5.3 `snapshot` returns the page's accessibility tree as text (Playwright aria snapshot), kept, console tail included, within 90,000 characters with an explicit note "truncated, the page continues"; the tool declares `anthropic/maxResultSizeChars` so Claude Code does not move a result over 50,000 characters to a file (D14, D39). This is a correctness guard, not cost control. This is the tester's primary way of reading the page; `screenshot` is for evidence and for visual questions.
 - F5.4 `fill` accepts the placeholders `{{account.user}}` and `{{account.pass}}`, substituted server-side from the env variables named in config. The server reads each variable from its own environment first, then from `.jeyna/.env` (Node's built-in dotenv parsing; gitignored; filled in by people only) (D18). On the way out, the server replaces every configured account value with its placeholder in every text it returns (snapshots, errors, URLs, titles), so a value echoed by the page never reaches the context (D9). Pixels are not redacted: a screenshot may show a username, never a password (password fields render masked).
 - F5.5 `screenshot` always writes `evidence/<case>-<seq>[-<label>].png` and returns the file name. It returns the image too only when `look: true` (default `false`); the tool description says to look when the question is visual (layout, overlap, cut-off text) and to use `snapshot` otherwise. Full page is an option; viewport is the default (D3).
 - F5.6 Selectors are Playwright selectors. The tool description teaches the three that matter: `role=button[name="Sign in"]`, `text=Forgot password`, CSS.
@@ -101,7 +102,7 @@ Numbered so they can be referenced in grill sessions. "Must" is v0; "should" is 
 - F6.5 The server holds the session in memory as the only source of truth during a run. Every change updates memory, then writes the whole `session.json` through one write queue (temp file + rename). The server never reads `session.json` back during a run, so parallel verdicts cannot overwrite each other (D11).
 
 ### F7. Verdicts and report
-- F7.1 `scenario_verdict` records `{case, result, note?, findings[]}` into `session.json`. Testers own verdicts; the server checks them (D8): `fail` needs at least one finding id belonging to that case; `blocked` and `skipped` need a `note`; `pass` may list findings.
+- F7.1 `scenario_verdict` records `{case, result, note?, findings[]}` into `session.json`. Testers own verdicts; the server checks them (D8): `fail` needs at least one finding id recorded by a case of the same tester (so a problem seen at two viewports is recorded once and cited at both, D39); `blocked` and `skipped` need a `note`; `pass` may list findings.
 - F7.2 After all testers return, the main agent calls `validate` and resolves every error. `session_finish` runs the same checks itself and refuses, returning the error list, while any remain (D2). This is the one gate where a run ends, and it does not depend on hooks.
 - F7.3 `session_finish` writes `report.md` from `session.json` and the findings (summary counts, scenario matrix, finding list sorted by severity then kind; no ranking), sets status `done`, and closes all browser contexts.
 - F7.4 Dedupe is the main agent's job, not the server's (D12). It reads the findings with `Read` and marks a duplicate with status `duplicate` and `of: PT-…`; the server never deletes files.
@@ -112,7 +113,7 @@ Numbered so they can be referenced in grill sessions. "Must" is v0; "should" is 
 - F8.3 The same checks run as the viewer's read-time validation.
 
 ### F9. Hooks
-- F9.1 PreToolUse on `Write|Edit|NotebookEdit`: deny when `tool_input.file_path` is under `.jeyna/playtests/` or is `.jeyna/.env` (D18). Message explains to use `record_finding`. `Bash` is not guarded: testers do not have it, and a main-agent shell write is accepted risk.
+- F9.1 PreToolUse on `Write|Edit|NotebookEdit`: deny when `tool_input.file_path` is under `.jeyna/playtests/` or `.jeyna/feedback/` (D36), or is `.jeyna/.env` (D18). Message explains to use `record_finding` (or `update_status`). `Bash` is not guarded: testers do not have it, and a main-agent shell write is accepted risk.
 - F9.2 Exit hooks check only the work of the agent that is stopping, never the whole run (D2). A whole-run check at a tester's exit fails on other testers' missing verdicts, which that tester cannot fix.
   - SubagentStop, matcher `^jeyna:jeyna-tester$`: block if any of this tester's cases has no verdict in the active run. The case ids come from the marker line `jeyna-tester-cases: <ids>` that opens every tester prompt, read from `agent_transcript_path`.
   - It allows the stop when `stop_hook_active` is true, so it blocks at most once. It is a no-op when no run is `running`.
@@ -121,7 +122,7 @@ Numbered so they can be referenced in grill sessions. "Must" is v0; "should" is 
 ### F11. Install and setup (D13)
 - F11.1 Per developer, once: `/plugin marketplace add <owner>/jeyna` and `/plugin install jeyna`. The Jeyna GitHub repo is the plugin marketplace; no npm publish. The plugin folder contains `server/jeyna-mcp.mjs`, an esbuild bundle of the server with its dependencies, built and committed per release. No npm command, build or download on the developer's machine; Node ≥ 20 only.
 - F11.2 If `playwright-core` cannot be bundled (unverified; first slice), it stays external and the server installs it once into `${CLAUDE_PLUGIN_DATA}` on first start. Still no developer command, nothing in the project's dependencies.
-- F11.3 Browser: Playwright launches the installed Google Chrome (`channel: "chrome"`) with a temporary profile; the developer's own Chrome profile, cookies and tabs are never used. If Chrome is missing, `get_context` fails with one line: run `npx playwright install chromium`, after which the server uses that browser.
+- F11.3 Browser: Playwright launches the installed Google Chrome (`channel: "chrome"`) with a temporary profile; the developer's own Chrome profile, cookies and tabs are never used. If Chrome is missing, `session_start` launches the browser before it creates or aborts any run and refuses with one line: run `npx playwright install chromium`, after which the server uses that browser (D39).
 - F11.4 Per project, once: `/jeyna:init`. It inspects the project (dev script, port), asks for the app URL and the env variable names of test accounts, writes `.jeyna/jeyna.config.yaml`, `.jeyna/CONVENTIONS.md` and `.jeyna/.env` (empty entries for the account variables, gitignored, D18) from templates in the plugin, asks the evidence git policy and writes the matching `.gitignore` line (§7 Q10), optionally writes `.claude/settings.json` naming the marketplace and enabling the plugin for teammates, and ends by calling `get_context` to validate the config. No new MCP tool: config and conventions are hand-edited files, not run files.
 - F11.5 No skill, agent or hook is copied into the project; the plugin namespace is the distribution.
 
@@ -137,7 +138,7 @@ Numbered so they can be referenced in grill sessions. "Must" is v0; "should" is 
 - **N1 Determinism of shape.** No agent ever formats a run file. Enforced by F4.2, F9.1 and the server being the only writer.
 - **N2 Secrets.** No credential appears in markdown, JSON, tool results or agent context. Enforced by F5.4 and config holding env variable *names* only.
 - **N3 Isolation.** Testers cannot affect each other: separate browser contexts (cookies, storage), and no account is used by two testers at the same time (D10). A tester's own cases share its account, in sequence.
-- **N4 Durability.** Everything a later session needs is in markdown and PNG on disk, committed with the branch. `session.json` and the viewer's index are not part of the record.
+- **N4 Durability.** Everything a later session needs is in markdown and PNG on disk, committed with the branch. `session.json` is part of the record too: since-last-run, retests and `save_flow` read old ones. The studio's index is not.
 - **N5 Cost visibility.** No limits: no token budget, no time target, no per-case call cap (D14). The skill reports elapsed time and tester count in its final message; token cost is visible in the developer's own Claude Code usage.
 - **N6 Portability of the contract.** Nothing in the files depends on Claude Code. Cowork must be able to drive the same server; because `session_finish` refuses an invalid run (F7.2), Cowork needs no special fallback, only the missing per-tester exit check.
 - **N7 Evidence size.** PNGs at viewport size by default. Git policy for `evidence/` is a per-project choice documented in the README (commit on branch, or gitignore).
@@ -152,8 +153,8 @@ Numbered so they can be referenced in grill sessions. "Must" is v0; "should" is 
 |---|---|---|
 | Language | TypeScript, Node ≥ 20, ESM | One language across server, CLI and viewer; the schema module is shared as code. |
 | Schema | zod v4, `z.toJSONSchema` for tool definitions | One definition, three readers. |
-| Markdown write | string template + gray-matter for frontmatter | No AST needed to write; trivially testable. |
-| Markdown read | gray-matter + heading regex (server, CLI); remark or TanStack Markdown in the viewer only | Server never needs a body AST. |
+| Markdown write | string template + the `yaml` package for frontmatter | No AST needed to write; trivially testable. |
+| Markdown read | a `---` regex + `yaml` + heading regex (server, CLI); remark in the studio only | Server never needs a body AST. |
 | MCP | `@modelcontextprotocol/sdk`, stdio | Standard; one process per session. |
 | Browser | Playwright library, headless Chromium | Contexts give isolation; aria snapshot gives a text view. |
 | Config | YAML (`yaml` package) | Hand-edited by developers. |
@@ -179,7 +180,7 @@ Numbered so they can be referenced in grill sessions. "Must" is v0; "should" is 
 | evidence | string[] | default [] | file names under `evidence/` |
 | next | string | no | suggested next step |
 
-**Finding frontmatter** (server-added fields in bold): schema, **id**, kind, severity, **status** (`open | duplicate | wontfix | fixed`), **of?**, **flow**, **case**, **scenario**, route, **viewport**, **browser**, **build**, **author** (the tester's model id, D15), **created**, evidence. Scenario and viewport are copied from the case, so a tester cannot get them wrong (D4).
+**Finding frontmatter** (server-added fields in bold): schema, **id**, kind, severity, **status** (`open | duplicate | wontfix | fixed`), **of?**, **flow**, **case**, **scenario**, route, **viewport**, **browser**, **build**, **author** (the config's `tester.model`, a model alias such as `sonnet`, D15), **created**, evidence. Scenario and viewport are copied from the case, so a tester cannot get them wrong (D4).
 
 **Session** (`session.json`): schema, id, flow (name, or `exploratory:<slug>`), app, build, status (running | done | aborted), started, finished?, mode (guided | exploratory), entry, scenarios[{name, description, pass, account?: none | consumes}], testers[{id, scenario, account?, batch, model, cases[]}], cases[{id, scenario, viewport}], verdicts[{case, result, note?, findings[]}], summary?.
 
@@ -217,10 +218,14 @@ Pass: the new password works, the old one is refused.
 .jeyna/
 ├─ jeyna.config.yaml
 ├─ CONVENTIONS.md
+├─ .env                                   # account values, gitignored (D18)
 ├─ flows/<name>.md
+├─ feedback/FB-<nnn>.md, FB-<nnn>[-<nn>].png   # feedback items and their captures (D36)
 └─ playtests/<yyyy-mm-dd>-<slug>[-<n>]/
    ├─ session.json
    ├─ report.md
+   ├─ hooks.log                          # the tester exit check's decisions (P6)
+   ├─ server.log                         # one line per tool call while the run runs (D33)
    ├─ findings/PT-<slug>-<nnn>.md
    └─ evidence/<case>-<seq>[-label].png
 ```
@@ -233,13 +238,14 @@ Run family:
 
 | tool | input | output |
 |---|---|---|
-| `get_context` | — | project root, config (env variable names only), `secrets`: per account variable `env` \| `.env` \| `missing`, never the value (D18, D21), conventions text, flows with their scenario names, active session if any |
+| `get_context` | — | project root, config (env variable names only), `secrets`: per account variable `env` \| `.env` \| `missing`, never the value (D18, D21), conventions text, flows with their scenario names |
 | `get_flow` | `{name}` | flow frontmatter + body + parsed scenario list |
-| `session_start` | `{flow?, scenarios?: [{name, description, pass, account?}], slug?, entry?, only?: string[], viewports?: string[], force?}` | session id, run dir, testers[{id, scenario, account handle?, batch, cases[{id, viewport}]}]. Either `flow` (guided) or an explicit `scenarios` list (exploratory) is required; `slug` and `entry` are for exploratory runs (D29). Closes the scout. Runs `app.reset` first, if set; a failure refuses the run (D31). |
+| `session_start` | `{flow?, scenarios?: [{name, description, pass, account?}], slug?, entry?, only?: string[], viewports?: string[], accounts?: string[], force?}` | session id, run dir, testers[{id, scenario, account handle?, batch, cases[{id, viewport}]}]. Either `flow` (guided) or an explicit `scenarios` list (exploratory) is required; `slug`, `entry` and `accounts` (handles to deal from) are for exploratory runs (D29, D39). A guided run's `viewports` must be its flow's (else the configured ones); an exploratory run takes any `<width>x<height>`, so a finding's retest runs at the finding's viewport. Launches the browser first and refuses the run without one (F11.3). Closes the scout. Runs `app.reset` first, if set; a failure refuses the run (D31). After `force`, testers are numbered after the aborted runs' (F3.3). |
 | `save_flow` | `{run, name}` | writes `flows/<name>.md` from that run's `session.json` scenarios and `entry` (F2.4); refuses if the file exists, a bad name, or a scenario that would not read back the same (D29) |
-| `scenario_verdict` | `{case, result, note?, findings?}` | ok; refused if `fail` has no finding of this case, or `blocked`/`skipped` has no note |
+| `scenario_verdict` | `{case, result, note?, findings?}` | ok; `findings` may name any finding of the same tester's cases (its other viewports, D39); refused if `fail` has none, or `blocked`/`skipped` has no note |
 | `record_finding` | `{case, finding: FindingInput}` | `{id, path}`; refused if kind is `bug` with no evidence, or an evidence file does not exist |
-| `update_status` | `{id, status, of?, note?, run?}` | ok; `of` required when status is `duplicate`. Looks in `run` if given, else the current run; with no run running and the id in several runs, refused with their ids (D30) |
+| `update_status` | `{id, status, of?, note?, run?}` | ok; `id` and `of` must look like `PT-<flow>-<nnn>`, or `id` like `FB-<nnn>` for a feedback item (`open \| processed \| done \| wontfix`, D36). `of` required when status is `duplicate`. Looks in `run` if given, else the current run; with no run running and the id in several runs, refused with their ids (D30). The note is redacted before it is written; a feedback item keeps its note until a new one is given, and going back to `open` clears it (D39) |
+| `get_feedback` | `{id?, next?}` | no arguments: the items still to do (open, processed) and the broken ones, one line each; `id` or `next`: that item (or the oldest open one) in full, its frames as images, and for feedback on evidence the finding and the whole evidence image (D36, D37) |
 | `validate` | `{run?}` | `{errors: string[]}`; `run` is a run id under `.jeyna/playtests/`, anything outside is refused (D30) |
 | `session_finish` | `{summary}` | `{reportPath, counts, since, elapsedSeconds, testers}` (elapsed since `session_start`, N5; `since` compares verdicts with the latest done run of the same flow, D31), or a tool error listing validation errors (run stays `running`) |
 
@@ -251,7 +257,7 @@ Browser family (all `{case, …}`; `case: "scout"` is reserved for the pre-sessi
 | `click` | `{selector}` | ok, or error with nearest candidates |
 | `fill` | `{selector, value}` | ok; placeholders substituted; `<select>` handled via `selectOption` |
 | `press` | `{key}` | ok |
-| `snapshot` | — | aria snapshot text, truncated with a note above ~90k characters, ending with the console events since the case's last call (D31) |
+| `snapshot` | — | aria snapshot text, ending with the console events since the case's last call (D31); the whole result stays within 90,000 characters, the page text cut with a note, and the tool declares `anthropic/maxResultSizeChars` (D39) |
 | `screenshot` | `{label?, fullPage?, look?}` | file name; plus image content when `look: true` |
 
 Errors are returned as tool errors with actionable text (what exists, what was expected), never as thrown exceptions that kill the server.
@@ -271,14 +277,19 @@ plugin/
 ├─ .claude-plugin/plugin.json
 ├─ .mcp.json                      # server key `mcp`: node ${CLAUDE_PLUGIN_ROOT}/server/jeyna-mcp.mjs --project ${CLAUDE_PROJECT_DIR}
 ├─ server/jeyna-mcp.mjs           # committed esbuild bundle (D13); also `validate` subcommand
+├─ studio/                        # committed studio bundle: sidecar, UI, Live overlay (D34, D37)
 ├─ templates/                     # jeyna.config.yaml, CONVENTIONS.md for /jeyna:init
 ├─ skills/init/SKILL.md           # invoked as /jeyna:init; disable-model-invocation: true
 ├─ skills/playtest/SKILL.md       # invoked as /jeyna:playtest; disable-model-invocation: true
+├─ skills/studio/SKILL.md         # /jeyna:studio starts the studio (D34)
+├─ skills/feedback/SKILL.md       # /jeyna:feedback [FB-<nnn>] (D36)
+├─ skills/feedback-next/SKILL.md  # /jeyna:feedback-next: the oldest open item (D36)
 ├─ agents/jeyna-tester.md         # tools: 8 exact names (D1, D9); one per scenario (D4); model: sonnet, effort: medium (D15)
 └─ hooks/
    ├─ hooks.json
-   ├─ guard-write.sh
-   └─ check-exit.sh               # SubagentStop: tester recorded a verdict for each case
+   ├─ guard-write.sh              # PreToolUse: no Write/Edit under playtests/, feedback/, or .env
+   ├─ check-exit.sh               # SubagentStop: tester recorded a verdict for each case
+   └─ watch/                      # Jeyna's Watch, the band above the prompt during a run (D35)
 ```
 
 ### 5.8 Skill procedure (`SKILL.md` outline)
@@ -385,7 +396,7 @@ These are the places where the design is a guess and a Claude Code session can d
 | Hook semantics differ from assumption | Guard or exit check silently inert | Verified against docs (D1, D2); `agent_type` string and transcript marker checked in the first slice; acceptance criteria 4, 5b verify. Shape rules live in the server, so an inert hook loses only the verdict nudge. |
 | Playwright selectors flaky for the model | Many "element not found" turns | `click` error returns nearest candidates from the aria tree. |
 | Account collisions | Single-session apps log a tester out mid-scenario; lockout scenarios poison others | Account per tester, never shared concurrently; `Account: consumes` runs last (D10). |
-| Server crash mid-run | Lost run state | `session.json` is written (atomically, temp + rename) on every change; `validate` reports a `running` session with no finish as stale; `force` recovers. |
+| Server crash mid-run | Lost run state | `session.json` is written (atomically, temp + rename) on every change; the next `session_start` refuses while a run is `running` and `force` recovers it (`validate` does not report a running run as stale: `session_finish` runs the same checks on it, D27). |
 
 ---
 

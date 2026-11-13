@@ -14,7 +14,7 @@ The one glossary for Jeyna. Use these words in docs, code, issues and agent prom
 - **Flow**: a named set of scenarios for one area of the app, in `flows/<name>.md`. Usually first written by the loop at the end of an exploratory run (`save_flow`), then edited by people.
 - **Scenario**: one named path through a flow, with a description, a `Pass:` line and an optional `Account:` line (`none` or `consumes`).
 - **Reset**: the `app.reset` shell command in `jeyna.config.yaml`, run by `session_start` from the project root before every run so each run starts from the same app state. A failing command refuses the run. (D31)
-- **Retest**: a run of one finding's scenario at its viewport, started by `/jeyna:playtest PT-<slug>-<nnn>`. A `pass` marks the finding `fixed`. (D31)
+- **Retest**: an exploratory run that plays one finding: its Steps, judged against its Expected, at its viewport, with the account its tester had; started by `/jeyna:playtest PT-<slug>-<nnn>`. A `pass` marks the finding `fixed`. (D31, D32, D39)
 - **Slug**: the flow name or exploratory slug used in the run folder and finding ids. It never contains a colon. (D7)
 
 ## Who does the work
