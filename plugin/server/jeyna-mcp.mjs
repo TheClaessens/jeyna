@@ -207033,7 +207033,7 @@ var StdioServerTransport2 = class {
 var import_yaml6 = __toESM2(require_dist2(), 1);
 import { appendFileSync, existsSync as existsSync9, readFileSync as readFileSync7, statSync } from "node:fs";
 import { join as join10 } from "node:path";
-import { parseArgs, parseEnv as parseEnv2 } from "node:util";
+import { parseArgs } from "node:util";
 
 // src/schema.ts
 var envName = external_exports.string().regex(/^[A-Za-z_][A-Za-z0-9_]*$/, "must be an environment variable name, not a value");
@@ -207117,17 +207117,26 @@ var _android = import_index2.default._android;
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { parseEnv } from "node:util";
-function accountValues(root, config2) {
+function readSecrets(root) {
   const file2 = join(root, ".jeyna", ".env");
   const dotenv3 = existsSync(file2) ? parseEnv(readFileSync(file2, "utf8")) : {};
-  const get = (n) => process.env[n] || dotenv3[n] || void 0;
-  return config2.accounts.map((a) => ({ handle: a.handle, user: get(a.user_env), pass: get(a.pass_env) }));
+  return (n) => process.env[n] ? { from: "env", value: process.env[n] } : dotenv3[n] ? { from: ".env", value: dotenv3[n] } : { from: "missing" };
 }
-function substitute(value2, account, caseId) {
-  if (!/\{\{account\.(user|pass)\}\}/.test(value2)) return value2;
+function accountValues(root, config2) {
+  const get = readSecrets(root);
+  return config2.accounts.map((a) => ({ ...a, user: get(a.user_env).value, pass: get(a.pass_env).value }));
+}
+function substitute(text2, account, caseId) {
+  if (!/\{\{account\.(user|pass)\}\}/.test(text2)) return text2;
   if (!account) throw new Error(`Case ${caseId} has no account (its scenario is \`Account: none\`), so {{account.*}} cannot be filled.`);
-  if (!account.user || !account.pass) throw new Error(`account ${account.handle} not configured`);
-  return value2.replaceAll("{{account.user}}", account.user).replaceAll("{{account.pass}}", account.pass);
+  for (const k of ["user", "pass"]) {
+    if (text2.includes(`{{account.${k}}}`) && !account[k]) {
+      throw new Error(
+        `{{account.${k}}} cannot be filled: ${account[`${k}_env`]} (account ${account.handle}) is not set. The developer fills it in .jeyna/.env, or exports it in the shell before starting claude; until then this account cannot sign in.`
+      );
+    }
+  }
+  return text2.replaceAll("{{account.user}}", account.user ?? "").replaceAll("{{account.pass}}", account.pass ?? "");
 }
 var escape2 = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 var TOKEN = "[\\p{L}\\p{N}_%+@.-]";
@@ -207311,6 +207320,16 @@ function listen(caseId, pg) {
   pg.on("console", (m) => m.type() === "error" && !NOISE.test(m.text()) && note(caseId, `console error: ${m.text()}`));
   pg.on("requestfailed", (r) => !favicon(r.url()) && note(caseId, `${r.method()} ${r.url()} failed: ${r.failure()?.errorText ?? "unknown"}`));
   pg.on("response", (r) => r.status() >= 400 && !favicon(r.url()) && note(caseId, `${r.request().method()} ${r.url()} ${r.status()}`));
+  pg.on("dialog", (d) => {
+    note(caseId, `${d.type()} dialog accepted: ${d.message()}`);
+    d.accept(d.defaultValue()).catch(() => {
+    });
+  });
+  pg.on("popup", (tab2) => {
+    note(caseId, `new tab opened at ${tab2.url()} and closed, not followed; goto that url to open it in this case's page`);
+    tab2.close().catch(() => {
+    });
+  });
 }
 async function browserName() {
   try {
@@ -207396,6 +207415,17 @@ function registerBrowserTools(server3, getContext2, redact2) {
     }
   );
   const selector = external_exports.string().describe('Playwright selector, e.g. role=button[name="Sign in"], #email, text=Forgot password?');
+  const withAccount = (text2, c, root, config2) => {
+    if (!/\{\{account\./.test(text2)) return text2;
+    const handle = c === SCOUT ? config2.accounts[0]?.handle : current?.session.testers.find((t) => t.cases.includes(c))?.account;
+    if (c === SCOUT && !handle) throw new Error("jeyna.config.yaml lists no accounts, so scout cannot sign in.");
+    return substitute(text2, accountValues(root, config2).find((x) => x.handle === handle), c);
+  };
+  const sameRun = (c, run) => {
+    if (c !== SCOUT && (current !== run || run?.session.status !== "running")) {
+      throw new Error("The run ended or was replaced while this call waited for the browser; nothing was done. Case ids come from the current run's session_start result.");
+    }
+  };
   server3.registerTool(
     "click",
     {
@@ -207404,11 +207434,18 @@ function registerBrowserTools(server3, getContext2, redact2) {
     },
     async (a) => {
       try {
-        const p = await page(a.case, getContext2().config);
+        const run = current;
+        const { root, config: config2 } = getContext2();
+        const p = await page(a.case, config2);
+        sameRun(a.case, run);
+        const target = withAccount(a.selector, a.case, root, config2);
         try {
-          await p.locator(a.selector).click({ timeout: ACT_TIMEOUT });
+          await p.locator(target).click({ timeout: ACT_TIMEOUT });
         } catch (e) {
-          const near = nearest(a.selector, await p.locator("body").ariaSnapshot().catch(() => ""));
+          const aria = await p.locator("body").ariaSnapshot().catch(() => void 0);
+          if (p.isClosed()) throw new Error(`Could not click ${a.selector}: the page was closed (its tab or window shut). The next call opens a new, empty page: goto the page again.`);
+          if (p.url() === "about:blank") throw new Error(`Could not click ${a.selector}: this case's page is empty (about:blank): it was never opened, or it was closed and replaced. goto a page first.`);
+          const near = nearest(a.selector, aria ?? "");
           throw new Error(
             `Could not click ${a.selector}: ${e.message.split("\n")[0]}
 ` + (near.length ? `Nearest candidates:
@@ -207429,12 +207466,12 @@ ${near.map((n) => `- ${n}`).join("\n")}` : "The page has no clickable controls."
     },
     async (a) => {
       try {
+        const run = current;
         const { root, config: config2 } = getContext2();
         const p = await page(a.case, config2);
-        const handle = a.case === SCOUT ? config2.accounts[0]?.handle : current.session.testers.find((t) => t.cases.includes(a.case))?.account;
-        if (a.case === SCOUT && !handle && /\{\{account\./.test(a.value)) throw new Error("jeyna.config.yaml lists no accounts, so scout cannot sign in.");
-        const value2 = substitute(a.value, accountValues(root, config2).find((x) => x.handle === handle), a.case);
-        const el = p.locator(a.selector);
+        sameRun(a.case, run);
+        const value2 = withAccount(a.value, a.case, root, config2);
+        const el = p.locator(withAccount(a.selector, a.case, root, config2));
         const tag = await el.evaluate((e) => e.tagName, void 0, { timeout: ACT_TIMEOUT });
         if (tag === "SELECT") await el.selectOption(value2, { timeout: ACT_TIMEOUT });
         else await el.fill(value2, { timeout: ACT_TIMEOUT });
@@ -208458,10 +208495,9 @@ ${external_exports.prettifyError(parsed.error)}`);
   return { root, config: parsed.data, secrets: secretSources(root, parsed.data) };
 }
 function secretSources(root, config2) {
-  const file2 = join10(root, ".jeyna", ".env");
-  const dotenv3 = existsSync9(file2) ? parseEnv2(readFileSync7(file2, "utf8")) : {};
+  const read = readSecrets(root);
   const names = config2.accounts.flatMap((a) => [a.user_env, a.pass_env]);
-  return Object.fromEntries(names.map((n) => [n, process.env[n] ? "env" : dotenv3[n] ? ".env" : "missing"]));
+  return Object.fromEntries(names.map((n) => [n, read(n).from]));
 }
 var cached2;
 var envOf = (names) => JSON.stringify(names.map((n) => process.env[n] ?? null));

@@ -2,13 +2,13 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { appendFileSync, existsSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
-import { parseArgs, parseEnv } from "node:util";
+import { parseArgs } from "node:util";
 import { parse } from "yaml";
 import { z } from "zod";
 import { Config } from "./schema.js";
 import { current, registerSessionTools } from "./session.js";
 import { registerBrowserTools } from "./browser.js";
-import { accountValues, redactDeep, redactor } from "./accounts.js";
+import { accountValues, readSecrets, redactDeep, redactor } from "./accounts.js";
 import { registerFindingTools } from "./findings.js";
 import { registerFinishTools, validateCli } from "./finish.js";
 import { listFlows, registerFlowTools } from "./flows.js";
@@ -42,10 +42,9 @@ function getContext() {
 
 // Where each account variable is set: shell env first, then .jeyna/.env. Never the value (D18, P3).
 function secretSources(root: string, config: Config): Record<string, "env" | ".env" | "missing"> {
-  const file = join(root, ".jeyna", ".env");
-  const dotenv = existsSync(file) ? parseEnv(readFileSync(file, "utf8")) : {};
+  const read = readSecrets(root);
   const names = config.accounts.flatMap((a) => [a.user_env, a.pass_env]);
-  return Object.fromEntries(names.map((n) => [n, process.env[n] ? "env" : dotenv[n] ? ".env" : "missing"]));
+  return Object.fromEntries(names.map((n) => [n, read(n).from]));
 }
 
 // The account-value redactor (D9), rebuilt only when what it is built from changes: the config's and

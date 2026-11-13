@@ -1,6 +1,7 @@
 // click, fill, press and redaction (D9), driving the committed bundle over MCP stdio against the sample app.
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { execFileSync } from "node:child_process";
 import { cpSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -51,9 +52,8 @@ async function start(env: Record<string, string> = ENV_A, scenarios = [SIGN_IN])
   for (const k of Object.keys(clean)) if (k.startsWith("JEYNA_USER_")) delete clean[k];
   const client = new Client({ name: "test", version: "0" });
   clients.push(client);
-  await client.connect(
-    new StdioClientTransport({ command: "node", args: [bundle, "--project", root], env: { ...clean, ...env }, stderr: "ignore" }),
-  );
+  const transport = new StdioClientTransport({ command: "node", args: [bundle, "--project", root], env: { ...clean, ...env }, stderr: "ignore" });
+  await client.connect(transport);
   const seen: string[] = []; // every text the server returned, as the transcript would hold it
   const call = async (name: string, args: Record<string, unknown> = {}) => {
     const r = (await client.callTool({ name, arguments: args })) as Result;
@@ -62,7 +62,7 @@ async function start(env: Record<string, string> = ENV_A, scenarios = [SIGN_IN])
   };
   const text = (r: Result) => (r.content[0] as { text: string }).text;
   const run = JSON.parse(text(await call("session_start", { scenarios })));
-  return { root, call, text, seen, run };
+  return { root, call, text, seen, run, pid: transport.pid! };
 }
 
 const SIGN_IN = { name: "Sign in", description: "Sign in from the login page.", pass: "The todo list shows." };
@@ -78,13 +78,69 @@ test("fill substitutes the case's account placeholders server-side and the snaps
   expect(snap).not.toContain(A.user);
 });
 
-test("a missing account variable makes fill fail with 'account <handle> not configured'", async () => {
+test("a missing account variable fails only the fill that uses it, naming the variable and where to set it", async () => {
   const { call, text } = await start({ JEYNA_USER_A_USER: A.user });
   await call("goto", { case: CASE, path: "/login" });
-  const r = await call("fill", { case: CASE, selector: "#email", value: "{{account.user}}" });
+  expect((await call("fill", { case: CASE, selector: "#email", value: "{{account.user}}" })).isError).toBeFalsy();
+  const r = await call("fill", { case: CASE, selector: "input[type=password]", value: "{{account.pass}}" });
   expect(r.isError).toBe(true);
-  expect(text(r)).toBe("account user_a not configured");
+  expect(text(r)).toMatch(/JEYNA_USER_A_PASS/);
+  expect(text(r)).toMatch(/\.jeyna\/\.env/);
+  expect(text(r)).toMatch(/export/);
 });
+
+const page = (html: string) => "data:text/html," + encodeURIComponent(html);
+
+test("a confirm() is accepted, as a user clicking the button would, and the result's console says so", async () => {
+  const { call, text } = await start();
+  await call("goto", { case: CASE, url: page(`<title>start</title><button onclick="document.title = confirm('Delete this todo?') ? 'confirmed' : 'dismissed'">Delete</button>`) });
+  const r = JSON.parse(text(await call("click", { case: CASE, selector: "text=Delete" })));
+  expect(r.title).toBe("confirmed");
+  expect(r.console).toEqual([expect.stringMatching(/confirm.*accepted.*Delete this todo\?/)]);
+});
+
+// The tab shows up shortly after the click returns (once its first page loads), so in that call's console or the next one's.
+test("a link that opens a new tab is reported in console with its url; the case stays on its page", async () => {
+  const { call, text } = await start();
+  await call("goto", { case: CASE, url: page(`<title>first</title><a target="_blank" href="${APP}/login">Open in new tab</a>`) });
+  const heard = [text(await call("click", { case: CASE, selector: "text=Open in new tab" }))];
+  for (let i = 0; i < 20 && !/new tab/.test(heard.join()); i++, await sleep(100)) heard.push(text(await call("snapshot", { case: CASE })));
+  expect(heard.join()).toMatch(new RegExp(`new tab opened at ${APP}/login.*goto`));
+  const after = text(await call("snapshot", { case: CASE }));
+  expect(after).toMatch(/link "Open in new tab"/);
+});
+
+test("{{account.user}} in a click or fill selector matches the control the snapshot shows under that name", async () => {
+  const { call, text } = await start();
+  await call("goto", { case: CASE, url: page(`<title>t</title><button onclick="document.title='menu open'">${A.user}</button><input aria-label="${A.user}">`) });
+  expect(text(await call("snapshot", { case: CASE }))).toMatch(/button "\{\{account\.user\}\}"/);
+  const clicked = await call("click", { case: CASE, selector: 'role=button[name="{{account.user}}"]' });
+  expect(clicked.isError, text(clicked)).toBeFalsy();
+  expect(JSON.parse(text(clicked)).title).toBe("menu open");
+  const filled = await call("fill", { case: CASE, selector: 'role=textbox[name="{{account.user}}"]', value: "hello" });
+  expect(filled.isError, text(filled)).toBeFalsy();
+});
+
+// The server's browser, found as its child process; killing it closes the page the way a shut window does.
+const killBrowser = (serverPid: number) =>
+  execFileSync("ps", ["-A", "-o", "pid=,ppid=,args="], { encoding: "utf8" })
+    .split("\n")
+    .map((l) => l.trim().split(/\s+/))
+    .filter(([, ppid, ...args]) => Number(ppid) === serverPid && /chrom/i.test(args.join(" ")))
+    .forEach(([pid]) => process.kill(Number(pid), "SIGKILL"));
+
+test("a click whose page closes under it, or that lands on a page never opened, says so, not that it has no controls", async () => {
+  const { call, text, pid } = await start();
+  await call("goto", { case: CASE, path: "/login" });
+  const pending = call("click", { case: CASE, selector: "#missing" });
+  await sleep(500);
+  killBrowser(pid);
+  const closed = await pending;
+  expect(text(closed)).toMatch(/the page was closed.*goto/);
+  const blank = await call("click", { case: CASE, selector: "#missing" }); // the next call opened a new, empty page
+  expect(text(blank)).toMatch(/about:blank.*goto/);
+  for (const r of [closed, blank]) expect(text(r)).not.toMatch(/no clickable controls/);
+}, 30_000);
 
 test("fill on a <select> chooses the option by label", async () => {
   const { call, text } = await start();
@@ -210,6 +266,20 @@ test("record_finding refuses when its run is replaced while it waits for the bro
   expect(r.isError, text(r)).toBe(true);
   expect(text(r)).toMatch(/ended or was replaced while this finding was being recorded; nothing was written/);
   expect(readdirSync(run.runDir)).not.toContain("findings");
+  expect((await restarted).isError).toBeFalsy();
+  await goto;
+}, 30_000);
+
+test("fill refuses, saying the run ended, when its run is replaced while it waits for the browser", async () => {
+  const { call, text } = await start();
+  const goto = call("goto", { case: CASE, path: "/login" }); // starts the browser launch
+  await sleep(30);
+  const filled = call("fill", { case: CASE, selector: "#email", value: "{{account.user}}" }); // waits on the same launch
+  await sleep(30);
+  const restarted = call("session_start", { scenarios: [SIGN_IN], force: true });
+  const r = await filled;
+  expect(r.isError, text(r)).toBe(true);
+  expect(text(r)).toMatch(/run ended or was replaced/);
   expect((await restarted).isError).toBeFalsy();
   await goto;
 }, 30_000);

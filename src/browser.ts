@@ -69,6 +69,17 @@ function listen(caseId: string, pg: Page) {
   pg.on("console", (m) => m.type() === "error" && !NOISE.test(m.text()) && note(caseId, `console error: ${m.text()}`));
   pg.on("requestfailed", (r) => !favicon(r.url()) && note(caseId, `${r.method()} ${r.url()} failed: ${r.failure()?.errorText ?? "unknown"}`));
   pg.on("response", (r) => r.status() >= 400 && !favicon(r.url()) && note(caseId, `${r.request().method()} ${r.url()} ${r.status()}`));
+  // Unhandled, Playwright dismisses every dialog, so a Delete behind confirm() would do nothing. Accept it, as the
+  // user who clicked would, and say so.
+  pg.on("dialog", (d) => {
+    note(caseId, `${d.type()} dialog accepted: ${d.message()}`);
+    d.accept(d.defaultValue()).catch(() => {});
+  });
+  // A case has one page. A tab the app opens is named and closed, not followed (no tab switching yet).
+  pg.on("popup", (tab) => {
+    note(caseId, `new tab opened at ${tab.url()} and closed, not followed; goto that url to open it in this case's page`);
+    tab.close().catch(() => {});
+  });
 }
 
 // "chromium 155.0.8059.41" for findings; "unknown" when no browser was launched.
@@ -181,6 +192,21 @@ export function registerBrowserTools(
 
   const selector = z.string().describe('Playwright selector, e.g. role=button[name="Sign in"], #email, text=Forgot password?');
 
+  // {{account.*}} in a fill value or a selector, filled in with the case's account: its tester's, or the first
+  // pool account for scout. Called after the page await, once sameRun has confirmed the run.
+  const withAccount = (text: string, c: string, root: string, config: Config) => {
+    if (!/\{\{account\./.test(text)) return text;
+    const handle = c === SCOUT ? config.accounts[0]?.handle : current?.session.testers.find((t) => t.cases.includes(c))?.account;
+    if (c === SCOUT && !handle) throw new Error("jeyna.config.yaml lists no accounts, so scout cannot sign in.");
+    return substitute(text, accountValues(root, config).find((x) => x.handle === handle), c);
+  };
+  // After awaiting the page: the run the call started in must still be current and running.
+  const sameRun = (c: string, run: typeof current) => {
+    if (c !== SCOUT && (current !== run || run?.session.status !== "running")) {
+      throw new Error("The run ended or was replaced while this call waited for the browser; nothing was done. Case ids come from the current run's session_start result.");
+    }
+  };
+
   server.registerTool(
     "click",
     {
@@ -190,11 +216,18 @@ export function registerBrowserTools(
     },
     async (a) => {
       try {
-        const p = await page(a.case, getContext().config);
+        const run = current;
+        const { root, config } = getContext();
+        const p = await page(a.case, config);
+        sameRun(a.case, run);
+        const target = withAccount(a.selector, a.case, root, config);
         try {
-          await p.locator(a.selector).click({ timeout: ACT_TIMEOUT });
+          await p.locator(target).click({ timeout: ACT_TIMEOUT });
         } catch (e) {
-          const near = nearest(a.selector, await p.locator("body").ariaSnapshot().catch(() => ""));
+          const aria = await p.locator("body").ariaSnapshot().catch(() => undefined);
+          if (p.isClosed()) throw new Error(`Could not click ${a.selector}: the page was closed (its tab or window shut). The next call opens a new, empty page: goto the page again.`);
+          if (p.url() === "about:blank") throw new Error(`Could not click ${a.selector}: this case's page is empty (about:blank): it was never opened, or it was closed and replaced. goto a page first.`);
+          const near = nearest(a.selector, aria ?? "");
           throw new Error(
             `Could not click ${a.selector}: ${(e as Error).message.split("\n")[0]}\n` +
               (near.length ? `Nearest candidates:\n${near.map((n) => `- ${n}`).join("\n")}` : "The page has no clickable controls."),
@@ -216,12 +249,12 @@ export function registerBrowserTools(
     },
     async (a) => {
       try {
+        const run = current;
         const { root, config } = getContext();
         const p = await page(a.case, config);
-        const handle = a.case === SCOUT ? config.accounts[0]?.handle : current!.session.testers.find((t) => t.cases.includes(a.case))?.account;
-        if (a.case === SCOUT && !handle && /\{\{account\./.test(a.value)) throw new Error("jeyna.config.yaml lists no accounts, so scout cannot sign in.");
-        const value = substitute(a.value, accountValues(root, config).find((x) => x.handle === handle), a.case);
-        const el = p.locator(a.selector);
+        sameRun(a.case, run);
+        const value = withAccount(a.value, a.case, root, config);
+        const el = p.locator(withAccount(a.selector, a.case, root, config));
         const tag = await el.evaluate((e) => e.tagName, undefined, { timeout: ACT_TIMEOUT });
         if (tag === "SELECT") await el.selectOption(value, { timeout: ACT_TIMEOUT });
         else await el.fill(value, { timeout: ACT_TIMEOUT });

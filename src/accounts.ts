@@ -3,22 +3,37 @@ import { join } from "node:path";
 import { parseEnv } from "node:util";
 import type { Config } from "./schema.js";
 
-export type Account = { handle: string; user?: string; pass?: string };
+// An account: its handle, the names of its two variables, and their values when set. Values are never returned.
+export type Account = { handle: string; user_env: string; pass_env: string; user?: string; pass?: string };
 
-// Values are read when needed, from the server's env first, then .jeyna/.env (D18). Never returned.
-export function accountValues(root: string, config: Config): Account[] {
+// The one reader of account variables: the server's env first, then .jeyna/.env (D18).
+// `from` says where a variable is set; its `value` never leaves the server.
+export function readSecrets(root: string): (name: string) => { from: "env" | ".env" | "missing"; value?: string } {
   const file = join(root, ".jeyna", ".env");
   const dotenv = existsSync(file) ? parseEnv(readFileSync(file, "utf8")) : {};
-  const get = (n: string) => process.env[n] || dotenv[n] || undefined;
-  return config.accounts.map((a) => ({ handle: a.handle, user: get(a.user_env), pass: get(a.pass_env) }));
+  return (n) => (process.env[n] ? { from: "env", value: process.env[n] } : dotenv[n] ? { from: ".env", value: dotenv[n] } : { from: "missing" });
 }
 
-// `{{account.user}}` / `{{account.pass}}` in a fill value become the account's values (F5.4).
-export function substitute(value: string, account: Account | undefined, caseId: string): string {
-  if (!/\{\{account\.(user|pass)\}\}/.test(value)) return value;
+// Values are read when needed, never kept.
+export function accountValues(root: string, config: Config): Account[] {
+  const get = readSecrets(root);
+  return config.accounts.map((a) => ({ ...a, user: get(a.user_env).value, pass: get(a.pass_env).value }));
+}
+
+// `{{account.user}}` / `{{account.pass}}` in a fill value or a selector become the account's values (F5.4).
+// Only the placeholders the text uses need their variable set.
+export function substitute(text: string, account: Account | undefined, caseId: string): string {
+  if (!/\{\{account\.(user|pass)\}\}/.test(text)) return text;
   if (!account) throw new Error(`Case ${caseId} has no account (its scenario is \`Account: none\`), so {{account.*}} cannot be filled.`);
-  if (!account.user || !account.pass) throw new Error(`account ${account.handle} not configured`);
-  return value.replaceAll("{{account.user}}", account.user).replaceAll("{{account.pass}}", account.pass);
+  for (const k of ["user", "pass"] as const) {
+    if (text.includes(`{{account.${k}}}`) && !account[k]) {
+      throw new Error(
+        `{{account.${k}}} cannot be filled: ${account[`${k}_env`]} (account ${account.handle}) is not set. ` +
+          "The developer fills it in .jeyna/.env, or exports it in the shell before starting claude; until then this account cannot sign in.",
+      );
+    }
+  }
+  return text.replaceAll("{{account.user}}", account.user ?? "").replaceAll("{{account.pass}}", account.pass ?? "");
 }
 
 const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -32,7 +47,7 @@ const AFTER = `(?=$|(?!${TOKEN})[\\s\\S]|%[0-9A-Fa-f]{2}|\\.(?![\\p{L}\\p{N}]))`
 
 // Every configured value, also URL- and form-encoded, back to its placeholder, ignoring case (D9).
 // Passwords are replaced wherever they appear, even inside a larger token; usernames as whole tokens (D30).
-export function redactor(accounts: Account[]): (text: string) => string {
+export function redactor(accounts: Pick<Account, "handle" | "user" | "pass">[]): (text: string) => string {
   const pairs = accounts.flatMap((a) => [
     [a.user, "{{account.user}}"],
     [a.pass, "{{account.pass}}"], // after the user: a value that is both is treated as a password
