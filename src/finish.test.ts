@@ -249,6 +249,17 @@ test("report.md compares verdicts with the latest done run of the same flow, and
   expect(md).toContain(`## Since last run\n\nCompared with ${firstId}: 2 cases in both runs, 1 changed.\n\n| Scenario | Viewport | Was | Now |\n|---|---|---|---|\n| Sign in | 390x844 | pass | fail |`);
 });
 
+test("the first guided run of a flow saved from an exploratory run compares with that run (#18)", async () => {
+  const s = await started([SIGN_IN]);
+  await s.call("scenario_verdict", { case: "t1-1440x900", result: "pass" });
+  await s.call("scenario_verdict", { case: "t1-390x844", result: "pass" });
+  await s.call("session_finish", { summary: "Exploratory." });
+  expect(s.text(await s.call("save_flow", { run: basename(s.runDir), name: "login" }))).toMatch(/"name":"login"/);
+  const guided = JSON.parse(s.text(await s.call("session_start", { flow: "login" })));
+  for (const c of guided.testers[0].cases) await s.call("scenario_verdict", { case: c.id, result: "pass" });
+  expect(JSON.parse(s.text(await s.call("session_finish", { summary: "Guided." }))).since).toEqual({ run: basename(s.runDir), compared: 2, changed: [] });
+});
+
 test("update_status takes only finding-shaped ids: a path-shaped id or of is refused and nothing outside findings/ changes", async () => {
   const { root, call, text, runDir } = await started();
   mkdirSync(join(root, ".jeyna", "flows"));

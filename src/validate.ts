@@ -119,6 +119,8 @@ export function runs(root: string): string[] {
 }
 
 // The latest done run of the same flow started before this one: the baseline of "Since last run" (D31).
+// An exploratory run's flow exploratory:<name> is the same flow as <name>, which save_flow makes of it (#18).
+const flowOf = (s: Session) => s.flow.replace(/^exploratory:/, "");
 export function previousRun(runDir: string, session: Session): Session | undefined {
   const dir = join(runDir, "..");
   return readdirSync(dir)
@@ -129,7 +131,7 @@ export function previousRun(runDir: string, session: Session): Session | undefin
         return [];
       }
     })
-    .filter((s) => s.flow === session.flow && s.status === "done" && s.started < session.started)
+    .filter((s) => flowOf(s) === flowOf(session) && s.status === "done" && s.started < session.started)
     .sort((a, b) => b.started.localeCompare(a.started))[0];
 }
 

@@ -202689,6 +202689,7 @@ function validateRun(runDir) {
   if (session.status === "done" && !existsSync3(join3(runDir, "report.md"))) errors2.push("report.md: missing, but the run is done");
   return errors2;
 }
+var flowOf = (s) => s.flow.replace(/^exploratory:/, "");
 function previousRun(runDir, session) {
   const dir = join3(runDir, "..");
   return readdirSync2(dir).flatMap((d) => {
@@ -202697,7 +202698,7 @@ function previousRun(runDir, session) {
     } catch {
       return [];
     }
-  }).filter((s) => s.flow === session.flow && s.status === "done" && s.started < session.started).sort((a, b) => b.started.localeCompare(a.started))[0];
+  }).filter((s) => flowOf(s) === flowOf(session) && s.status === "done" && s.started < session.started).sort((a, b) => b.started.localeCompare(a.started))[0];
 }
 function since(session, prev) {
   if (!prev) return void 0;

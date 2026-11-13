@@ -207671,6 +207671,7 @@ function runs(root) {
   };
   return readdirSync(dir).map((d) => join4(dir, d)).filter((d) => started(d)).sort((a, b) => started(b).localeCompare(started(a)));
 }
+var flowOf = (s) => s.flow.replace(/^exploratory:/, "");
 function previousRun(runDir, session) {
   const dir = join4(runDir, "..");
   return readdirSync(dir).flatMap((d) => {
@@ -207679,7 +207680,7 @@ function previousRun(runDir, session) {
     } catch {
       return [];
     }
-  }).filter((s) => s.flow === session.flow && s.status === "done" && s.started < session.started).sort((a, b) => b.started.localeCompare(a.started))[0];
+  }).filter((s) => flowOf(s) === flowOf(session) && s.status === "done" && s.started < session.started).sort((a, b) => b.started.localeCompare(a.started))[0];
 }
 function since(session, prev) {
   if (!prev) return void 0;
