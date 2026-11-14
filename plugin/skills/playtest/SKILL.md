@@ -14,7 +14,7 @@ Rules for the whole run:
 - Read config and flows only through `get_context` and `get_flow`, never with your own file tools.
 - Never write under `.jeyna/playtests/` or to `.jeyna/.env`. The server writes the run; the write guard denies you anyway.
 - Never ask for, read or print an account's username or password.
-- Never read the app's source code, build or git history to decide what to run or what a verdict should be: a run judges the app through the browser, and that is the point. Start the run the request asks for, even when you expect the same result as last time.
+- Never read the app's source code, build or git history to decide what to run or what a verdict should be: a run judges the app only through the browser. Start the run the request asks for, even when you expect the same result as last time.
 
 ## 1. Context
 
@@ -80,7 +80,7 @@ Start only after the developer confirms. If they edit (add, drop or rename scena
 
 ## 2c. Retest a finding
 
-Only when the request is a finding id. The run plays the finding itself: its Steps, judged against its Expected. Not the scenario it was found in: a finding is often something seen on the way (an unlabelled field while signing in to add a todo), and that scenario's `Pass:` line says nothing about it.
+Only when the request is a finding id. The run replays the finding itself, its Steps judged against its Expected, and not the scenario it was found in: a finding is often something seen on the way (an unlabelled field while signing in to add a todo), and that scenario's `Pass:` line says nothing about it.
 
 **Find it.** `Glob` `.jeyna/playtests/*/findings/<id>.md`. None: say so and stop. Several (ids repeat across runs of a flow): take the newest run folder (folder names sort by date) unless the request names a run. `Read` the finding: its frontmatter (`flow`, `scenario`, `viewport`, `status`), the title and the Steps, Expected and Actual sections. Then `Read` that run's `session.json` for `entry`, the `account` of the scenario named in the finding (in `scenarios`), and the account handle of the tester that played it (the `account` of the entry in `testers` whose `scenario` is that name; a tester of an `Account: none` scenario has none). Reading these files is fine; never write them.
 

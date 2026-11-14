@@ -6,9 +6,9 @@ returned an aria snapshot + PNG over MCP stdio. Working files: `scratchpad/exp/b
 
 ## P1 verdict: bundling works, but NOT as a pure single file
 Three problems, each hit for real:
-1. **Build error** — `Could not resolve "chromium-bidi/lib/cjs/bidiMapper/BidiMapper"` (and `.../cdp/CdpConnection`). playwright-core requires them but doesn't depend on them (BiDi protocol only). Fix: mark `chromium-bidi` external. Not needed for Chromium/CDP.
-2. **Runtime crash** — `ReferenceError: __dirname is not defined in ES module scope` (from playwright-core `package.ts`). ESM output has no `__dirname`/`__filename`/`require`. Fix: banner shim.
-3. **Runtime file reads** — playwright-core computes `packageRoot = join(__dirname, "..")` and at import time does `require(join(packageRoot, "package.json"))` (for `.version`) and `require(join(packageRoot, "browsers.json"))` (browser registry). These are dynamic requires esbuild can't inline. Fix: point the shimmed `__dirname` at `<bundle dir>/pw/lib` and ship `pw/package.json` + `pw/browsers.json` copied from `node_modules/playwright-core/`. (The `lib/` dir itself need not exist for launch/goto/screenshot/ariaSnapshot; it's used by codegen, trace viewer, browser download, webp/screencast — none in scope.)
+1. Build error: `Could not resolve "chromium-bidi/lib/cjs/bidiMapper/BidiMapper"` (and `.../cdp/CdpConnection`). playwright-core requires them but doesn't depend on them (BiDi protocol only). Fix: mark `chromium-bidi` external. Not needed for Chromium/CDP.
+2. Runtime crash: `ReferenceError: __dirname is not defined in ES module scope` (from playwright-core `package.ts`). ESM output has no `__dirname`/`__filename`/`require`. Fix: banner shim.
+3. Runtime file reads: playwright-core computes `packageRoot = join(__dirname, "..")` and at import time does `require(join(packageRoot, "package.json"))` (for `.version`) and `require(join(packageRoot, "browsers.json"))` (browser registry). These are dynamic requires esbuild can't inline. Fix: point the shimmed `__dirname` at `<bundle dir>/pw/lib` and ship `pw/package.json` + `pw/browsers.json` copied from `node_modules/playwright-core/`. (The `lib/` dir itself need not exist for launch/goto/screenshot/ariaSnapshot; it's used by codegen, trace viewer, browser download and webp/screencast, none of which is in scope.)
 
 Result: `plugin/server/jeyna-mcp.mjs` (~8.3 MB unminified) + `plugin/server/pw/package.json` + `plugin/server/pw/browsers.json`, all committed. `--minify` shrinks it; keep `keepNames` if stack traces matter.
 
@@ -43,7 +43,7 @@ Notes:
 - Leftover `require("ajv/dist/runtime/...")` strings in the bundle are inside ajv's generated-code strings, not real calls; harmless.
 - Prefixing banner imports (`__cr`, `__f2p`) avoids clashing with bundled identifiers.
 - Run the P1 check exactly like the slice says: copy `plugin/server/` to a temp dir, no node_modules, spawn it via an MCP client (see mcp-server.md) and call a browser tool.
-- Alternative not taken: Claude Code itself runs `npm ci`-style installs for a plugin whose ROOT has `package.json` + `package-lock.json` (registry deps pinned exactly) when it copies the plugin to its cache — but NOT for plugins loaded in place (`--plugin-dir`, marketplace added from a local path). Bundling avoids that split. (Source: plugins/loading.md "Node.js package dependencies".)
+- Alternative not taken: Claude Code itself runs `npm ci`-style installs for a plugin whose ROOT has `package.json` + `package-lock.json` (registry deps pinned exactly) when it copies the plugin to its cache, but NOT for plugins loaded in place (`--plugin-dir`, marketplace added from a local path). Bundling avoids that split. (Source: plugins/loading.md "Node.js package dependencies".)
 
 ## Browsers are never bundled
 playwright-core ships no browser. Options at runtime:
@@ -91,7 +91,7 @@ Launch cost observed ~2.4 s first call (Chrome cold start), contexts are cheap a
 await page.locator("body").ariaSnapshot();                     // YAML-ish string
 await page.ariaSnapshot({ mode: "ai", boxes: true });         // page-level, refs + bounding boxes
 ```
-Options (types.d.ts): `{ mode?: "default"|"ai", boxes?: boolean, depth?: number, timeout?: number, signal? }`. `page.ariaSnapshot()` and `boxes`/`mode` are recent additions — check they exist if the playwright-core version changes.
+Options (types.d.ts): `{ mode?: "default"|"ai", boxes?: boolean, depth?: number, timeout?: number, signal? }`. `page.ariaSnapshot()` and `boxes`/`mode` are recent additions, so check they exist if the playwright-core version changes.
 
 Login page with an unlabelled password field and a Sign in button at `left:500px` in a 390-wide viewport:
 ```
@@ -106,4 +106,4 @@ default:                         mode "ai" + boxes:
 - Bug 3 (unlabelled password) shows in both as a nameless `- textbox`.
 - Bug 2 (off screen): the default snapshot cannot show it (P5's premise holds), BUT `boxes: true` exposes `x=500 >= viewport 390`. Worth noting in decisions: the screenshot isn't the only way to see layout bugs.
 - `mode: "ai"` refs are clickable: `page.locator("aria-ref=e5").click()` worked (useful for slice 2 click/fill). Refs are per-snapshot; re-snapshot after navigation.
-- Playwright's `click()` scrolled the off-screen button into view and clicked it — actionability checks will NOT flag bug 2.
+- Playwright's `click()` scrolled the off-screen button into view and clicked it, so actionability checks will NOT flag bug 2.

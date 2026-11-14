@@ -42,4 +42,4 @@ When you have made the change the developer asked for:
 
 ## 4. The next one
 
-With a queue (a sweep included), once the item is `done` or `wontfix`, or the developer says "next" or "skip", go to step 2 with the next id of the queue. A skipped item stays open and stays behind you. When the queue is empty, say so and stop.
+With a queue (a sweep included), once the item is `done` or `wontfix`, or the developer says "next" or "skip", go to step 2 with the next id of the queue. A skipped item stays open, and the queue does not come back to it. When the queue is empty, say so and stop.

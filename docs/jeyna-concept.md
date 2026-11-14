@@ -1,12 +1,12 @@
-# Jeyna — concept (playtest loop), v0.4, 15 Oct 2026 (after grill session; see decisions.md)
+# Jeyna: concept (playtest loop), v0.4, 15 Oct 2026 (after grill session; see decisions.md)
 
 ## Scope
-One loop only: `/jeyna:playtest <free text>` typed in the developer's own Claude Code session → tester subagents drive the web app in headless browsers → findings recorded through a typed MCP tool → markdown + evidence in `.jeyna/playtests/<run>/` → Jeyna (read-only studio, v1) watches and renders the report. Human feedback capture / ingest is out of scope for now; the contract must not block it later.
+One loop only. The developer types `/jeyna:playtest <free text>` in their own Claude Code session. Tester subagents drive the web app in headless browsers and record findings through a typed MCP tool. Findings land as markdown and evidence in `.jeyna/playtests/<run>/`, and Jeyna (a read-only studio, v1) watches that folder and renders the report. Capturing and ingesting human feedback is out of scope for now, but the contract must not block it later.
 
 ## Principles
 - Claude stays Claude (Claude Code + jeyna plugin). Jeyna never starts or talks to Claude; it infers run status from `session.json` and file events. Progress is quasi-realtime because every finding is a file written immediately.
 - Files are the API; `.jeyna/` is git-tracked and is Claude's context in later sessions. Markdown on disk is the record; JSON exists only in flight (tool calls, viewer push) and in `session.json` (status, not record).
-- Agents supply meaning, code supplies shape: findings enter via `record_finding` with a JSON schema; the server renders markdown from a template. An agent never formats a run file.
+- Agents write the content and code owns the format: findings enter via `record_finding` with a JSON schema; the server renders markdown from a template. An agent never formats a run file.
 - The file contract is the product; plugin and studio are consumers of it.
 - Flow files are optional. With no flow, a run is exploratory: scenarios are derived from the prompt, confirmed by the developer, stored in `session.json`, and can be promoted to `flows/<name>.md` at the end. Flow files are written by the loop and edited by people.
 

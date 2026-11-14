@@ -54,7 +54,7 @@ The one glossary for Jeyna. Use these words in docs, code, issues and agent prom
 ## What the developer sees
 
 - **Jeyna's Watch**: the three-line band above the prompt while a run is live: Claw'd as Jaina, the run's status and tally, every case with its verdict, the run path (the report path once done). Read from `session.json` by a once-a-second tick, never from the agents; gone a minute after the run ends. (D35)
-- **Mod**: a change to Claude Code's own interface shipped by the plugin as a function-hooks module (`plugin/hooks/hooks.json` → `modules`). Jeyna's Watch is the first. (D35)
+- **Mod**: a change to Claude Code's own interface shipped by the plugin as a function-hooks module (listed under `modules` in `plugin/hooks/hooks.json`). Jeyna's Watch is the first. (D35)
 
 ## Rules of the fan-out
 

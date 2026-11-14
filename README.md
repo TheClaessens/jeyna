@@ -43,9 +43,9 @@ Jeyna's features are called abilities. There are two so far.
 
 A few things hold for both:
 
-- **Everything is a file.** Findings and feedback are markdown in `.jeyna/`. You can read them, the studio reads them, and Claude reads them in your next session.
-- **No secrets in prompts.** The config only knows the names of your env variables. The values never show up in a prompt or a finding.
-- **Nothing lands in your project.** No npm package, no dependencies. The plugin is the `plugin/` folder of this repo, that's it.
+- Findings and feedback are markdown files in `.jeyna/`. You can read them, the studio reads them, and Claude reads them in your next session.
+- The config only knows the names of your env variables. Their values never show up in a prompt or a finding.
+- Nothing gets added to your project's dependencies. The plugin is the `plugin/` folder of this repo.
 
 ## What it looks like
 
@@ -226,7 +226,7 @@ Feedback works the other way around: you see something, and you show Claude.
 - <kbd>⌥</kbd><kbd>⇧</kbd><kbd>R</kbd> records an area while you use the app instead.
 - On a finding, **Give feedback** does the same over its screenshot.
 
-Each item lands in `.jeyna/feedback/` with exactly the pixels you selected. `/jeyna:feedback` lists what's open and lets you pick one, a few, or all of them one by one. Claude marks an item as processed once it made the change. Done is always your call.
+Each item lands in `.jeyna/feedback/` with exactly the pixels you selected. `/jeyna:feedback` lists what's open and lets you pick one, a few, or all of them one by one. Claude marks an item processed once it has made the change, and only you mark it done.
 
 ## Config
 

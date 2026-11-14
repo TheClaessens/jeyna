@@ -20,11 +20,11 @@ const columnOf = (i: FeedbackItem): Column =>
 const COLUMNS: { key: Column; title: string; small: string; empty: string; said: string }[] = [
   { key: "todo", title: "To do", small: "newest first", empty: "Nothing to do", said: "Snap or record on Live; what you write lands here for Claude." },
   { key: "processed", title: "Claude did it", small: "check these", empty: "Nothing to check", said: "Items land here once Claude has worked on them. You check each one and mark it done." },
-  { key: "closed", title: "Closed", small: "done or won’t fix", empty: "Nothing closed", said: "Items you mark done, or won’t fix, end up here." },
+  { key: "closed", title: "Closed", small: "done or won't fix", empty: "Nothing closed", said: "Items you mark done, or won't fix, end up here." },
 ];
 const newestFirst = (items: FeedbackItem[]) => [...items].reverse();
 const when = (iso: string) => `${m.day(iso)}, ${m.hm(iso)}`;
-const statusWord = (s: FeedbackStatus) => (s === "wontfix" ? "won’t fix" : s);
+const statusWord = (s: FeedbackStatus) => (s === "wontfix" ? "won't fix" : s);
 
 function Kind({ item, cls }: { item: FeedbackItem; cls: string }) {
   const f = item.front!;
@@ -130,10 +130,10 @@ export function FeedbackListScreen({ index }: { index: StudioIndex }) {
 
 const STEPS = ["To do", "Claude did it", "Done"];
 const EXPLAIN: Record<FeedbackStatus, string> = {
-  open: "Paste it in Claude Code. Claude moves it to “Claude did it”; you check it and mark it done.",
+  open: 'Paste it in Claude Code. Claude moves it to "Claude did it"; you check it and mark it done.',
   processed: "Claude worked on this. Check it in the app, then mark it done; reopen it from ⋯ if it needs another pass.",
   done: "Done. Reopen it if the problem comes back.",
-  wontfix: "Won’t fix. Reopen it to hand it to Claude again.",
+  wontfix: "Won't fix. Reopen it to hand it to Claude again.",
 };
 
 export function FeedbackScreen({ index, item }: { index: StudioIndex; item: FeedbackItem }) {
@@ -187,10 +187,10 @@ export function FeedbackScreen({ index, item }: { index: StudioIndex; item: Feed
         <button type="button" className="btn" aria-label="Previous (k)" aria-disabled={!prev} onClick={() => go(prev)}>↑</button>
         <button type="button" className="btn" aria-label="Next (j)" aria-disabled={!next} onClick={() => go(next)}>↓</button>
         <details className="menu" onClick={(e) => e.target instanceof HTMLButtonElement && e.currentTarget.removeAttribute("open")}>
-          <summary className="btn ghost" aria-label="More: won’t fix, delete, source">⋯</summary>
+          <summary className="btn ghost" aria-label="More: won't fix, delete, source">⋯</summary>
           <div className="pop">
             {fr && fr.status !== "open" && <button type="button" onClick={status("open")}>Reopen</button>}
-            {fr && (fr.status === "open" || fr.status === "processed") && <button type="button" onClick={status("wontfix")}>Won’t fix</button>}
+            {fr && (fr.status === "open" || fr.status === "processed") && <button type="button" onClick={status("wontfix")}>Won't fix</button>}
             <button type="button" onClick={() => setSource(!source)}>{source ? "Hide source" : "View source"}</button>
             <button type="button" className="danger" onClick={remove}>Delete</button>
           </div>
@@ -216,7 +216,7 @@ export function FeedbackScreen({ index, item }: { index: StudioIndex; item: Feed
                   {n > 0 && <span className="bar" />}
                   <span className={n === step ? "on" : ""} aria-current={n === step ? "step" : undefined}>
                     <span className="dot">{n + 1}</span>
-                    {n === 2 && fr.status === "wontfix" ? "Won’t fix" : w}
+                    {n === 2 && fr.status === "wontfix" ? "Won't fix" : w}
                   </span>
                 </span>
               ))}

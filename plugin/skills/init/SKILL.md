@@ -7,7 +7,7 @@ disable-model-invocation: true
 
 Set up `.jeyna/` in `${CLAUDE_PROJECT_DIR}`. Templates are in `${CLAUDE_PLUGIN_ROOT}/templates/`.
 
-Write only the files listed below. Never copy a skill, agent or hook into the project: the plugin is the distribution.
+Write only the files listed below. Never copy a skill, agent or hook into the project; they stay in the plugin.
 
 ## 1. Check
 

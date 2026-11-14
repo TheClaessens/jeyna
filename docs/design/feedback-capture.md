@@ -15,7 +15,7 @@ Every factual claim carries one of these tags:
 
 ## 0. The short answers
 
-**"Do we have to use Chrome's share feature? What about canvas?"** No, and canvas cannot help on its own. A canvas can only read pixels the page is allowed to read: it cannot draw an iframe at all, and a cross-origin app's pixels never reach the studio's JavaScript except through the Screen Capture API. The way out is not a cleverer canvas. It is to stop framing the app: the sidecar opens the app in **its own headed Chrome window** through playwright-core (which Jeyna already needs for playtests). It captures over CDP: real compositor pixels at the screen's device pixel ratio, no permission prompt, no "Sharing this tab" bar and no iframe. This is not the remote desktop D36 rejected. Nothing is streamed or forwarded: the developer uses a real Chrome window directly.
+**"Do we have to use Chrome's share feature? What about canvas?"** No, and canvas cannot help on its own. A canvas can only read pixels the page is allowed to read: it cannot draw an iframe at all, and a cross-origin app's pixels never reach the studio's JavaScript except through the Screen Capture API. The way out is to stop framing the app: the sidecar opens the app in **its own headed Chrome window** through playwright-core (which Jeyna already needs for playtests). It captures over CDP: real compositor pixels at the screen's device pixel ratio, no permission prompt, no "Sharing this tab" bar and no iframe. This is not the remote desktop D36 rejected. Nothing is streamed or forwarded: the developer uses a real Chrome window directly.
 
 **"The modal makes the object small. Keep the full browser experience."** Yes. Select in place, at 1:1, on a frozen frame, like a screenshot tool. Press ⌥⇧S in the app window: the page freezes under a shade, you drag a region (or click an element), and a small panel opens beside the selection for the text. Recording uses the same overlay: pick the region first, record while using the app with a ring and a timer outside the region, then review and annotate in place. Evidence images use the same overlay in a full-window lightbox at 100%.
 
@@ -65,7 +65,7 @@ No prompt, which is good: the evidence PNG is same-origin and the crop is exact 
 
 ### 1.5 What Claude finally receives
 
-`get_feedback` sends each frame as a base64 PNG, unchanged [code]. The API scales an image down when its long edge is over about 1568 px [docs]. A whole-tab 3600×1616 frame becomes about 1568×704: **0.87 image px per CSS px of the app**. Small text sits at the edge of legible, and each frame costs about 1.5k tokens. A 40-frame whole-tab recording is about 60k tokens [docs + arithmetic]. A tight 600×240 crop costs about 200 tokens per frame at full detail. **For Claude, the crop is more than a pointer: it is what keeps the pixels legible and the item affordable.** So the selection has to be easy enough that the developer always makes one.
+`get_feedback` sends each frame as a base64 PNG, unchanged [code]. The API scales an image down when its long edge is over about 1568 px [docs]. A whole-tab 3600×1616 frame becomes about 1568×704: **0.87 image px per CSS px of the app**. Small text sits at the edge of legible, and each frame costs about 1.5k tokens. A 40-frame whole-tab recording is about 60k tokens [docs + arithmetic]. A tight 600×240 crop costs about 200 tokens per frame at full detail. **For Claude, the crop also keeps the pixels legible and the item affordable.** So the selection has to be easy enough that the developer always makes one.
 
 ---
 
@@ -169,7 +169,7 @@ Delete the getDisplayMedia path rather than keep it as a fallback: every Jeyna u
 
 ### 3.1 Principles
 
-1. **Capture where you look.** Select on the real pixels, in place, at 1:1. Never in a thumbnail.
+1. **Capture where you look.** Select on the real pixels, in place, at 1:1, never in a thumbnail.
 2. **Freeze first, think later.** The shortcut grabs the frame *before* any UI appears, so hover states, open menus and toasts survive.
 3. **The selection is the pointer**, and it is also what keeps Claude's pixels sharp (§1.5). Make a tight selection the path of least effort.
 4. **Keyboard-complete.** Every step works without the mouse.
@@ -459,7 +459,7 @@ url: http://localhost:4173/login          # the page's URL at the freeze (live o
 viewport: { width: 1512, height: 860, dpr: 2 }  # CSS px and ratio at the freeze (live only)
 ```
 
-`get_feedback` prints them in its text before the frames. Claude then knows the route and the size it was seen at, not only how it looks. Tighter crops also mean fewer tokens and less downscaling (§1.5).
+`get_feedback` prints them in its text before the frames. With them, Claude also knows the route and the size the page was seen at. Tighter crops also mean fewer tokens and less downscaling (§1.5).
 
 ---
 

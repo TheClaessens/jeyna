@@ -6,7 +6,7 @@ argument-hint: "[port]"
 
 # /jeyna:studio
 
-Start the studio for `${CLAUDE_PROJECT_DIR}` and hand the developer its URL. The studio ships inside the plugin as a committed bundle: no install, no npm.
+Start the studio for `${CLAUDE_PROJECT_DIR}` and hand the developer its URL. The studio ships inside the plugin as a committed bundle, so there is nothing to install.
 
 1. If `${CLAUDE_PROJECT_DIR}/.jeyna/` does not exist, tell the developer to run `/jeyna:init` first, and stop.
 2. Start the sidecar in the background with Bash (port from `$ARGUMENTS`, default 4710):

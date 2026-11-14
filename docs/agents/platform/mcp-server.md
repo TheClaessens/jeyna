@@ -83,7 +83,7 @@ process.on("unhandledRejection", (e) => log("unhandledRejection", e));
 ```
 
 ## Arguments / root resolution
-`process.argv.slice(2)` -> e.g. `["--project", "/abs/sample-app"]` (Claude Code substitutes `${CLAUDE_PROJECT_DIR}` in plugin `args`). Use `node:util` `parseArgs` (stdlib) — no dependency:
+`process.argv.slice(2)` -> e.g. `["--project", "/abs/sample-app"]` (Claude Code substitutes `${CLAUDE_PROJECT_DIR}` in plugin `args`). Use `parseArgs` from `node:util` (stdlib), so there is no dependency:
 ```ts
 import { parseArgs } from "node:util";
 const { values } = parseArgs({ options: { project: { type: "string" } }, strict: false });

@@ -53,14 +53,14 @@ Source: code.claude.com/docs/en/hooks.md (2026-10-15, Claude Code 2.1.299). Tran
 - MCP tool calls also carry `mcp_server: {name, source}` (>=2.1.274).
 - Bash writes (`echo > .jeyna/.env`) are NOT covered by a Write|Edit matcher. Decide explicitly if Bash needs guarding.
 
-## Deny with a message — two ways
+## Deny with a message: two ways
 1. JSON on stdout, exit 0 (preferred; reason goes to Claude):
 ```json
 { "hookSpecificOutput": { "hookEventName": "PreToolUse",
     "permissionDecision": "deny",
     "permissionDecisionReason": "Jeyna: .jeyna/playtests/** is written only by the jeyna MCP server." } }
 ```
-2. `echo "reason" >&2; exit 2` — Claude sees `PreToolUse:Write hook error: [...]: reason`.
+2. `echo "reason" >&2; exit 2`. Claude sees `PreToolUse:Write hook error: [...]: reason`.
 - Exit 1 (or any non-0/2) without valid JSON = non-blocking error, tool RUNS. Never use exit 1 for policy.
 - Print nothing + exit 0 = no opinion (normal permission flow).
 - `permissionDecision` values: allow | deny | ask | defer. Precedence across hooks: deny > defer > ask > allow. deny is honored in every permission mode, including bypassPermissions.
@@ -123,7 +123,7 @@ cases=$(jq -rs '[.[]|select(.type=="user" and (.message.content|type)=="string")
 # ...compare against session.json verdicts; if missing:
 jq -n --arg r "Record scenario_verdict for: $cases" '{decision:"block",reason:$r}'
 ```
-(Paths in docs examples start with `~`; real values are probably absolute — UNVERIFIED, the `${t/#\~/$HOME}` handles both.)
+(Paths in the docs examples start with `~`. Real values are probably absolute, but that is UNVERIFIED; `${t/#\~/$HOME}` handles both.)
 
 ## Transcript JSONL (VERIFIED on 40 real subagent transcripts, v2.1.29x)
 One JSON object per line. Subagent dir: `<session>/subagents/agent-<id>.jsonl` plus `agent-<id>.meta.json` (`{"agentType":"...","description":"...","toolUseId":"..."}`).
@@ -136,6 +136,6 @@ Record shapes:
 {"type":"user","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"toolu_..","content":[...]}]}}
 ```
 - First user prompt = first line with `type=="user"` and `message.content` a STRING (in all 40 samples it was line 1). Later string user records can be `<system-reminder>` injections; tool results are arrays.
-- `jq -r 'select(.type=="user" and (.message.content|type)=="string") | .message.content' | head -1` — but content is multi-line text, so `head -1` takes its first LINE; to get the whole first prompt use `jq -rs '[.[]|select(.type=="user" and (.message.content|type)=="string")][0].message.content'`.
+- `jq -r 'select(.type=="user" and (.message.content|type)=="string") | .message.content' | head -1` is not enough: content is multi-line text, so `head -1` takes its first LINE. To get the whole first prompt use `jq -rs '[.[]|select(.type=="user" and (.message.content|type)=="string")][0].message.content'`.
 - Tool calls by the tester: `select(.type=="assistant") | .message.content[] | select(.type=="tool_use") | {name, input}` (fallback for P7).
 - Format is internal/undocumented; keep the parser tolerant.

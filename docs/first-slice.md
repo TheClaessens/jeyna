@@ -1,10 +1,10 @@
-# Jeyna — first slice: walking skeleton
+# Jeyna's first slice: walking skeleton
 
 **Status:** agreed 2026-10-15 (D19). Nothing is built yet.
 
 ## Goal
 
-Build the thinnest real path through every lane, so that the eight facts the docs could not settle are settled by running code. This is not a feature slice. Its output is **evidence**: each probe below is recorded in `docs/decisions.md` as verified or failed. A failed probe gets a follow-up decision before slice 2 starts.
+Build the thinnest real path through every lane, so that running code settles the eight facts the docs could not. This is not a feature slice. Its output is evidence: each probe below is recorded in `docs/decisions.md` as verified or failed. A failed probe gets a follow-up decision before slice 2 starts.
 
 ## Scope
 
@@ -82,4 +82,4 @@ All other criteria (AC1, 1b, 2, 3, 5, 6, 7) need findings, the report, flows and
 ## Next slices (for orientation, not agreed in detail)
 
 - **Slice 2:** findings path: `record_finding`, converter, `validate`, `session_finish`, `report.md`, `click`/`fill`/`press` with redaction, the full sample app with all six bugs.
-- **Slice 3:** the `playtest` skill end to end, flows, the scout, `save_flow`, dedupe with `update_status`, then AC1–AC8 on the sample app.
+- **Slice 3:** the `playtest` skill end to end, flows, the scout, `save_flow`, dedupe with `update_status`, then AC1 to AC8 on the sample app.
