@@ -4,7 +4,7 @@ The one glossary for Jeyna. Use these words in docs, code, issues and agent prom
 
 ## Abilities
 
-- **Ability**: one of Jeyna's features, to get a World of Warcraft flavoured name. Not necessarily a skill. Playtest is the first, Feedback the second. The studio and Jeyna's Watch are surfaces, not abilities. (D36)
+- **Ability**: one of Jeyna's features. Not necessarily a skill. Playtest is the first, Feedback the second. The studio and Jeyna's Watch are surfaces, not abilities. (D36)
 
 ## The loop
 
@@ -26,7 +26,7 @@ The one glossary for Jeyna. Use these words in docs, code, issues and agent prom
 - **Batch**: a group of testers that run at the same time: at most `tester.parallel` (default 20), and no configured account held by two of them. (D10, D41)
 - **Account**: a test login a tester signs in with, one per tester, never shared by concurrently running testers. Either configured, from the pool in `jeyna.config.yaml` (handle plus environment variable names), or created: made by the `app.new_account` command for one tester alone, handle `new`, its values kept in server memory only. A run that names accounts (a flow's `accounts`, or the `accounts` input) uses configured ones. (D10, D41)
 - **Brief**: what a tester plays, returned by the `brief` tool for one of its cases: app url, entry, its cases and viewports, account, scenario and `Pass:` line, preconditions, what matters most here, conventions. A tester's spawn prompt is only its `jeyna-tester-cases` line and the call to `brief`. (D41)
-- **Persona**: *not supported in v0; required in v1.* Who the tester pretends to be. It changes behaviour, so each persona gets its own tester. (D4)
+- **Persona**: _not supported in v0; required in v1._ Who the tester pretends to be. It changes behaviour, so each persona gets its own tester. (D4)
 
 ## What a run produces
 

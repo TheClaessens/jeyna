@@ -28,7 +28,7 @@ You type one command. Jeyna spins up a tester per scenario, each tester clicks t
 
 ## Abilities
 
-Jeyna's features are called abilities. There are two so far. I still owe them proper World of Warcraft names.
+Jeyna's features are called abilities. There are two so far.
 
 **Playtest.** Claude plays your app for you.
 
@@ -115,14 +115,14 @@ Nothing is published to npm and nothing is added to your project's dependencies.
 
 ## Commands
 
-| Command | What it does |
-|---|---|
-| `/jeyna:init` | Sets up `.jeyna/` in your project. You run it once. |
-| `/jeyna:playtest [request]` | Runs a flow by name, or whatever you describe. |
-| `/jeyna:playtest PT-…` | Retests that one finding and marks it fixed if it passes. |
-| `/jeyna:studio [port]` | Opens the studio on localhost. Port 4710 unless you give another. |
-| `/jeyna:feedback [FB-…]` | Lists your open feedback, or loads the one you name. |
-| `/jeyna:feedback-next` | Loads the oldest open feedback item. |
+| Command                     | What it does                                                      |
+| --------------------------- | ----------------------------------------------------------------- |
+| `/jeyna:init`               | Sets up `.jeyna/` in your project. You run it once.               |
+| `/jeyna:playtest [request]` | Runs a flow by name, or whatever you describe.                    |
+| `/jeyna:playtest PT-…`      | Retests that one finding and marks it fixed if it passes.         |
+| `/jeyna:studio [port]`      | Opens the studio on localhost. Port 4710 unless you give another. |
+| `/jeyna:feedback [FB-…]`    | Lists your open feedback, or loads the one you name.              |
+| `/jeyna:feedback-next`      | Loads the oldest open feedback item.                              |
 
 ## Flows
 
@@ -143,15 +143,18 @@ The app runs on its configured url. Each account starts with an empty cart.
 ## Scenarios
 
 ### Sign-in page
+
 Open the sign-in page without signing in and check that every control is labelled and on screen.
 Pass: the email field, the password field and the Sign in button are all labelled and visible without scrolling sideways.
 Account: none
 
 ### Add a product to the cart
+
 Sign in, then add a product to the cart with quantity 2.
 Pass: the cart shows the product with quantity 2.
 
 ### Remove a product from the cart
+
 Sign in, add a product to the cart, then remove it.
 Pass: the product shows in the cart after adding it, and the cart is empty after removing it.
 
@@ -229,18 +232,18 @@ Each item lands in `.jeyna/feedback/` with exactly the pixels you selected. `/je
 
 `/jeyna:init` writes `.jeyna/jeyna.config.yaml`. Edit it as you like.
 
-| Key | What it does | Default |
-|---|---|---|
-| `app.name` | The name of your app | asked at init |
-| `app.url` | Base URL of the app under test | asked at init |
-| `app.build` | A fixed build id for the reports. Leave it `null` and Jeyna uses `git describe --always --dirty` | `null` |
-| `app.reset` | Shell command that runs before every run, so every run starts from the same state. If it fails, the run doesn't start | `null` |
-| `app.new_account` | Shell command that creates a new test user on every call and prints `JEYNA_USER=<username>` and `JEYNA_PASS=<password>`. With it, every tester that signs in gets its own account, so they can all run at once | `null` |
-| `viewports` | Every scenario runs once per viewport | `[1440x900, 390x844]` |
-| `browser.headed` | Shows the browser, handy while you tune a run | `false` |
-| `tester.model`, `tester.effort` | Model and effort for the testers | `sonnet`, `medium` |
-| `tester.parallel` | The most testers that run at once | `20` |
-| `accounts` | `{ handle, user_env, pass_env }` per test account. Env variable names, never values. No two testers share an account, so with a small pool the testers run in batches | `[]` |
+| Key                             | What it does                                                                                                                                                                                                   | Default               |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- |
+| `app.name`                      | The name of your app                                                                                                                                                                                           | asked at init         |
+| `app.url`                       | Base URL of the app under test                                                                                                                                                                                 | asked at init         |
+| `app.build`                     | A fixed build id for the reports. Leave it `null` and Jeyna uses `git describe --always --dirty`                                                                                                               | `null`                |
+| `app.reset`                     | Shell command that runs before every run, so every run starts from the same state. If it fails, the run doesn't start                                                                                          | `null`                |
+| `app.new_account`               | Shell command that creates a new test user on every call and prints `JEYNA_USER=<username>` and `JEYNA_PASS=<password>`. With it, every tester that signs in gets its own account, so they can all run at once | `null`                |
+| `viewports`                     | Every scenario runs once per viewport                                                                                                                                                                          | `[1440x900, 390x844]` |
+| `browser.headed`                | Shows the browser, handy while you tune a run                                                                                                                                                                  | `false`               |
+| `tester.model`, `tester.effort` | Model and effort for the testers                                                                                                                                                                               | `sonnet`, `medium`    |
+| `tester.parallel`               | The most testers that run at once                                                                                                                                                                              | `20`                  |
+| `accounts`                      | `{ handle, user_env, pass_env }` per test account. Env variable names, never values. No two testers share an account, so with a small pool the testers run in batches                                          | `[]`                  |
 
 `.jeyna/CONVENTIONS.md` tells the testers what counts as a bug, a ux issue or an a11y issue, and how to grade severity. It goes into every tester prompt, so make it fit your app.
 
