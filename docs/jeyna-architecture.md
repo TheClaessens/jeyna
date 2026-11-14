@@ -1,4 +1,4 @@
-# Jeyna — architecture of the playtest loop
+# Jeyna: architecture of the playtest loop
 
 Who talks to whom, over what, in which format. Four runtime lanes and one folder. Everything crossing a lane boundary is an MCP call (JSON), an agent prompt or return (TEXT), a hook payload (JSON), a file on disk (markdown, YAML, JSON, `.env` or PNG), or a shell exec. There is no channel between Claude Code and the studio; the folder is the only thing they share.
 
@@ -25,16 +25,16 @@ Started by the plugin as `node ${CLAUDE_PLUGIN_ROOT}/server/jeyna-mcp.mjs --proj
 - Build id: `git describe --always --dirty` in the project root (D7).
 
 **project/.jeyna/ (files on disk, git-tracked except where noted)**
-- `jeyna.config.yaml` — YAML — app url, viewports, tester model and `parallel`, account pool as env variable names, or `app.new_account`, a command that creates a test user per tester (D41).
-- `.env` — dotenv — account values; gitignored, written by you, never by Claude (D18).
-- `CONVENTIONS.md` — MD — what counts as a finding per kind; returned by `get_context` and, read at call time, by every tester's `brief`.
-- `flows/*.md` — MD+YAML — optional; scenarios, `Pass:` and `Account:` lines.
-- `playtests/<run>/session.json` — JSON — status, scope, build, testers, cases, verdicts. Read back by since-last-run, retests and `save_flow`.
-- `playtests/<run>/findings/PT-*.md` — MD+YAML — one file per finding. The record.
-- `playtests/<run>/report.md` — MD, no frontmatter — summary, counts, scenario matrix, since last run, findings.
-- `playtests/<run>/hooks.log`, `server.log` — TEXT — the exit check's decisions; one line per tool call (D33).
-- `feedback/FB-*.md` + `FB-*.png` — MD+YAML and PNG — feedback items and their captures, written by the studio (D36).
-- `playtests/<run>/evidence/*` — PNG — screenshots; committed or gitignored per project, chosen at init.
+- `jeyna.config.yaml` (YAML): app url, viewports, tester model and `parallel`, account pool as env variable names, or `app.new_account`, a command that creates a test user per tester (D41).
+- `.env` (dotenv): account values; gitignored, written by you, never by Claude (D18).
+- `CONVENTIONS.md` (MD): what counts as a finding per kind; returned by `get_context` and, read at call time, by every tester's `brief`.
+- `flows/*.md` (MD+YAML): optional; scenarios, `Pass:` and `Account:` lines.
+- `playtests/<run>/session.json` (JSON): status, scope, build, testers, cases, verdicts. Read back by since-last-run, retests and `save_flow`.
+- `playtests/<run>/findings/PT-*.md` (MD+YAML): one file per finding; these are the record.
+- `playtests/<run>/report.md` (MD, no frontmatter): summary, counts, scenario matrix, since last run, findings.
+- `playtests/<run>/hooks.log`, `server.log` (TEXT): the exit check's decisions; one line per tool call (D33).
+- `feedback/FB-*.md` + `FB-*.png` (MD+YAML and PNG): feedback items and their captures, written by the studio (D36).
+- `playtests/<run>/evidence/*` (PNG): screenshots; committed or gitignored per project, chosen at init.
 - Committed with the branch; context for every later session.
 
 **Jeyna studio (ships inside the plugin as committed bundles, started by `/jeyna:studio`, D34; writes only feedback items, D36)**

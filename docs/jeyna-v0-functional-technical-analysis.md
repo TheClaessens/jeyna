@@ -1,4 +1,4 @@
-# Jeyna v0 — Functional & Technical Analysis
+# Jeyna v0: functional and technical analysis
 
 **Scope:** the playtest loop only.
 **Status:** draft v3, 15 Oct 2026, after the first grill session; decisions D1–D19 in `decisions.md`, terms in `../GLOSSARY.md`, first build step in `first-slice.md`. Flow files are optional; exploratory mode added (F2). Intended to be interrogated in Claude Code before any code is written.
@@ -25,7 +25,7 @@ The product is the **file contract**. The plugin (Claude side) and the studio (h
 ### 1.2 In scope for v1 (designed for, not built in v0)
 
 - The Jeyna studio viewer (TanStack Start): watch, parse, render, live run status.
-- **Personas (UX playtests). Not supported in v0; required for v1.** A persona (e.g. an 80-year-old first-time user vs a 20-year-old power user) changes who the tester is, so per the fan-out rule (D4) each (scenario, persona) gets its own tester, and a case becomes (scenario, persona, viewport). A persona may also carry browser-context settings (zoom, reduced motion, pace), which attach to the case like a viewport. v0 contains no `persona` field; the `schema` version field lets v1 add `persona?` to cases, findings and the report matrix without breaking v0 runs.
+- Personas (UX playtests). Not supported in v0, required for v1. A persona (e.g. an 80-year-old first-time user vs a 20-year-old power user) changes who the tester is, so per the fan-out rule (D4) each (scenario, persona) gets its own tester, and a case becomes (scenario, persona, viewport). A persona may also carry browser-context settings (zoom, reduced motion, pace), which attach to the case like a viewport. v0 contains no `persona` field; the `schema` version field lets v1 add `persona?` to cases, findings and the report matrix without breaking v0 runs.
 
 ### 1.3 Explicitly out of scope
 
@@ -35,8 +35,8 @@ The product is the **file contract**. The plugin (Claude side) and the studio (h
 - Cowork registration and testing.
 - Non-web targets.
 - Running `jeyna validate` in CI (no published package to install there; v1, D18).
-- **Performance findings** (kind `perf`). No v0 tool measures anything, so perf findings would be guesses. v1 with real measurement.
-- **Personas.** v0 runs one implicit persona (a technical tester). See §1.2: personas are a v1 requirement, not an afterthought.
+- Performance findings (kind `perf`). No v0 tool measures anything, so perf findings would be guesses. They come in v1, with real measurement.
+- Personas. v0 runs one implicit persona (a technical tester). Personas are a v1 requirement (§1.2).
 - Jeyna starting or talking to Claude in any way.
 
 ---
@@ -89,14 +89,14 @@ Numbered so they can be referenced in grill sessions. "Must" is v0; "should" is 
 ### F5. Browser actions
 - F5.1 All browser tools take `case`. Calls with an unknown case id are refused.
 - F5.2 `goto`, `click`, `fill`, `press`, `snapshot`, `screenshot`. Nothing else in v0 (no `evaluate`, no raw CDP, no clips; D9). `fill` on a `<select>` element calls Playwright's `selectOption` with the value, so dropdowns need no extra tool.
-- F5.3 `snapshot` returns the page's accessibility tree as text (Playwright aria snapshot), kept, console tail included, within 90,000 characters with an explicit note "truncated, the page continues"; the tool declares `anthropic/maxResultSizeChars` so Claude Code does not move a result over 50,000 characters to a file (D14, D40). This is a correctness guard, not cost control. This is the tester's primary way of reading the page; `screenshot` is for evidence and for visual questions.
+- F5.3 `snapshot` returns the page's accessibility tree as text (Playwright aria snapshot), with the console tail. The whole result stays within 90,000 characters; a cut page ends with an explicit note "truncated, the page continues". The tool declares `anthropic/maxResultSizeChars` so Claude Code does not move a result over 50,000 characters to a file (D14, D40). The cap is there for correctness, not to control cost. `snapshot` is the tester's primary way of reading the page; `screenshot` is for evidence and for visual questions.
 - F5.4 `fill` accepts the placeholders `{{account.user}}` and `{{account.pass}}`, substituted server-side from the env variables named in config. The server reads each variable from its own environment first, then from `.jeyna/.env` (Node's built-in dotenv parsing; gitignored; filled in by people only) (D18). On the way out, the server replaces every configured account value with its placeholder in every text it returns (snapshots, errors, URLs, titles), so a value echoed by the page never reaches the context (D9). Pixels are not redacted: a screenshot may show a username, never a password (password fields render masked).
 - F5.5 `screenshot` always writes `evidence/<case>-<seq>[-<label>].png` and returns the file name. It returns the image too only when `look: true` (default `false`); the tool description says to look when the question is visual (layout, overlap, cut-off text) and to use `snapshot` otherwise. Full page is an option; viewport is the default (D3).
 - F5.6 Selectors are Playwright selectors. The tool description teaches the three that matter: `role=button[name="Sign in"]`, `text=Forgot password`, CSS.
 
 ### F6. Findings
 - F6.1 `record_finding` takes the payload defined in §5.2, validates it, assigns the id, adds server-side fields, writes `findings/<id>.md`, and returns the id.
-- F6.2 Ids are `PT-<slug>-<nnn>` (same slug as the run folder), sequential per run, allocated by the server. Two concurrent calls cannot receive the same id: the number comes from an in-memory counter in one synchronous step before any `await`, and the file is created with the `wx` flag so a collision fails loudly instead of overwriting (D11). No lock.
+- F6.2 Ids are `PT-<slug>-<nnn>` (same slug as the run folder), sequential per run, allocated by the server. Two concurrent calls cannot receive the same id: the number comes from an in-memory counter in one synchronous step before any `await`, and the file is created with the `wx` flag so a collision fails loudly instead of overwriting (D11). There is no lock.
 - F6.3 Evidence names in the payload must exist in the run's `evidence/` folder, otherwise the call is refused with the list of files that do exist.
 - F6.4 Findings are immutable in v0 except `status` (`open | duplicate | wontfix | fixed`, default `open`), changed through `update_status`. During a run the main agent sets only `duplicate`, with `of: PT-…`. `wontfix` and `fixed` are for later sessions or for people editing the file by hand (D11).
 - F6.5 The server holds the session in memory as the only source of truth during a run. Every change updates memory, then writes the whole `session.json` through one write queue (temp file + rename). The server never reads `session.json` back during a run, so parallel verdicts cannot overwrite each other (D11).

@@ -55,7 +55,7 @@ export function LiveScreen({ index }: { index: StudioIndex }) {
             <div className="draft">
               <span>
                 The app window closed with unsaved feedback: {w.draft.capture === "snap" ? "a snap" : `a recording of ${w.draft.frames} frames`}
-                {w.draft.text.trim() && <>, “<b>{w.draft.text.trim().split("\n")[0]}</b>”</>}.
+                {w.draft.text.trim() && <>, "<b>{w.draft.text.trim().split("\n")[0]}</b>"</>}.
               </span>
               <div className="acts">
                 <button type="button" className="btn primary" onClick={() => setFinishing(true)}>Finish it here</button>
@@ -122,7 +122,7 @@ export function LiveScreen({ index }: { index: StudioIndex }) {
           </div>
         </section>
       )}
-      <p className="meta">Chrome uses this project’s own profile in <span className="mono">.jeyna/chrome-profile/</span>, so logins stay between sessions.</p>
+      <p className="meta">Chrome uses this project's own profile in <span className="mono">.jeyna/chrome-profile/</span>, so logins stay between sessions.</p>
     </>
   );
 }
