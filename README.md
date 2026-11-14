@@ -14,57 +14,64 @@
 </p>
 
 <p align="center">
-  <a href="#features">Features</a> ·
-  <a href="#installation">Installation</a> ·
-  <a href="#quick-start">Quick start</a> ·
+  <a href="#abilities">Abilities</a> ·
+  <a href="#install">Install</a> ·
+  <a href="#how-to-use-it">How to use it</a> ·
   <a href="#commands">Commands</a> ·
-  <a href="#configuration">Configuration</a> ·
-  <a href="#sample-app">Sample app</a> ·
+  <a href="#config">Config</a> ·
   <a href="#development">Development</a>
 </p>
 
-Jeyna is a Claude Code plugin that plays your web app the way a first-time user would and records what it finds.
+Jeyna is a Claude Code plugin that plays your web app like a first-time user would, and writes down what it finds.
 
-One command starts a run. Jeyna starts a tester subagent per scenario, each tester drives a headless browser through your app, and every problem it encounters is saved as a Markdown file with a screenshot under `.jeyna/`. Read the report yourself, or hand the folder back to Claude to fix what was found.
+You type one command. Jeyna spins up a tester per scenario, each tester clicks through your app in a headless browser, and every problem it runs into ends up as a markdown file with a screenshot in `.jeyna/`. You read the report, or you hand the folder back to Claude and let it fix things.
 
-## Features
+## Abilities
 
-- **One command to run.** `/jeyna:playtest` runs a saved flow, or derives scenarios from a plain-language request and asks for confirmation before it starts.
-- **Isolated testers.** One tester subagent per scenario, each in its own headless browser context, at every configured viewport.
-- **Findings as files.** Each finding is a Markdown file with structured frontmatter, reproduction steps and screenshot evidence, in a format that people, the studio and Claude can all read.
-- **Regression tracking.** Every report lists the verdicts that changed since the previous run of the same flow, and a single finding can be retested by id.
-- **Studio.** A local viewer for runs, findings and evidence that follows a run while it is in progress.
-- **Feedback capture.** Mark up the live app or a finding's screenshot, describe the change, and let Claude implement it.
-- **Secrets stay out of prompts.** The configuration holds environment variable names only. Account values never appear in a prompt or a finding.
-- **Nothing added to your project.** No npm package and no dependencies. The plugin is the `plugin/` folder of this repository.
+Jeyna's features are called abilities. There are two so far. I still owe them proper World of Warcraft names.
 
-## Screenshots
+**Playtest.** Claude plays your app for you.
+
+- You run `/jeyna:playtest` with a flow you saved, or you just describe what you want tested and Jeyna proposes the scenarios. It asks before it runs them.
+- Every scenario gets its own tester, in its own headless browser, at every viewport you configured. Give Jeyna a way to create test accounts and the testers all run at once.
+- Every report tells you which verdicts changed since the last run of that flow. Fixed something? Retest that one finding by its id.
+
+**Feedback.** You show Claude what should change.
+
+- You snap or record a part of your running app, or of a finding's screenshot, and type what should change right next to it.
+- `/jeyna:feedback` hands it to Claude, with exactly the pixels you selected.
+
+A few things hold for both:
+
+- **Everything is a file.** Findings and feedback are markdown in `.jeyna/`. You can read them, the studio reads them, and Claude reads them in your next session.
+- **No secrets in prompts.** The config only knows the names of your env variables. The values never show up in a prompt or a finding.
+- **Nothing lands in your project.** No npm package, no dependencies. The plugin is the `plugin/` folder of this repo, that's it.
+
+## What it looks like
 
 <p align="center">
   <img src="docs/screenshots/band-live.webp" width="900" alt="The Jeyna band above the Claude Code prompt during a run">
 </p>
 
-During a run, a status band above the prompt shows which cases have finished, the number of findings so far and where the run is stored on disk.
+While a run is going, Jeyna's Watch sits above your prompt: which cases are done, how many findings so far, and where the run lives on disk.
 
 <p align="center">
   <img src="docs/screenshots/studio-run.jpg" width="900" alt="Jeyna studio showing a run">
 </p>
 
-`/jeyna:studio` opens the runs in your browser: the scenario × viewport matrix, every finding with its screenshot, and what changed since the last run.
+`/jeyna:studio` opens your runs in the browser: every finding with its screenshot, and what changed since the last run.
 
-## Installation
+## Install
 
-### Requirements
+You need three things:
 
 - Claude Code 2.1.302 or later
-- Node.js 20 or later
-- Google Chrome, or Playwright's Chromium (`npx playwright install chromium`)
+- Node 20 or later
+- Google Chrome. No Chrome? `npx playwright install chromium` works too.
 
-Chrome runs headless with a temporary profile. Your own browser profile is never used.
+Chrome runs headless with a throwaway profile, so your own profile is never touched.
 
-### Install the plugin
-
-Inside Claude Code:
+Then, inside Claude Code:
 
 ```
 /plugin marketplace add TheClaessens/jeyna
@@ -73,61 +80,65 @@ Inside Claude Code:
 
 Nothing is published to npm and nothing is added to your project's dependencies.
 
-## Quick start
+## How to use it
 
-1. **Set up the project.** Run `/jeyna:init` once. It inspects how your app starts and asks for the app URL, the names of the environment variables that hold your test accounts (never their values), and whether screenshots are committed. It writes `.jeyna/jeyna.config.yaml` and `.jeyna/CONVENTIONS.md`.
+1. **Run `/jeyna:init` once.** It looks at how your app starts and asks a few questions: the URL, which env variables hold your test accounts (the names, never the values), and whether screenshots get committed. It writes `.jeyna/jeyna.config.yaml` and `.jeyna/CONVENTIONS.md`.
 
-2. **Provide the account values.** Put them in `.jeyna/.env` (gitignored), or export them before starting `claude`. Agents cannot read or write that file, and the values never appear in a prompt or a finding.
+2. **Put the account values in `.jeyna/.env`.** That file is gitignored. Exporting them before you start `claude` works too. Agents can't read or write the file, and the values never show up in a prompt or a finding.
 
-3. **Run a playtest.** Run `/jeyna:playtest todos` with a flow name, or describe what you want tested. Without a flow, Jeyna takes a short look at the app, proposes scenarios and waits for your confirmation. When the run is done, it offers to save the scenarios as a flow so they can be run again.
+3. **Run `/jeyna:playtest checkout`.** Give it a flow name, or just describe what you want tested. Without a flow, Jeyna takes a quick look at the app, proposes a few scenarios and asks before it runs them. When it's done, it offers to save them as a flow so you can run them again.
+
+   Something like this comes back in your terminal:
 
    ```
-   3 testers, 1 batch (2 accounts): Sign-in page, Add a todo with a priority, Complete and delete a todo.
+   3 testers, 1 batch (2 accounts): Sign-in page, Add a product to the cart, Remove a product from the cart.
 
    Sign-in page: t1-1440x900 fail, t1-390x844 fail; 3 findings.
-   Add a todo with a priority: t2-1440x900 fail, t2-390x844 fail; 4 findings.
-   Complete and delete a todo: t3-1440x900 pass, t3-390x844 fail; 3 findings.
+   Add a product to the cart: t2-1440x900 fail, t2-390x844 fail; 4 findings.
+   Remove a product from the cart: t3-1440x900 pass, t3-390x844 fail; 3 findings.
 
-   Replayed the three todos scenarios at 1440x900 and 390x844; all three known problems
-   persist. A todo saved with priority High comes back as Normal, the Sign in button is
+   Replayed the three checkout scenarios at 1440x900 and 390x844; all three known problems
+   persist. A product added with quantity 2 shows up with quantity 1, the Sign in button is
    not visible at phone width, and the password field has no label.
 
    Cases: 1 passed, 5 failed, 0 blocked, 0 skipped.
    Findings: 1 critical, 1 major, 1 minor, 0 notes; 7 marked duplicate.
-     PT-todos-004  critical  bug   Sign in button not visible at phone width
-     PT-todos-006  major     bug   Chosen priority High is saved as Normal
-     PT-todos-001  minor     a11y  Password field on sign-in has no label
-   Since 2026-10-17-todos: Complete and delete a todo at 390x844: pass -> fail.
-   Report: .jeyna/playtests/2026-10-17-todos-2/report.md
+     PT-checkout-004  critical  bug   Sign in button not visible at phone width
+     PT-checkout-006  major     bug   Quantity 2 is saved as 1
+     PT-checkout-001  minor     a11y  Password field on sign-in has no label
+   Since 2026-10-17-checkout: Remove a product from the cart at 390x844: pass -> fail.
+   Report: .jeyna/playtests/2026-10-17-checkout-2/report.md
    1 min 42 s, 3 testers.
    ```
 
-4. **Review the results.** Run `/jeyna:studio` to browse the run. After a fix, `/jeyna:playtest PT-todos-004` retests that one finding and marks it fixed if it passes.
+4. **Open `/jeyna:studio`** to browse the run. Fixed something? `/jeyna:playtest PT-checkout-004` retests that one finding and marks it fixed if it passes.
 
 ## Commands
 
-| Command | Description |
+| Command | What it does |
 |---|---|
-| `/jeyna:init` | Sets up `.jeyna/` in the project: configuration, conventions and the `.gitignore` entries. |
-| `/jeyna:playtest [request]` | Runs a flow by name, or derives scenarios from a free-text request. |
-| `/jeyna:playtest PT-…` | Retests a single finding and marks it fixed when it passes. |
-| `/jeyna:studio [port]` | Opens Jeyna studio on localhost (default port 4710). |
-| `/jeyna:feedback [FB-…]` | Lists the open feedback items, or loads one, for Claude to implement. |
+| `/jeyna:init` | Sets up `.jeyna/` in your project. You run it once. |
+| `/jeyna:playtest [request]` | Runs a flow by name, or whatever you describe. |
+| `/jeyna:playtest PT-…` | Retests that one finding and marks it fixed if it passes. |
+| `/jeyna:studio [port]` | Opens the studio on localhost. Port 4710 unless you give another. |
+| `/jeyna:feedback [FB-…]` | Lists your open feedback, or loads the one you name. |
 | `/jeyna:feedback-next` | Loads the oldest open feedback item. |
 
 ## Flows
 
-A flow is a Markdown file in `.jeyna/flows/` that defines a set of scenarios. Each scenario has a description and a `Pass:` line. The `Pass:` line is the only criterion a tester judges the case against. Anything else the tester notices is recorded as a finding, but does not fail the case.
+A flow is a markdown file in `.jeyna/flows/` with a few scenarios. Each scenario has a description and a `Pass:` line. That line is the only thing a tester judges the case against. Anything else it notices becomes a finding, but doesn't fail the case.
+
+You don't have to write a flow by hand. Let a playtest propose the scenarios, save them, and edit the file afterwards.
 
 ```markdown
 ---
-name: todos
+name: checkout
 entry: /login
 ---
 
 ## Preconditions
 
-The app runs on its configured url. Each account starts with an empty todo list.
+The app runs on its configured url. Each account starts with an empty cart.
 
 ## Scenarios
 
@@ -136,41 +147,39 @@ Open the sign-in page without signing in and check that every control is labelle
 Pass: the email field, the password field and the Sign in button are all labelled and visible without scrolling sideways.
 Account: none
 
-### Add a todo with a priority
-Sign in, then add a todo called "Buy milk" with priority High.
-Pass: "Buy milk" appears in the list with High priority.
+### Add a product to the cart
+Sign in, then add a product to the cart with quantity 2.
+Pass: the cart shows the product with quantity 2.
 
-### Complete and delete a todo
-Sign in, add a todo, mark it complete, then delete it.
-Pass: the todo shows as done after completing it, and is gone from the list after deleting it.
+### Remove a product from the cart
+Sign in, add a product to the cart, then remove it.
+Pass: the product shows in the cart after adding it, and the cart is empty after removing it.
 
 ## What matters most here
 
-Todos keep exactly what was typed and chosen. Nothing about the sign-in form may be hidden at phone width.
+The cart keeps exactly what was added. Nothing about the sign-in form may be hidden at phone width.
 ```
 
-The optional `Account:` line controls sign-in:
+The `Account:` line is optional:
 
-| Value | Meaning |
-|---|---|
-| *(omitted)* | The scenario signs in with the account assigned to its tester. |
-| `none` | The scenario does not sign in. |
-| `consumes` | The scenario may lock or change its account (wrong passwords, a password reset), so it runs last. |
+- No line: the scenario signs in with the account its tester got.
+- `Account: none`: don't sign in.
+- `Account: consumes`: the scenario may lock or change its account (wrong passwords, a password reset), so it runs last.
 
 ## Findings
 
-Each finding is a single file under `.jeyna/playtests/<run>/findings/`, with its screenshot under `evidence/` in the same run folder:
+Every finding is one file under `.jeyna/playtests/<run>/findings/`. Its screenshot sits under `evidence/` in the same run folder.
 
 ```markdown
 ---
 schema: 1
-id: PT-todos-001
+id: PT-checkout-001
 kind: a11y
 severity: minor
 status: open
-flow: todos
+flow: checkout
 case: t2-1440x900
-scenario: Add a todo with a priority
+scenario: Add a product to the cart
 route: /login
 viewport: 1440x900
 browser: chromium 155.0.8059.80
@@ -201,56 +210,39 @@ Only Email is labelled; the second textbox has no label or name
 ![t2-1440x900-1-login.png](../evidence/t2-1440x900-1-login.png)
 ```
 
-| Field | Values |
-|---|---|
-| `kind` | `bug`, `ux`, `a11y`, `question` |
-| `severity` | `critical`, `major`, `minor`, `note` |
-| `status` | `open`, `duplicate`, `wontfix`, `fixed` |
+A finding has a kind (`bug`, `ux`, `a11y` or `question`), a severity (`critical`, `major`, `minor` or `note`) and a status (`open`, `duplicate`, `wontfix` or `fixed`).
 
-Findings are written by the server, never by an agent, so their structure is always consistent. The `.jeyna/` folder is designed to be committed: it is readable by people, by the studio, and by Claude in a later session.
+Findings are written by the server, never by an agent, so they always have the same shape. The whole `.jeyna/` folder is meant to be committed.
 
 ## Feedback
 
-The studio also works in the other direction: you show Claude what should change.
+Feedback works the other way around: you see something, and you show Claude.
 
-- **Live** opens your app in a dedicated Chrome window with its own profile, so sign-ins persist between sessions.
-- <kbd>⌥</kbd><kbd>⇧</kbd><kbd>S</kbd> freezes the page. Drag over the area concerned, describe what should change, and save with <kbd>⌘</kbd><kbd>↩</kbd>.
-- <kbd>⌥</kbd><kbd>⇧</kbd><kbd>R</kbd> records a short clip of an area while you use the app.
-- **Give feedback** on a finding does the same over its screenshot.
+- **Live** opens your app in its own Chrome window. It has its own profile, so your logins stick.
+- <kbd>⌥</kbd><kbd>⇧</kbd><kbd>S</kbd> freezes the page. Drag over what's wrong, type what should change, and save with <kbd>⌘</kbd><kbd>↩</kbd>. That's a snap.
+- <kbd>⌥</kbd><kbd>⇧</kbd><kbd>R</kbd> records an area while you use the app instead.
+- On a finding, **Give feedback** does the same over its screenshot.
 
-Each item is saved to `.jeyna/feedback/` with exactly the pixels you selected. `/jeyna:feedback` has Claude pick the items up and make the changes. An item is marked done only after you approve the result.
+Each item lands in `.jeyna/feedback/` with exactly the pixels you selected. `/jeyna:feedback` lists what's open and lets you pick one, a few, or all of them one by one. Claude marks an item as processed once it made the change. Done is always your call.
 
-## Configuration
+## Config
 
-`/jeyna:init` writes `.jeyna/jeyna.config.yaml`. Edit it by hand afterwards as needed.
+`/jeyna:init` writes `.jeyna/jeyna.config.yaml`. Edit it as you like.
 
-| Key | Description | Default |
+| Key | What it does | Default |
 |---|---|---|
-| `app.name` | Name of the app under test | asked at init |
+| `app.name` | The name of your app | asked at init |
 | `app.url` | Base URL of the app under test | asked at init |
-| `app.build` | Fixed build id for reports. `null` uses `git describe --always --dirty` | `null` |
-| `app.reset` | Shell command run before every run, so that each run starts from the same state. A failing command refuses the run | `null` |
-| `app.new_account` | Shell command that creates a new test user on every call and prints `JEYNA_USER=<username>` and `JEYNA_PASS=<password>`. When set, each tester that signs in gets its own account, so all testers can run at once | `null` |
-| `viewports` | Viewport sizes. Every scenario runs once per viewport | `[1440x900, 390x844]` |
-| `browser.headed` | Shows the browser, for tuning a run | `false` |
-| `tester.model`, `tester.effort` | Model and effort used for the testers | `sonnet`, `medium` |
-| `tester.parallel` | Maximum number of testers running at once | `20` |
-| `accounts` | Test accounts as `{ handle, user_env, pass_env }`. Environment variable names, never values. No two testers hold the same account at once, so a small pool runs testers in batches | `[]` |
+| `app.build` | A fixed build id for the reports. Leave it `null` and Jeyna uses `git describe --always --dirty` | `null` |
+| `app.reset` | Shell command that runs before every run, so every run starts from the same state. If it fails, the run doesn't start | `null` |
+| `app.new_account` | Shell command that creates a new test user on every call and prints `JEYNA_USER=<username>` and `JEYNA_PASS=<password>`. With it, every tester that signs in gets its own account, so they can all run at once | `null` |
+| `viewports` | Every scenario runs once per viewport | `[1440x900, 390x844]` |
+| `browser.headed` | Shows the browser, handy while you tune a run | `false` |
+| `tester.model`, `tester.effort` | Model and effort for the testers | `sonnet`, `medium` |
+| `tester.parallel` | The most testers that run at once | `20` |
+| `accounts` | `{ handle, user_env, pass_env }` per test account. Env variable names, never values. No two testers share an account, so with a small pool the testers run in batches | `[]` |
 
-`.jeyna/CONVENTIONS.md` defines what counts as a bug, a UX issue or an accessibility issue, and how severity is graded. It is included in every tester prompt, so adapt it to your app.
-
-## Sample app
-
-`sample-app/` is a small todo app with a sign-in page and six seeded bugs, listed in [`SEEDED-BUGS.md`](sample-app/SEEDED-BUGS.md). It ships with a configuration, a flow and several real runs in `sample-app/.jeyna/`.
-
-```sh
-node sample-app/server.mjs            # http://localhost:4173
-cd sample-app
-cp .env.example .jeyna/.env           # the two test accounts
-claude --plugin-dir ../plugin         # or use the installed plugin
-```
-
-Then run `/jeyna:playtest todos`, and `/jeyna:studio` to review the runs.
+`.jeyna/CONVENTIONS.md` tells the testers what counts as a bug, a ux issue or an a11y issue, and how to grade severity. It goes into every tester prompt, so make it fit your app.
 
 ## Development
 
@@ -258,33 +250,21 @@ Then run `/jeyna:playtest todos`, and `/jeyna:studio` to review the runs.
 npm install
 npm run build         # bundles plugin/server and plugin/studio
 npm test
-npm run check         # tests, typecheck and bundle check; required before every commit
-npm run studio        # the studio against sample-app/
+npm run check         # test + typecheck + bundle check; run it before every commit
 ```
 
-The bundles under `plugin/server/` and `plugin/studio/` are committed. Rebuild and commit them with every source change; `npm run check` fails when they are out of date.
+The bundles under `plugin/server/` and `plugin/studio/` are committed, so rebuild and commit them with any source change. `npm run check` fails if they're stale.
 
-### Repository layout
+Where things live:
 
-| Path | Contents |
-|---|---|
-| `src/` | The MCP server and the studio, with tests next to the code |
-| `plugin/` | What gets installed: skills, the tester agent, hooks, templates and the committed bundles |
-| `docs/` | Concept, architecture and decisions |
-| `sample-app/` | The todo app with the seeded bugs |
+- `src/`: the MCP server and the studio, tests next to the code.
+- `plugin/`: what gets installed. Skills, the tester agent, hooks, templates and the committed bundles.
+- `docs/`: concept, architecture and decisions.
 
-### Documentation
+Want to know why something works the way it does? Start with the [glossary](GLOSSARY.md), then the [concept](docs/jeyna-concept.md), the [architecture](docs/jeyna-architecture.md) and the [decisions](docs/decisions.md). The [coding standards](CODING_STANDARDS.md) are there for when you change code.
 
-- [`GLOSSARY.md`](GLOSSARY.md): the project's terminology
-- [`docs/jeyna-concept.md`](docs/jeyna-concept.md): the concept
-- [`docs/jeyna-architecture.md`](docs/jeyna-architecture.md): the architecture
-- [`docs/decisions.md`](docs/decisions.md): the decision log
-- [`CODING_STANDARDS.md`](CODING_STANDARDS.md): the coding standards
-
-### Issues
-
-Bugs and feature requests are tracked in [GitHub Issues](https://github.com/TheClaessens/jeyna/issues).
+Found a bug, or missing something? Open an [issue](https://github.com/TheClaessens/jeyna/issues).
 
 ## License
 
-No license has been selected yet.
+I haven't picked one yet.
